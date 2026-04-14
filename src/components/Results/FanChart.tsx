@@ -1,0 +1,95 @@
+import React from 'react';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  ReferenceLine,
+} from 'recharts';
+import type { PercentileBand } from '../../types';
+import { formatCompact } from '../../utils/format';
+
+interface FanChartProps {
+  data: PercentileBand[];
+  retirementAge: number;
+}
+
+export function FanChart({ data, retirementAge }: FanChartProps) {
+  return (
+    <div className="card">
+      <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+        Portfolio Value Over Time (Percentile Bands)
+      </h4>
+      <ResponsiveContainer width="100%" height={300}>
+        <AreaChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis
+            dataKey="age"
+            tick={{ fontSize: 10 }}
+            interval={0}
+            label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fontSize: 11 }}
+          />
+          <YAxis
+            tickFormatter={formatCompact}
+            tick={{ fontSize: 10 }}
+            width={55}
+          />
+          <Tooltip
+            formatter={(val: number) => formatCompact(val)}
+            labelFormatter={(label) => `Age ${label}`}
+            contentStyle={{ fontSize: 11 }}
+          />
+          <ReferenceLine
+            x={retirementAge}
+            stroke="#ef4444"
+            strokeDasharray="5 5"
+            label={{ value: 'Retire', position: 'top', fontSize: 10, fill: '#ef4444' }}
+          />
+          {/* P10-P90 band */}
+          <Area
+            type="monotone"
+            dataKey="p90"
+            stackId="band"
+            stroke="none"
+            fill="#dbeafe"
+            fillOpacity={0.4}
+            name="P90"
+          />
+          <Area
+            type="monotone"
+            dataKey="p75"
+            stackId="band2"
+            stroke="none"
+            fill="#93c5fd"
+            fillOpacity={0.4}
+            name="P75"
+          />
+          {/* Median line */}
+          <Area
+            type="monotone"
+            dataKey="p50"
+            stroke="#2563eb"
+            strokeWidth={2}
+            fill="#60a5fa"
+            fillOpacity={0.3}
+            name="Median"
+          />
+          <Area
+            type="monotone"
+            dataKey="p25"
+            stroke="none"
+            fill="#bfdbfe"
+            fillOpacity={0.3}
+            name="P25"
+          />
+          <Area
+            type="monotone"
+            dataKey="p10"
+            stroke="#f87171"
+            strokeWidth={1}
+            strokeDasharray="3 3"
+            fill="none"
+            name="P10"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
