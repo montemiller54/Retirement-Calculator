@@ -236,7 +236,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
               );
             })}
             <div className="flex items-center gap-2 mt-1">
-              <label className="input-label mb-0">Tail Risk:</label>
+              <label className="input-label mb-0">Market Volatility:</label>
               <input
                 type="number"
                 className={`input-field w-14 ${fieldErrorClass(ve, 'investments.fatTailDf')}`}
