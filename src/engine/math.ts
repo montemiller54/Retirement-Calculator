@@ -21,7 +21,7 @@ export class PRNG {
     x = ((x >>> 16) ^ x) * 0x45d9f3b | 0;
     x = ((x >>> 16) ^ x) * 0x45d9f3b | 0;
     x = (x >>> 16) ^ x;
-    return x;
+    return x; 
   }
 
   /** Returns a uniform random in [0, 1) */

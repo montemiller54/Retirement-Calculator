@@ -6,6 +6,7 @@ import {
 } from '../../types';
 import { RISK_PROFILES, RISK_PROFILE_LABELS, makeUniformAllocations, DEFAULT_ASSET_RETURNS } from '../../constants/asset-classes';
 import { CurrencyInput } from './CurrencyInput';
+import { PercentInput } from './PercentInput';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
 
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
@@ -214,22 +215,18 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                   <span className="text-[11px] w-16 truncate">{ASSET_CLASS_LABELS[ac]}</span>
                   <div>
                     <label className="input-label">Mean %</label>
-                    <input
-                      type="number"
-                      step="0.1"
+                    <PercentInput
                       className="input-field w-14 text-right"
-                      value={(ret.mean * 100).toFixed(1)}
-                      onChange={e => setField(`investments.assetClassReturns.${ac}.mean`, (parseFloat(e.target.value) || 0) / 100)}
+                      value={ret.mean}
+                      onChange={v => setField(`investments.assetClassReturns.${ac}.mean`, v)}
                     />
                   </div>
                   <div>
                     <label className="input-label">Vol %</label>
-                    <input
-                      type="number"
-                      step="0.1"
+                    <PercentInput
                       className={`input-field w-14 text-right ${fieldErrorClass(ve, `investments.assetClassReturns.${ac}.stdDev`)}`}
-                      value={(ret.stdDev * 100).toFixed(1)}
-                      onChange={e => setField(`investments.assetClassReturns.${ac}.stdDev`, (parseFloat(e.target.value) || 0) / 100)}
+                      value={ret.stdDev}
+                      onChange={v => setField(`investments.assetClassReturns.${ac}.stdDev`, v)}
                     />
                   </div>
                 </div>
