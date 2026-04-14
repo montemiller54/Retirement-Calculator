@@ -15,7 +15,6 @@ function AppInner() {
   const { result, progress, isRunning, error, run } = useSimulation();
   const { dark, toggleDark } = useTheme();
   const [tab, setTab] = useState<Tab>('results');
-  const [seed, setSeed] = useState<string>('');
 
   const validationErrors = validateScenario(scenario);
 
@@ -23,7 +22,6 @@ function AppInner() {
     if (validationErrors.length > 0) return;
     run(scenario, {
       numSimulations: 1000,
-      seed: seed ? parseInt(seed) : undefined,
     });
   };
 
@@ -52,16 +50,6 @@ function AppInner() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <label className="text-[10px] text-gray-400">Seed:</label>
-            <input
-              type="number"
-              className="input-field w-20 text-xs"
-              placeholder="Random"
-              value={seed}
-              onChange={e => setSeed(e.target.value)}
-            />
-          </div>
           <button
             className="btn-primary"
             onClick={handleRun}
