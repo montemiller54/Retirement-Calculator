@@ -69,7 +69,7 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
   }
 
   if (s.investments.fatTailDf != null && (s.investments.fatTailDf < 3 || s.investments.fatTailDf > 30)) {
-    errors.push({ card: 'portfolio', field: 'investments.fatTailDf', message: 'Fat-tail degrees of freedom must be between 3 and 30.' });
+    errors.push({ card: 'portfolio', field: 'investments.fatTailDf', message: 'Tail Risk must be between 3 (extreme) and 30 (low).' });
   }
 
   // ── Spending & Healthcare ──

@@ -236,7 +236,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
               );
             })}
             <div className="flex items-center gap-2 mt-1">
-              <label className="input-label mb-0">Fat-tail df:</label>
+              <label className="input-label mb-0">Tail Risk:</label>
               <input
                 type="number"
                 className={`input-field w-14 ${fieldErrorClass(ve, 'investments.fatTailDf')}`}
@@ -244,6 +244,9 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                 value={inv.fatTailDf}
                 onChange={e => setField('investments.fatTailDf', parseInt(e.target.value) || 6)}
               />
+              <span className="text-[10px] text-gray-400">
+                {inv.fatTailDf <= 5 ? 'Extreme' : inv.fatTailDf <= 9 ? 'High' : inv.fatTailDf <= 15 ? 'Moderate' : 'Low'}
+              </span>
             </div>
             <FieldError errors={ve} field="investments.fatTailDf" />
           </div>
