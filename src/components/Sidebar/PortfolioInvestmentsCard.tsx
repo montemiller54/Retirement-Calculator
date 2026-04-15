@@ -13,7 +13,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
   return (
     <label className="flex items-center gap-2 cursor-pointer">
       <div
-        className={`relative inline-flex w-9 h-5 rounded-full border transition-colors ${checked ? 'bg-primary-500 border-primary-500' : 'bg-gray-300 border-gray-300 dark:bg-gray-500 dark:border-gray-400'}`}
+        className={`relative inline-flex w-9 h-5 rounded-full transition-colors ${checked ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-500'}`}
         onClick={() => onChange(!checked)}
       >
         <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
@@ -74,19 +74,27 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
     setField(`${allocField}.${acct}`, current);
   };
 
-  const sectionBtn = (id: 'balances' | 'allocations' | 'returns', label: string) => (
-    <button
-      className={`w-full flex items-center justify-between px-2 py-1.5 text-xs rounded ${
-        activeSection === id
-          ? 'bg-primary-50 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 font-medium'
-          : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-      }`}
-      onClick={() => setActiveSection(activeSection === id ? id : id)}
-    >
-      <span>{label}</span>
-      <span className="text-gray-400">{activeSection === id ? '▾' : '▸'}</span>
-    </button>
-  );
+  const sectionBtn = (id: 'balances' | 'allocations' | 'returns', label: string) => {
+    const isOpen = activeSection === id;
+    return (
+      <button
+        className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-md border transition-colors ${
+          isOpen
+            ? 'bg-primary-50 dark:bg-primary-900/50 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300 font-medium'
+            : 'bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/60'
+        }`}
+        onClick={() => setActiveSection(id)}
+      >
+        <span>{label}</span>
+        <svg
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} ${isOpen ? 'text-primary-500' : 'text-gray-400'}`}
+          fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+    );
+  };
 
   return (
     <div className="space-y-1">
@@ -212,7 +220,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                             {ACCOUNT_LABELS[acct]}
                           </td>
                           {ASSET_CLASSES.map(ac => (
-                            <td key={ac} className="px-0.5">
+                            <td key={ac} className="px-0.5 text-center">
                               <input
                                 type="number"
                                 className="input-field w-12 text-center text-[10px] py-0.5 px-1"
@@ -260,15 +268,15 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                     value={ret.mean}
                     onChange={v => setField(`investments.assetClassReturns.${ac}.mean`, v)}
                   />
-                  <div className="flex-1 flex items-center gap-1">
+                  <div className="flex-1 flex items-center justify-center gap-1">
                     <input
                       type="range"
-                      className="w-[55%] h-1.5 accent-primary-600"
+                      className="w-[50%] h-1.5 accent-primary-600"
                       min={1} max={10} step={0.5}
                       value={varVal}
                       onChange={e => setField(`investments.assetClassReturns.${ac}.stdDev`, variabilityToStdDev(parseFloat(e.target.value)))}
                     />
-                    <span className="text-[10px] text-gray-500 whitespace-nowrap">{varVal.toFixed(1)} {varLabel}</span>
+                    <span className="text-[10px] text-gray-500 whitespace-nowrap w-20">{varVal.toFixed(1)} {varLabel}</span>
                   </div>
                 </div>
               );

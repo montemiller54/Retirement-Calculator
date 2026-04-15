@@ -98,11 +98,20 @@ export function EarningsCard({ validationErrors }: CardProps) {
 
       {/* Contribution allocation — collapsible */}
       <button
-        className="w-full flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 pt-2 border-t border-gray-100 dark:border-gray-700"
+        className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-md border transition-colors ${
+          showDetails
+            ? 'bg-primary-50 dark:bg-primary-900/50 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300 font-medium'
+            : 'bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/60'
+        }`}
         onClick={() => setShowDetails(!showDetails)}
       >
-        <span>Contribution allocation & employer match</span>
-        <span>{showDetails ? '▾' : '▸'}</span>
+        <span>Allocations & Matches</span>
+        <svg
+          className={`w-4 h-4 transition-transform duration-200 ${showDetails ? 'rotate-180' : ''} ${showDetails ? 'text-primary-500' : 'text-gray-400'}`}
+          fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
       </button>
 
       {showDetails && (
