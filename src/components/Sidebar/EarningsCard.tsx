@@ -135,6 +135,9 @@ export function EarningsCard({ validationErrors }: CardProps) {
           {/* Employer match */}
           <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-gray-700">
             <label className="input-label font-medium">Employer Match</label>
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 -mt-1">
+              Employer matches {Math.round(scenario.employerMatchRate * 100)}% of your contributions on the first {(scenario.employerMatchCapPct * 100).toFixed(1)}% of salary.
+            </p>
             <div className="grid grid-cols-2 gap-2">
               <PctSlider
                 label="Match Rate"

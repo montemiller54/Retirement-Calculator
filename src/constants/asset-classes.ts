@@ -7,11 +7,14 @@ import type {
 } from '../types';
 
 // Default expected returns and volatility per asset class
+// Note: Stocks & crypto use Student-t(df=6) fat tails, which inflates effective
+// volatility by √(df/(df-2)) ≈ 1.22×. Input stdDev is calibrated so that
+// effective vol matches historical observations (~19.5% for stocks, ~61% for crypto).
 export const DEFAULT_ASSET_RETURNS: Record<AssetClass, AssetClassAssumption> = {
-  stocks: { mean: 0.10,  stdDev: 0.18 },
+  stocks: { mean: 0.10,  stdDev: 0.16 },
   bonds:  { mean: 0.04,  stdDev: 0.06 },
   cash:   { mean: 0.025, stdDev: 0.01 },
-  crypto: { mean: 0.15,  stdDev: 0.60 },
+  crypto: { mean: 0.15,  stdDev: 0.50 },
 };
 
 // Correlation matrix (Stocks, Bonds, Cash, Crypto)
