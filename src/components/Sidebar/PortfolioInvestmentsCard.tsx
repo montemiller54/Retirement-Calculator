@@ -23,6 +23,28 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
   );
 }
 
+// ── Variability scale: 1–10 (0.5 steps) ↔ stdDev (decimal) ──
+// Curve: vol = 0.01 + ((v-1)/9)^1.6888 * 0.59
+// Calibrated so v=1→1%, v=3→6%, v=5→16%, v=9→50%, v=10→60%
+function variabilityToStdDev(v: number): number {
+  return 0.01 + Math.pow((v - 1) / 9, 1.6888) * 0.59;
+}
+function stdDevToVariability(sd: number): number {
+  if (sd <= 0.01) return 1;
+  const raw = 1 + Math.pow((sd - 0.01) / 0.59, 1 / 1.6888) * 9;
+  return Math.round(Math.min(10, Math.max(1, raw)) * 2) / 2;
+}
+
+// ── Crash frequency scale: 1–10 (0.5 steps) ↔ df (3–30) ──
+// Linear inversion: 1→30, 10→3
+function crashFreqToDf(cf: number): number {
+  return Math.round(30 - (cf - 1) * (27 / 9));
+}
+function dfToCrashFreq(df: number): number {
+  const raw = 1 + (30 - df) * (9 / 27);
+  return Math.round(raw * 2) / 2; // snap to 0.5
+}
+
 export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
   const { scenario, setField } = useScenario();
   const ve = validationErrors;
@@ -207,45 +229,56 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
         </button>
 
         {showReturns && (
-          <div className="space-y-1">
+          <div className="space-y-2">
             <p className="text-[10px] text-gray-400">Expected nominal returns and variability by asset class.</p>
-            {ASSET_CLASSES.map(ac => {
-              const ret = inv.assetClassReturns[ac] ?? DEFAULT_ASSET_RETURNS[ac];
-              return (
-                <div key={ac} className="flex items-center gap-2">
-                  <span className="text-[11px] w-20 truncate">{ASSET_CLASS_LABELS[ac]}</span>
-                  <div className="flex-1">
-                    <label className="input-label">Avg Return %</label>
+            <div className="space-y-1.5">
+              {/* Column headers */}
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] w-14"></span>
+                <span className="text-[10px] text-gray-400 w-16 text-right">Avg Return %</span>
+                <span className="text-[10px] text-gray-400 flex-1 text-center">Variability</span>
+              </div>
+              {ASSET_CLASSES.map(ac => {
+                const ret = inv.assetClassReturns[ac] ?? DEFAULT_ASSET_RETURNS[ac];
+                const varVal = stdDevToVariability(ret.stdDev);
+                return (
+                  <div key={ac} className="flex items-center gap-1">
+                    <span className="text-[11px] w-14 truncate">{ASSET_CLASS_LABELS[ac]}</span>
                     <PercentInput
-                      className="input-field w-full text-right"
+                      className="input-field w-16 text-right text-[11px]"
                       value={ret.mean}
                       onChange={v => setField(`investments.assetClassReturns.${ac}.mean`, v)}
                     />
+                    <div className="flex-1 flex items-center gap-1">
+                      <input
+                        type="range"
+                        className="flex-1 h-1.5 accent-primary-600"
+                        min={1} max={10} step={0.5}
+                        value={varVal}
+                        onChange={e => setField(`investments.assetClassReturns.${ac}.stdDev`, variabilityToStdDev(parseFloat(e.target.value)))}
+                      />
+                      <span className="text-[10px] text-gray-500 w-6 text-right">{varVal.toFixed(1)}</span>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <label className="input-label">Variability %</label>
-                    <PercentInput
-                      className={`input-field w-full text-right ${fieldErrorClass(ve, `investments.assetClassReturns.${ac}.stdDev`)}`}
-                      value={ret.stdDev}
-                      onChange={v => setField(`investments.assetClassReturns.${ac}.stdDev`, v)}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
             <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+              <label className="input-label mb-1">Crash Frequency</label>
               <div className="flex items-center gap-2">
-                <label className="input-label mb-0">Market Crash Frequency:</label>
+                <span className="text-[10px] text-gray-400">Low</span>
                 <input
-                  type="number"
-                  className={`input-field w-14 ${fieldErrorClass(ve, 'investments.fatTailDf')}`}
-                  min={3} max={30}
-                  value={inv.fatTailDf}
-                  onChange={e => setField('investments.fatTailDf', parseInt(e.target.value) || 6)}
+                  type="range"
+                  className={`flex-1 h-1.5 accent-primary-600 ${fieldErrorClass(ve, 'investments.fatTailDf')}`}
+                  min={1} max={10} step={0.5}
+                  value={dfToCrashFreq(inv.fatTailDf)}
+                  onChange={e => setField('investments.fatTailDf', crashFreqToDf(parseFloat(e.target.value)))}
                 />
+                <span className="text-[10px] text-gray-400">High</span>
+                <span className="text-[10px] text-gray-500 w-6 text-right">{dfToCrashFreq(inv.fatTailDf).toFixed(1)}</span>
               </div>
               <p className="text-[10px] text-gray-400 mt-0.5">
-                3–5 = very high, 6–9 = high, 10–15 = moderate, 16–30 = low. Lower values simulate more frequent extreme market events.
+                How often extreme market crashes occur in simulations.
               </p>
             </div>
             <FieldError errors={ve} field="investments.fatTailDf" />
