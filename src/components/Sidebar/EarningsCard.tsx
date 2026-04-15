@@ -118,11 +118,12 @@ export function EarningsCard({ validationErrors }: CardProps) {
         <div className="space-y-3">
           {/* Allocation */}
           <div>
-            <label className="input-label">
-              Allocation {allocSum !== 100 && (
-                <span className="text-red-500 ml-1">({allocSum}% — must be 100%)</span>
-              )}
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="input-label mb-0">Allocation</label>
+              <span className={`text-[10px] font-medium ${allocSum === 100 ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+                {allocSum}% of 100%{allocSum !== 100 && (allocSum < 100 ? ` — need ${100 - allocSum}% more` : ` — ${allocSum - 100}% over`)}
+              </span>
+            </div>
             <FieldError errors={ve} field="contributionAllocation" />
             <div className="space-y-1">
               {ALLOCATION_ACCOUNTS.map(acct => (
@@ -130,14 +131,16 @@ export function EarningsCard({ validationErrors }: CardProps) {
                   <span className="text-[11px] w-28 truncate text-gray-600 dark:text-gray-400" title={ACCOUNT_LABELS[acct]}>
                     {ACCOUNT_LABELS[acct]}
                   </span>
-                  <input
-                    type="range"
-                    className="flex-1 h-1 accent-primary-600"
-                    min={0} max={100}
-                    value={scenario.contributionAllocation[acct]}
-                    onChange={e => setField(`contributionAllocation.${acct}`, parseInt(e.target.value) || 0)}
-                  />
-                  <span className="text-[11px] w-8 text-right text-gray-500">{scenario.contributionAllocation[acct]}%</span>
+                  <div className="flex items-center gap-0.5">
+                    <input
+                      type="number"
+                      className={`input-field w-14 text-right text-[11px] py-0.5 px-1.5 ${allocSum !== 100 ? 'border-red-300 dark:border-red-700' : ''}`}
+                      min={0} max={100}
+                      value={scenario.contributionAllocation[acct]}
+                      onChange={e => setField(`contributionAllocation.${acct}`, Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
+                    />
+                    <span className="text-[10px] text-gray-400">%</span>
+                  </div>
                 </div>
               ))}
             </div>

@@ -148,51 +148,98 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
       {sectionBtn('allocations', 'Allocations')}
       {activeSection === 'allocations' && (
         <div className="px-1 pb-2 space-y-3">
-          <div className="flex gap-1">
-            {(['simple', 'advanced'] as const).map(m => (
-              <button
-                key={m}
-                className={`flex-1 text-xs py-1.5 rounded border ${
-                  inv.mode === m
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                    : 'border-gray-300 dark:border-gray-600'
-                }`}
-                onClick={() => setField('investments.mode', m)}
-              >
-                {m === 'simple' ? 'Simple' : 'Advanced'}
-              </button>
-            ))}
+          {/* Risk profile selector — always visible */}
+          <div className="space-y-2">
+            <label className="input-label">Risk Profile</label>
+            <div className="flex gap-1">
+              {(['conservative', 'balanced', 'aggressive'] as RiskProfile[]).map(p => (
+                <button
+                  key={p}
+                  className={`flex-1 text-xs py-1.5 rounded border ${
+                    inv.riskProfile === p
+                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
+                      : 'border-gray-300 dark:border-gray-600'
+                  }`}
+                  onClick={() => handleRiskProfile(p)}
+                >
+                  {RISK_PROFILE_LABELS[p]}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-gray-400">
+              {RISK_PROFILES[inv.riskProfile].stocks}% Stocks / {RISK_PROFILES[inv.riskProfile].bonds}% Bonds / {RISK_PROFILES[inv.riskProfile].cash}% Cash / {RISK_PROFILES[inv.riskProfile].crypto}% Crypto
+            </p>
           </div>
 
-          {inv.mode === 'simple' ? (
-            <div className="space-y-2">
-              <label className="input-label">Risk Profile</label>
-              <div className="flex gap-1">
-                {(['conservative', 'balanced', 'aggressive'] as RiskProfile[]).map(p => (
-                  <button
-                    key={p}
-                    className={`flex-1 text-xs py-1.5 rounded border ${
-                      inv.riskProfile === p
-                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-                        : 'border-gray-300 dark:border-gray-600'
-                    }`}
-                    onClick={() => handleRiskProfile(p)}
-                  >
-                    {RISK_PROFILE_LABELS[p]}
-                  </button>
-                ))}
+          {/* Default allocation inputs — 4 values */}
+          {inv.mode === 'advanced' && (() => {
+            const defaultAlloc = inv.preRetirement[ACCOUNT_TYPES[0]];
+            const defaultSum = ASSET_CLASSES.reduce((s, ac) => s + defaultAlloc[ac], 0);
+            return (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="input-label mb-0">Default Allocation</label>
+                  <span className={`text-[10px] font-medium ${defaultSum === 100 ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+                    {defaultSum}%{defaultSum !== 100 && (defaultSum < 100 ? ` — need ${100 - defaultSum}% more` : ` — ${defaultSum - 100}% over`)}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {ASSET_CLASSES.map(ac => (
+                    <div key={ac} className="text-center">
+                      <label className="text-[10px] text-gray-500 block mb-0.5">{ASSET_CLASS_LABELS[ac]}</label>
+                      <div className="flex items-center justify-center gap-0.5">
+                        <input
+                          type="number"
+                          className={`input-field w-12 text-center text-[11px] py-0.5 px-1 ${defaultSum !== 100 ? 'border-red-300 dark:border-red-700' : ''}`}
+                          min={0} max={100}
+                          value={defaultAlloc[ac]}
+                          onChange={e => {
+                            const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                            // Apply to all accounts for the current phase
+                            ACCOUNT_TYPES.forEach(acct => {
+                              setField(`investments.preRetirement.${acct}.${ac}`, val);
+                            });
+                            // Also apply to post-retirement unless customizing per-phase
+                            if (phase === 'pre') {
+                              ACCOUNT_TYPES.forEach(acct => {
+                                setField(`investments.postRetirement.${acct}.${ac}`, val);
+                              });
+                            }
+                          }}
+                        />
+                        <span className="text-[10px] text-gray-400">%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <p className="text-[10px] text-gray-400">
-                {RISK_PROFILES[inv.riskProfile].stocks}% Stocks / {RISK_PROFILES[inv.riskProfile].bonds}% Bonds / {RISK_PROFILES[inv.riskProfile].cash}% Cash / {RISK_PROFILES[inv.riskProfile].crypto}% Crypto
-              </p>
-            </div>
-          ) : (
+            );
+          })()}
+
+          {/* Customize per account toggle */}
+          <div className="pt-1 border-t border-gray-100 dark:border-gray-700">
+            <button
+              className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              onClick={() => setField('investments.mode', inv.mode === 'simple' ? 'advanced' : 'simple')}
+            >
+              <svg
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${inv.mode === 'advanced' ? 'rotate-180' : ''}`}
+                fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+              <span>Customize per account</span>
+            </button>
+          </div>
+
+          {inv.mode === 'advanced' && (
             <div className="space-y-2">
+              {/* Pre/Post tabs */}
               <div className="flex gap-1">
                 {(['pre', 'post'] as const).map(p => (
                   <button
                     key={p}
-                    className={`flex-1 text-xs py-1 rounded ${phase === p ? 'bg-gray-200 dark:bg-gray-700 font-medium' : 'text-gray-500'}`}
+                    className={`flex-1 text-[11px] py-1 rounded ${phase === p ? 'bg-gray-200 dark:bg-gray-700 font-medium' : 'text-gray-500'}`}
                     onClick={() => setPhase(p)}
                   >
                     {p === 'pre' ? 'Pre-Retirement' : 'Post-Retirement'}
