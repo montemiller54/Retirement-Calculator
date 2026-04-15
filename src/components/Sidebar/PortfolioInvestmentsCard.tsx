@@ -202,29 +202,30 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
           className="w-full flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 pt-2 border-t border-gray-100 dark:border-gray-700"
           onClick={() => setShowReturns(!showReturns)}
         >
-          <span>Return assumptions</span>
+          <span>Return Assumptions</span>
           <span>{showReturns ? '▾' : '▸'}</span>
         </button>
 
         {showReturns && (
           <div className="space-y-1">
+            <p className="text-[10px] text-gray-400">Expected nominal returns and variability by asset class.</p>
             {ASSET_CLASSES.map(ac => {
               const ret = inv.assetClassReturns[ac] ?? DEFAULT_ASSET_RETURNS[ac];
               return (
                 <div key={ac} className="flex items-center gap-2">
-                  <span className="text-[11px] w-16 truncate">{ASSET_CLASS_LABELS[ac]}</span>
-                  <div>
-                    <label className="input-label">Mean %</label>
+                  <span className="text-[11px] w-20 truncate">{ASSET_CLASS_LABELS[ac]}</span>
+                  <div className="flex-1">
+                    <label className="input-label">Avg Return %</label>
                     <PercentInput
-                      className="input-field w-14 text-right"
+                      className="input-field w-full text-right"
                       value={ret.mean}
                       onChange={v => setField(`investments.assetClassReturns.${ac}.mean`, v)}
                     />
                   </div>
-                  <div>
-                    <label className="input-label">Vol %</label>
+                  <div className="flex-1">
+                    <label className="input-label">Variability %</label>
                     <PercentInput
-                      className={`input-field w-14 text-right ${fieldErrorClass(ve, `investments.assetClassReturns.${ac}.stdDev`)}`}
+                      className={`input-field w-full text-right ${fieldErrorClass(ve, `investments.assetClassReturns.${ac}.stdDev`)}`}
                       value={ret.stdDev}
                       onChange={v => setField(`investments.assetClassReturns.${ac}.stdDev`, v)}
                     />
@@ -232,18 +233,20 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                 </div>
               );
             })}
-            <div className="flex items-center gap-2 mt-1">
-              <label className="input-label mb-0">Market Volatility:</label>
-              <input
-                type="number"
-                className={`input-field w-14 ${fieldErrorClass(ve, 'investments.fatTailDf')}`}
-                min={3} max={30}
-                value={inv.fatTailDf}
-                onChange={e => setField('investments.fatTailDf', parseInt(e.target.value) || 6)}
-              />
-              <span className="text-[10px] text-gray-400">
-                {inv.fatTailDf <= 5 ? 'Extreme' : inv.fatTailDf <= 9 ? 'High' : inv.fatTailDf <= 15 ? 'Moderate' : 'Low'}
-              </span>
+            <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex items-center gap-2">
+                <label className="input-label mb-0">Market Crash Frequency:</label>
+                <input
+                  type="number"
+                  className={`input-field w-14 ${fieldErrorClass(ve, 'investments.fatTailDf')}`}
+                  min={3} max={30}
+                  value={inv.fatTailDf}
+                  onChange={e => setField('investments.fatTailDf', parseInt(e.target.value) || 6)}
+                />
+              </div>
+              <p className="text-[10px] text-gray-400 mt-0.5">
+                3–5 = very high, 6–9 = high, 10–15 = moderate, 16–30 = low. Lower values simulate more frequent extreme market events.
+              </p>
             </div>
             <FieldError errors={ve} field="investments.fatTailDf" />
           </div>

@@ -80,19 +80,21 @@ export function EarningsCard({ validationErrors }: CardProps) {
         )}
       </div>
 
-      <PctSlider
-        label="Salary Growth"
-        value={scenario.salaryGrowthRate * 100}
-        onChange={v => setField('salaryGrowthRate', v / 100)}
-        min={0} max={10} step={0.5}
-      />
+      <div className="grid grid-cols-2 gap-3">
+        <PctSlider
+          label="Salary Growth"
+          value={scenario.salaryGrowthRate * 100}
+          onChange={v => setField('salaryGrowthRate', v / 100)}
+          min={0} max={10} step={0.5}
+        />
 
-      <PctSlider
-        label="Savings Rate"
-        value={scenario.totalSavingsRate * 100}
-        onChange={v => setField('totalSavingsRate', v / 100)}
-        min={0} max={60} step={1}
-      />
+        <PctSlider
+          label="Savings Rate"
+          value={scenario.totalSavingsRate * 100}
+          onChange={v => setField('totalSavingsRate', v / 100)}
+          min={0} max={60} step={1}
+        />
+      </div>
 
       {/* Contribution allocation — collapsible */}
       <button
@@ -158,25 +160,6 @@ export function EarningsCard({ validationErrors }: CardProps) {
               onChange={v => setField('employerRothPct', Math.round(v))}
               min={0} max={100} step={10}
             />
-          </div>
-
-          {/* Limits */}
-          <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-            <label className="input-label font-medium">Contribution Limits</label>
-            <div className="grid grid-cols-2 gap-2">
-              <DollarInput label="401(k) Limit" value={scenario.limit401k} onChange={v => setField('limit401k', v)} />
-              <DollarInput label="IRA Limit" value={scenario.limitIRA} onChange={v => setField('limitIRA', v)} />
-            </div>
-            <div className="flex items-center gap-4 text-xs">
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" checked={scenario.enable401kCatchUp} onChange={e => setField('enable401kCatchUp', e.target.checked)} className="accent-primary-600" />
-                401(k) catch-up (50+)
-              </label>
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" checked={scenario.enableIRACatchUp} onChange={e => setField('enableIRACatchUp', e.target.checked)} className="accent-primary-600" />
-                IRA catch-up
-              </label>
-            </div>
           </div>
         </div>
       )}
