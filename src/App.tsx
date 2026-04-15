@@ -69,8 +69,8 @@ function AppInner() {
 
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <aside className="w-96 xl:w-[460px] shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
+        {/* Sidebar: title strip + card content */}
+        <aside className="w-[520px] xl:w-[580px] shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
           <ScenarioManager />
           <Sidebar validationErrors={validationErrors} />
         </aside>

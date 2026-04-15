@@ -22,32 +22,32 @@ interface SidebarProps {
 }
 
 export function Sidebar({ validationErrors }: SidebarProps) {
-  const [openSections, setOpenSections] = useState<Set<string>>(
-    new Set(['profile', 'earnings', 'portfolio']),
-  );
+  const [activeSection, setActiveSection] = useState<string>('profile');
 
-  const toggle = (id: string) => {
-    setOpenSections(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const activeItem = SECTIONS.find(s => s.id === activeSection)!;
+  const ActiveComponent = activeItem.component;
+  const activeErrors = validationErrors.filter(e => e.card === activeSection);
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="p-3 space-y-1">
-        {SECTIONS.map(({ id, label, component: Component }) => {
-          const cardErrors = validationErrors.filter(e => e.card === id);
-          const hasErrors = cardErrors.length > 0;
-          return (
-            <div key={id} className={`border rounded-lg overflow-hidden ${hasErrors ? 'border-red-400 dark:border-red-500' : 'border-gray-200 dark:border-gray-700'}`}>
+    <div className="flex h-full">
+      {/* Card title strip */}
+      <nav className="w-40 shrink-0 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 overflow-y-auto">
+        <div className="py-2">
+          {SECTIONS.map(({ id, label }) => {
+            const cardErrors = validationErrors.filter(e => e.card === id);
+            const hasErrors = cardErrors.length > 0;
+            const isActive = activeSection === id;
+            return (
               <button
-                className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-800/50 text-xs font-medium hover:bg-gray-100 dark:hover:bg-gray-800"
-                onClick={() => toggle(id)}
+                key={id}
+                className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                  isActive
+                    ? 'bg-white dark:bg-gray-900 text-primary-700 dark:text-primary-300 font-medium border-r-2 border-primary-500'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+                onClick={() => setActiveSection(id)}
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5">
                   {label}
                   {hasErrors && (
                     <span className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full">
@@ -55,16 +55,17 @@ export function Sidebar({ validationErrors }: SidebarProps) {
                     </span>
                   )}
                 </span>
-                <span className="text-gray-400">{openSections.has(id) ? '▾' : '▸'}</span>
               </button>
-              {openSections.has(id) && (
-                <div className="p-3 border-t border-gray-200 dark:border-gray-700">
-                  <Component validationErrors={cardErrors} />
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* Active card content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-3">
+          <ActiveComponent validationErrors={activeErrors} />
+        </div>
       </div>
     </div>
   );
