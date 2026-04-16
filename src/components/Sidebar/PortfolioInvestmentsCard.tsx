@@ -150,12 +150,53 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
       {/* ── Allocations ── */}
       {sectionBtn('allocations', 'Allocations')}
       {activeSection === 'allocations' && (() => {
-        const defaultAlloc = inv.preRetirement[ACCOUNT_TYPES[0]];
-        const defaultSum = ASSET_CLASSES.reduce((s, ac) => s + defaultAlloc[ac], 0);
-        // Three states: simple (read-only defaults), customizeDefaults (editable 4 boxes), advanced (per-account matrix)
+        const preAlloc = inv.preRetirement[ACCOUNT_TYPES[0]];
+        const postAlloc = inv.postRetirement[ACCOUNT_TYPES[0]];
+        const preSum = ASSET_CLASSES.reduce((s, ac) => s + preAlloc[ac], 0);
+        const postSum = ASSET_CLASSES.reduce((s, ac) => s + postAlloc[ac], 0);
         const showPerAccount = inv.mode === 'advanced';
         const showDefaultBoxes = !showPerAccount;
         const isEditable = customizeDefaults && !showPerAccount;
+
+        const allocRow = (label: string, alloc: Record<string, number>, sum: number, phaseKey: 'preRetirement' | 'postRetirement') => (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">{label}</span>
+              {isEditable && sum !== 100 && (
+                <span className="text-[10px] font-medium text-red-500">
+                  {sum}% — must equal 100%
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {ASSET_CLASSES.map(ac => (
+                <div key={ac} className="text-center">
+                  {isEditable ? (
+                    <div className="flex items-center justify-center gap-0.5">
+                      <input
+                        type="number"
+                        className={`input-field w-12 text-center text-[11px] py-0.5 px-1 ${sum !== 100 ? 'border-red-300 dark:border-red-700' : ''}`}
+                        min={0} max={100}
+                        value={alloc[ac]}
+                        onChange={e => {
+                          const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+                          ACCOUNT_TYPES.forEach(acct => {
+                            setField(`investments.${phaseKey}.${acct}.${ac}`, val);
+                          });
+                        }}
+                      />
+                      <span className="text-[10px] text-gray-400">%</span>
+                    </div>
+                  ) : (
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {alloc[ac]}%
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
 
         return (
           <div className="px-1 pb-2 space-y-3">
@@ -179,49 +220,19 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
               </div>
             </div>
 
-            {/* Default allocation 4-box display */}
+            {/* Default allocation display — Pre & Post */}
             {showDefaultBoxes && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="input-label mb-0">Allocation</label>
-                  {isEditable && defaultSum !== 100 && (
-                    <span className="text-[10px] font-medium text-red-500">
-                      Total is {defaultSum}% — must equal 100%
-                    </span>
-                  )}
-                  {isEditable && defaultSum === 100 && (
-                    <span className="text-[10px] font-medium text-green-600 dark:text-green-400">100%</span>
-                  )}
-                </div>
-                <div className="grid grid-cols-4 gap-1.5">
+              <div className="space-y-3">
+                {/* Column headers */}
+                <div className="grid grid-cols-4 gap-1.5 pl-0">
                   {ASSET_CLASSES.map(ac => (
                     <div key={ac} className="text-center">
-                      <label className="text-[10px] text-gray-500 block mb-0.5">{ASSET_CLASS_LABELS[ac]}</label>
-                      {isEditable ? (
-                        <div className="flex items-center justify-center gap-0.5">
-                          <input
-                            type="number"
-                            className={`input-field w-12 text-center text-[11px] py-0.5 px-1 ${defaultSum !== 100 ? 'border-red-300 dark:border-red-700' : ''}`}
-                            min={0} max={100}
-                            value={defaultAlloc[ac]}
-                            onChange={e => {
-                              const val = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
-                              ACCOUNT_TYPES.forEach(acct => {
-                                setField(`investments.preRetirement.${acct}.${ac}`, val);
-                                setField(`investments.postRetirement.${acct}.${ac}`, val);
-                              });
-                            }}
-                          />
-                          <span className="text-[10px] text-gray-400">%</span>
-                        </div>
-                      ) : (
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          {defaultAlloc[ac]}%
-                        </span>
-                      )}
+                      <label className="text-[10px] text-gray-500">{ASSET_CLASS_LABELS[ac]}</label>
                     </div>
                   ))}
                 </div>
+                {allocRow('Pre-Retirement', preAlloc, preSum, 'preRetirement')}
+                {allocRow('Post-Retirement', postAlloc, postSum, 'postRetirement')}
                 {!isEditable && (
                   <button
                     className="text-[11px] text-primary-600 dark:text-primary-400 hover:underline"
@@ -241,12 +252,6 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                   if (showPerAccount) {
                     setField('investments.mode', 'simple');
                   } else {
-                    // Sync post-retirement to match pre-retirement before expanding
-                    ACCOUNT_TYPES.forEach(acct => {
-                      ASSET_CLASSES.forEach(ac => {
-                        setField(`investments.postRetirement.${acct}.${ac}`, inv.preRetirement[acct][ac]);
-                      });
-                    });
                     setField('investments.mode', 'advanced');
                     setCustomizeDefaults(false);
                   }
