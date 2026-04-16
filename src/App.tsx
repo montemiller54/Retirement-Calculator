@@ -34,6 +34,7 @@ function AppInner() {
           <span className="text-[10px] text-gray-400 hidden sm:inline" title="All data is stored in your browser's localStorage. Nothing is sent to any server.">
             🔒 100% private — your data never leaves your browser
           </span>
+          <span className="text-[9px] text-red-400 font-mono">BUILD:v4</span>
           <div className="flex gap-1">
             <button
               className={`text-xs px-2 py-1 rounded ${tab === 'results' ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
