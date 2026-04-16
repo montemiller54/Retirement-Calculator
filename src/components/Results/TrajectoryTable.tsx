@@ -13,7 +13,7 @@ export function TrajectoryTable({ data }: TrajectoryTableProps) {
   return (
     <div className="card overflow-x-auto">
       <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-        Median Trajectory Summary
+        Typical Outcome Summary
       </h4>
       <table className="w-full text-xs">
         <thead>

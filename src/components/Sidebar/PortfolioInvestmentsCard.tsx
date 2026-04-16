@@ -129,8 +129,8 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
           </div>
           <div className="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-gray-700">
             <div className="flex-1">
-              <label className="input-label">Taxable Cost Basis</label>
-              <p className="text-[10px] text-gray-400">% of taxable balance that is original cost</p>
+              <label className="input-label">Original Investment %</label>
+              <p className="text-[10px] text-gray-400">How much of your brokerage account is money you put in (vs. growth)</p>
             </div>
             <div className="flex items-center gap-1">
               <input

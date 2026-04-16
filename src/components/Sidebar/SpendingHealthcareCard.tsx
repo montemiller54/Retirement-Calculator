@@ -99,7 +99,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
           min={0} max={8} step={0.1}
         />
         <PctSlider
-          label="Tax Bracket Inflation"
+          label="Tax Threshold Increases"
           value={((scenario.taxBracketInflationRate ?? 0.02) * 100)}
           onChange={v => setField('taxBracketInflationRate', v / 100)}
           min={0} max={5} step={0.1}
@@ -161,7 +161,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
           <div className="space-y-3">
             <div className="space-y-2">
               <div>
-                <label className="input-label">Pre-Medicare Monthly ($)</label>
+                <label className="input-label">Before Age 65 Monthly ($)</label>
                 <div className="relative">
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
                   <CurrencyInput value={hc.preMedicareMonthly} onChange={v => setField('healthcare.preMedicareMonthly', v)} />
@@ -198,12 +198,15 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
               </div>
             </div>
 
-            <PctSlider
-              label="Medical Inflation"
-              value={hc.inflationRate * 100}
-              onChange={v => setField('healthcare.inflationRate', v / 100)}
-              min={0} max={10} step={0.1}
-            />
+            <div>
+              <PctSlider
+                label="Medical Inflation"
+                value={hc.inflationRate * 100}
+                onChange={v => setField('healthcare.inflationRate', v / 100)}
+                min={0} max={10} step={0.1}
+              />
+              <p className="text-[10px] text-gray-400 mt-0.5">Healthcare costs typically rise ~5% per year</p>
+            </div>
           </div>
         )}
       </div>

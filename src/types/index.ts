@@ -35,7 +35,7 @@ export const ACCOUNT_LABELS: Record<AccountType, string> = {
   traditionalIRA: 'Traditional IRA',
   rothIRA: 'Roth IRA',
   taxable: 'Taxable Brokerage',
-  hsa: 'HSA',
+  hsa: 'Health Savings Acct',
   cashAccount: 'Cash Account',
   otherAssets: 'Other Assets',
 };

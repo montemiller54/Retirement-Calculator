@@ -15,7 +15,7 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
   return (
     <div className="card">
       <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-        Portfolio Value Over Time (Percentile Bands)
+        Portfolio Value Over Time (Range of Outcomes)
       </h4>
       <ResponsiveContainer width="100%" height={300}>
         <AreaChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -50,7 +50,7 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
             stroke="none"
             fill="#dbeafe"
             fillOpacity={0.4}
-            name="P90"
+            name="Best 10%"
           />
           <Area
             type="monotone"
@@ -59,7 +59,7 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
             stroke="none"
             fill="#93c5fd"
             fillOpacity={0.4}
-            name="P75"
+            name="Best 25%"
           />
           {/* Median line */}
           <Area
@@ -69,7 +69,7 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
             strokeWidth={2}
             fill="#60a5fa"
             fillOpacity={0.3}
-            name="Median"
+            name="Typical"
           />
           <Area
             type="monotone"
@@ -77,7 +77,7 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
             stroke="none"
             fill="#bfdbfe"
             fillOpacity={0.3}
-            name="P25"
+            name="Worst 25%"
           />
           <Area
             type="monotone"
@@ -86,7 +86,7 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
             strokeWidth={1}
             strokeDasharray="3 3"
             fill="none"
-            name="P10"
+            name="Worst 10%"
           />
         </AreaChart>
       </ResponsiveContainer>

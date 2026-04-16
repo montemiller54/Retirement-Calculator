@@ -93,11 +93,11 @@ export function IncomeCard({ validationErrors }: CardProps) {
           <p className={`text-[10px] italic ${scenario.currentAge >= scenario.retirementAge && scenario.currentSalary === 0 ? 'text-amber-500' : 'text-gray-400'}`}>
             {scenario.currentAge >= scenario.retirementAge && scenario.currentSalary === 0
               ? 'Warning: auto-estimate uses salary ($0). Switch to manual and enter your actual SS benefit.'
-              : `Estimated from $${(scenario.currentSalary * 12).toLocaleString()}/yr salary using SSA bend-point formula`}
+              : `Estimated from $${(scenario.currentSalary * 12).toLocaleString()}/yr salary using Social Security Administration formula`}
           </p>
         )}
         <div className="flex items-center justify-between">
-          <label className="input-label mb-0">COLA</label>
+          <label className="input-label mb-0">Yearly Increase</label>
           <div className="flex items-center gap-1">
             <input
               type="range" className="w-20 h-1.5 accent-primary-600" min={0} max={5} step={0.1}
@@ -164,7 +164,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
           </div>
         </div>
         <div className="flex items-center justify-between">
-          <label className="input-label mb-0">COLA</label>
+          <label className="input-label mb-0">Yearly Increase</label>
           <div className="flex items-center gap-1">
             <input
               type="range" className="w-20 h-1.5 accent-primary-600" min={0} max={5} step={0.1}
@@ -197,7 +197,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <label className="input-label mb-0">COLA</label>
+            <label className="input-label mb-0">Yearly Increase</label>
             <div className="flex items-center gap-1">
               <input
                 type="range" className="w-20 h-1.5 accent-primary-600" min={0} max={5} step={0.1}

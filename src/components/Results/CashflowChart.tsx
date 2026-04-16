@@ -20,7 +20,7 @@ const SERIES = [
   { key: 'traditionalIRA', name: 'Traditional IRA', color: '#06b6d4' },
   { key: 'rothIRA', name: 'Roth IRA', color: '#10b981' },
   { key: 'taxable', name: 'Taxable', color: '#f59e0b' },
-  { key: 'hsa', name: 'HSA', color: '#ec4899' },
+  { key: 'hsa', name: 'Health Savings Acct', color: '#ec4899' },
   { key: 'cashAccount', name: 'Cash Account', color: '#6366f1' },
   { key: 'otherAssets', name: 'Other Assets', color: '#a3a3a3' },
 ] as const;

@@ -21,7 +21,7 @@ export function TaxChart({ data }: TaxChartProps) {
   return (
     <div className="card">
       <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-        Taxes Over Time (Median Path)
+        Taxes Over Time (Typical Outcome)
       </h4>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -31,8 +31,8 @@ export function TaxChart({ data }: TaxChartProps) {
           <Tooltip formatter={(val: number) => formatCompact(val)} contentStyle={{ fontSize: 11 }} />
           <Legend wrapperStyle={{ fontSize: 10 }} />
           <Bar dataKey="federal" stackId="1" fill="#3b82f6" name="Federal" />
-          <Bar dataKey="state" stackId="1" fill="#10b981" name="Iowa State" />
-          <Bar dataKey="fica" stackId="1" fill="#f59e0b" name="FICA" />
+          <Bar dataKey="state" stackId="1" fill="#10b981" name="State" />
+          <Bar dataKey="fica" stackId="1" fill="#f59e0b" name="SS & Medicare Tax" />
         </BarChart>
       </ResponsiveContainer>
     </div>

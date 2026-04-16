@@ -75,8 +75,8 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
           ))}
         </div>
         <p className="text-[10px] text-gray-400">
-          {scenario.withdrawalStrategy === 'taxEfficient' && 'Taxable → Pre-tax (with RMDs) → Roth'}
-          {scenario.withdrawalStrategy === 'rothPreserving' && 'Taxable → Pre-tax first to preserve Roth'}
+          {scenario.withdrawalStrategy === 'taxEfficient' && 'Brokerage first → 401(k)/IRA next → Roth last'}
+          {scenario.withdrawalStrategy === 'rothPreserving' && 'Brokerage first → 401(k)/IRA next to preserve Roth'}
           {scenario.withdrawalStrategy === 'proRata' && 'Withdraw proportionally from all accounts'}
         </p>
       </div>
@@ -86,7 +86,7 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
         <Toggle
           checked={rc.enabled}
           onChange={v => setField('rothConversion.enabled', v)}
-          label="Roth Conversions"
+          label="Tax-Bracket Conversions"
         />
 
         {rc.enabled && (
@@ -102,21 +102,21 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
                   }`}
                   onClick={() => setField('rothConversion.strategy', s)}
                 >
-                  {s === 'fillBracket' ? 'Fill Bracket' : 'Fixed Amount'}
+                  {s === 'fillBracket' ? 'Fill Tax Rate' : 'Fixed Amount'}
                 </button>
               ))}
             </div>
 
             {rc.strategy === 'fillBracket' ? (
               <div>
-                <label className="input-label">Target Bracket</label>
+                <label className="input-label">Fill up to tax rate</label>
                 <select
                   className="input-field"
                   value={rc.targetBracketRate}
                   onChange={e => setField('rothConversion.targetBracketRate', parseFloat(e.target.value))}
                 >
                   {BRACKET_OPTIONS.map(b => (
-                    <option key={b.rate} value={b.rate}>Fill to top of {b.label} bracket</option>
+                    <option key={b.rate} value={b.rate}>Fill up to the {b.label} tax rate</option>
                   ))}
                 </select>
               </div>
@@ -141,7 +141,7 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
               </div>
             </div>
             <FieldError errors={ve} field="rothConversion.startAge" />
-            <p className="text-[10px] text-gray-400">Typically retirement through age 72 (before RMDs at 73).</p>
+            <p className="text-[10px] text-gray-400">Typically retirement through age 72 (before required withdrawals begin at 73).</p>
           </div>
         )}
       </div>
@@ -151,7 +151,7 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
         <Toggle
           checked={g.enabled}
           onChange={v => setField('guardrails.enabled', v)}
-          label="Spending Guardrails"
+          label="Spending Safety Rules"
         />
 
         {g.enabled && (
@@ -194,12 +194,12 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
         <Toggle
           checked={cb.enabled}
           onChange={v => setField('cashBuffer.enabled', v)}
-          label="Cash Buffer"
+          label="Emergency Cash Reserve"
         />
 
         {cb.enabled && (
           <div className="space-y-2">
-            <p className="text-[10px] text-gray-400">Keep cash reserve to avoid selling in down markets.</p>
+            <p className="text-[10px] text-gray-400">Keep a cash reserve so you don't have to sell investments when the market is down.</p>
 
             <div className="flex items-center justify-between text-xs">
               <span>Years of expenses</span>

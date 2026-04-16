@@ -28,7 +28,7 @@ const ACCOUNT_NAMES: Record<string, string> = {
   traditionalIRA: 'Traditional IRA',
   rothIRA: 'Roth IRA',
   taxable: 'Taxable',
-  hsa: 'HSA',
+  hsa: 'Health Savings Acct',
   cashAccount: 'Cash Account',
   otherAssets: 'Other Assets',
 };

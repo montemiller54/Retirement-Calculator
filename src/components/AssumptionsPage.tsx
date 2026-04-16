@@ -19,7 +19,7 @@ export function AssumptionsPage() {
       <section className="space-y-2">
         <h3 className="font-semibold text-sm">Investment Returns</h3>
         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4">
-          <li>Stocks and crypto use a Student-t distribution with configurable degrees of freedom (default: 6) for realistic fat tails. Bonds and cash use a Gaussian (normal) distribution.</li>
+          <li>Stocks and crypto use a statistical model that accounts for rare market crashes being more likely than a simple bell curve suggests. Bonds and cash use a standard bell curve.</li>
           <li>At df=6, effective volatility = input volatility × √(6/4) ≈ 1.22×. Default input values are calibrated so effective vol matches historical observations (~19.5% for stocks, ~61% for crypto).</li>
           <li>Default returns: Stocks 10%/16% vol, Bonds 4%/6% vol, Cash 2.5%/1% vol, Crypto 15%/50% vol (all nominal).</li>
           <li>Cross-asset correlations use Cholesky decomposition of a fixed correlation matrix (e.g., stocks-bonds: −0.10, stocks-crypto: 0.30).</li>
@@ -74,13 +74,13 @@ export function AssumptionsPage() {
       <section className="space-y-2">
         <h3 className="font-semibold text-sm">Social Security</h3>
         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4">
-          <li>Auto-estimate mode: calculates PIA from current salary using 2025 bend points ($1,174/$7,078) with 90%/32%/15% replacement rates.</li>
+          <li>Auto-estimate mode: calculates your benefit from current salary using the Social Security Administration formula with 2025 thresholds.</li>
           <li>Full Retirement Age by birth year (66 for ≤1954, graduating to 67 for 1960+).</li>
           <li>Early claiming reduction: 5/9% per month for first 36 months before FRA, 5/12% after.</li>
           <li>Delayed retirement credits: 8% per year (2/3% per month) up to age 70.</li>
           <li>Manual mode: user enters their own monthly benefit amount.</li>
           <li>Spousal benefit: 50% of primary PIA when spouse has no earnings.</li>
-          <li>Configurable annual COLA (default 2%).</li>
+          <li>Configurable annual yearly increase (default 2%).</li>
           <li>Limitations: assumes current salary approximates career-average AIME (35+ years of similar earnings), no survivor benefits, no WEP/GPO.</li>
         </ul>
       </section>
