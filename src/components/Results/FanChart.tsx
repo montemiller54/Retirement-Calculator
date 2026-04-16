@@ -23,7 +23,7 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
           <XAxis
             dataKey="age"
             tick={{ fontSize: 10 }}
-            interval={0}
+            minTickGap={20}
             label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fontSize: 11 }}
           />
           <YAxis

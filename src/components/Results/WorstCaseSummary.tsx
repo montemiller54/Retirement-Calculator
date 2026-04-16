@@ -49,6 +49,7 @@ export function WorstCaseSummary({ depletionAges, successRate }: WorstCaseSummar
               dataKey="age"
               tick={{ fill: '#888', fontSize: 11 }}
               tickLine={false}
+              minTickGap={20}
               axisLine={{ stroke: '#444' }}
               label={{ value: 'Age', position: 'insideBottom', offset: -2, fill: '#666', fontSize: 10 }}
             />

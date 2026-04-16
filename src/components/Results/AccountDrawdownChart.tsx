@@ -62,6 +62,7 @@ export function AccountDrawdownChart({ data, retirementAge }: AccountDrawdownCha
           <XAxis
             dataKey="age"
             tick={{ fontSize: 10 }}
+            minTickGap={20}
             label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fontSize: 11 }}
           />
           <YAxis
