@@ -335,8 +335,8 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
             {/* Column headers */}
             <div className="flex items-center gap-1">
               <span className="text-[11px] w-14"></span>
-              <span className="text-[10px] text-gray-400 w-20 text-right">Avg Return %</span>
-              <span className="text-[10px] text-gray-400 flex-1 text-center ml-2">Variability</span>
+              <span className="text-[10px] text-gray-400 w-20 text-center">Avg Return %</span>
+              <span className="text-[10px] text-gray-400 flex-1 text-center ml-4">Variability</span>
             </div>
             {ASSET_CLASSES.map(ac => {
               const ret = inv.assetClassReturns[ac] ?? DEFAULT_ASSET_RETURNS[ac];
@@ -346,11 +346,11 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                 <div key={ac} className="flex items-center gap-1">
                   <span className="text-[11px] w-14 truncate">{ASSET_CLASS_LABELS[ac]}</span>
                   <PercentInput
-                    className="input-field w-20 text-right text-[11px]"
+                    className="input-field w-20 text-center text-[11px]"
                     value={ret.mean}
                     onChange={v => setField(`investments.assetClassReturns.${ac}.mean`, v)}
                   />
-                  <div className="flex-1 flex items-center gap-1 ml-2">
+                  <div className="flex-1 flex items-center gap-1 ml-4">
                     <input
                       type="range"
                       className="w-[50%] h-1.5 accent-primary-600"

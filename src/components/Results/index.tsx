@@ -58,7 +58,7 @@ export function ResultsPanel({ result, retirementAge, isRunning, progress, error
       <div className="flex items-center justify-center h-full">
         <div className="card text-center">
           <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-            Running 1,000 simulations...
+            Running simulations...
           </div>
           <div className="w-48 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto">
             <div
@@ -87,7 +87,7 @@ export function ResultsPanel({ result, retirementAge, isRunning, progress, error
   return (
     <div className="h-full overflow-y-auto p-4 space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <SuccessGauge rate={result.successRate} />
+        <SuccessGauge rate={result.successRate} numSimulations={result.endingBalances.length} />
         <WorstCaseSummary depletionAges={result.depletionAges} successRate={result.successRate} />
       </div>
 
