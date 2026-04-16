@@ -241,6 +241,12 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                   if (showPerAccount) {
                     setField('investments.mode', 'simple');
                   } else {
+                    // Sync post-retirement to match pre-retirement before expanding
+                    ACCOUNT_TYPES.forEach(acct => {
+                      ASSET_CLASSES.forEach(ac => {
+                        setField(`investments.postRetirement.${acct}.${ac}`, inv.preRetirement[acct][ac]);
+                      });
+                    });
                     setField('investments.mode', 'advanced');
                     setCustomizeDefaults(false);
                   }
@@ -306,7 +312,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                     </tbody>
                   </table>
                 </div>
-                {ve.filter(e => e.field.startsWith('investments.preRetirement') || e.field.startsWith('investments.postRetirement')).map((err, i) => (
+                {ve.filter(e => e.field.startsWith(phase === 'pre' ? 'investments.preRetirement' : 'investments.postRetirement')).map((err, i) => (
                   <p key={i} className="text-[10px] text-red-500 mt-1">{err.message}</p>
                 ))}
               </div>
