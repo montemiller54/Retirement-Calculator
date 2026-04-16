@@ -46,8 +46,8 @@ export function ProfileCard({ validationErrors }: CardProps) {
               type="number"
               className={`input-field text-center ${fieldErrorClass(ve, 'retirementAge')}`}
               value={scenario.retirementAge}
-              min={scenario.currentAge}
-              max={80}
+              min={18}
+              max={99}
               onChange={e => setField('retirementAge', parseInt(e.target.value) || 65)}
             />
             <FieldError errors={ve} field="retirementAge" />
@@ -61,7 +61,7 @@ export function ProfileCard({ validationErrors }: CardProps) {
               type="number"
               className={`input-field text-center ${fieldErrorClass(ve, 'endAge')}`}
               value={scenario.endAge}
-              min={scenario.retirementAge}
+              min={scenario.currentAge + 1}
               max={120}
               onChange={e => setField('endAge', parseInt(e.target.value) || 0)}
             />

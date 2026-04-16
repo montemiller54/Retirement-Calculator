@@ -14,11 +14,11 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
   if (!s.currentAge || s.currentAge < 18 || s.currentAge > 99) {
     errors.push({ card: 'profile', field: 'currentAge', message: 'Current age must be between 18 and 99.' });
   }
-  if (!s.retirementAge || s.retirementAge < s.currentAge) {
-    errors.push({ card: 'profile', field: 'retirementAge', message: 'Retirement age must be at least current age.' });
+  if (!s.retirementAge || s.retirementAge < 18 || s.retirementAge > 99) {
+    errors.push({ card: 'profile', field: 'retirementAge', message: 'Retirement age must be between 18 and 99.' });
   }
-  if (!s.endAge || s.endAge <= s.retirementAge) {
-    errors.push({ card: 'profile', field: 'endAge', message: 'Plan-through age must be greater than retirement age.' });
+  if (!s.endAge || s.endAge <= s.currentAge) {
+    errors.push({ card: 'profile', field: 'endAge', message: 'Plan-through age must be greater than current age.' });
   }
   if (s.endAge > 120) {
     errors.push({ card: 'profile', field: 'endAge', message: 'Plan-through age cannot exceed 120.' });
@@ -29,8 +29,8 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
     if (!s.spouse.currentAge || s.spouse.currentAge < 18 || s.spouse.currentAge > 99) {
       errors.push({ card: 'profile', field: 'spouse.currentAge', message: "Spouse's current age must be between 18 and 99." });
     }
-    if (!s.spouse.retirementAge || s.spouse.retirementAge < s.spouse.currentAge) {
-      errors.push({ card: 'profile', field: 'spouse.retirementAge', message: "Spouse's retirement age must be at least their current age." });
+    if (!s.spouse.retirementAge || s.spouse.retirementAge < 18) {
+      errors.push({ card: 'profile', field: 'spouse.retirementAge', message: "Spouse's retirement age must be at least 18." });
     }
   }
 
