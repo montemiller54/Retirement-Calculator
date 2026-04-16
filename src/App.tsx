@@ -21,7 +21,7 @@ function AppInner() {
   const handleRun = () => {
     if (validationErrors.length > 0) return;
     run(scenario, {
-      numSimulations: 1000,
+      numSimulations: 5000,
     });
   };
 

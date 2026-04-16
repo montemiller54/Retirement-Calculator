@@ -72,7 +72,7 @@ export function useSimulation(): UseSimulationReturn {
       type: 'run',
       scenario,
       params: {
-        numSimulations: params?.numSimulations ?? 1000,
+        numSimulations: params?.numSimulations ?? 5000,
         seed: params?.seed,
       },
     });
