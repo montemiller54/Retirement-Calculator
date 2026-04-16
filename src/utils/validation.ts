@@ -52,7 +52,7 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
       const phaseLabel = phase === 'preRetirement' ? 'Pre-retirement' : 'Post-retirement';
       const allocations = s.investments[phase];
       for (const acct of ACCOUNT_TYPES) {
-        if (s.balances[acct] <= 0 && allocSum > 0) continue; // skip unused accounts
+        if (s.balances[acct] <= 0) continue; // skip unused accounts
         const alloc = allocations[acct];
         const rowSum = ASSET_CLASSES.reduce((sum, ac) => sum + (alloc[ac] || 0), 0);
         if (Math.abs(rowSum - 100) > 0.01 && rowSum > 0) {
