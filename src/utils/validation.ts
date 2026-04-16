@@ -7,11 +7,8 @@ export interface ValidationError {
   message: string;
 }
 
-export const VALIDATION_VERSION = 'v4-2026-04-16';
-
 export function validateScenario(s: ScenarioInput): ValidationError[] {
   const errors: ValidationError[] = [];
-  console.log(`[validation ${VALIDATION_VERSION}] currentAge=${s.currentAge} retirementAge=${s.retirementAge} endAge=${s.endAge}`);
 
   // ── Profile ──
   if (!s.currentAge || s.currentAge < 18 || s.currentAge > 99) {
