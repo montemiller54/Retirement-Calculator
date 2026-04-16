@@ -49,9 +49,10 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
   const { scenario, setField } = useScenario();
   const ve = validationErrors;
   const inv = scenario.investments;
-  const [phase, setPhase] = useState<'pre' | 'post'>('pre');
+  const [phase, setPhase] = useState<'pre' | 'post'>(scenario.currentAge >= scenario.retirementAge ? 'post' : 'pre');
   const [activeSection, setActiveSection] = useState<'balances' | 'allocations' | 'returns'>('balances');
   const [customizeDefaults, setCustomizeDefaults] = useState(false);
+  const isRetired = scenario.currentAge >= scenario.retirementAge;
 
   const totalBalance = ACCOUNT_TYPES.reduce((s, a) => s + scenario.balances[a], 0);
 
@@ -231,8 +232,8 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                     </div>
                   ))}
                 </div>
-                {allocRow('Pre-Retirement', preAlloc, preSum, 'preRetirement')}
-                {allocRow('Post-Retirement', postAlloc, postSum, 'postRetirement')}
+                {!isRetired && allocRow('Pre-Retirement', preAlloc, preSum, 'preRetirement')}
+                {allocRow(isRetired ? 'Allocation' : 'Post-Retirement', postAlloc, postSum, 'postRetirement')}
                 {!isEditable && (
                   <button
                     className="text-[11px] text-primary-600 dark:text-primary-400 hover:underline"
@@ -269,17 +270,19 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
 
             {showPerAccount && (
               <div className="space-y-2">
-                <div className="flex gap-1">
-                  {(['pre', 'post'] as const).map(p => (
-                    <button
-                      key={p}
-                      className={`flex-1 text-[11px] py-1 rounded ${phase === p ? 'bg-gray-200 dark:bg-gray-700 font-medium' : 'text-gray-500'}`}
-                      onClick={() => setPhase(p)}
-                    >
-                      {p === 'pre' ? 'Pre-Retirement' : 'Post-Retirement'}
-                    </button>
-                  ))}
-                </div>
+                {!isRetired && (
+                  <div className="flex gap-1">
+                    {(['pre', 'post'] as const).map(p => (
+                      <button
+                        key={p}
+                        className={`flex-1 text-[11px] py-1 rounded ${phase === p ? 'bg-gray-200 dark:bg-gray-700 font-medium' : 'text-gray-500'}`}
+                        onClick={() => setPhase(p)}
+                      >
+                        {p === 'pre' ? 'Pre-Retirement' : 'Post-Retirement'}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-[10px]">

@@ -7,14 +7,15 @@ import { IncomeCard } from './IncomeCard';
 import { WithdrawalStrategyCard } from './WithdrawalStrategyCard';
 import type { ValidationError } from '../../utils/validation';
 import { hasFieldError } from '../../utils/validation';
+import { useScenario } from '../../context/ScenarioContext';
 
-const SECTIONS = [
-  { id: 'profile', label: 'You & Spouse', component: ProfileCard },
-  { id: 'earnings', label: 'Earnings & Savings', component: EarningsCard },
-  { id: 'portfolio', label: 'Portfolio & Investments', component: PortfolioInvestmentsCard },
-  { id: 'spending', label: 'Spending & Healthcare', component: SpendingHealthcareCard },
-  { id: 'income', label: 'Retirement Income', component: IncomeCard },
-  { id: 'withdrawal', label: 'Withdrawal Strategy', component: WithdrawalStrategyCard },
+const ALL_SECTIONS = [
+  { id: 'profile', label: 'You & Spouse', component: ProfileCard, showWhenRetired: true },
+  { id: 'earnings', label: 'Earnings & Savings', component: EarningsCard, showWhenRetired: false },
+  { id: 'portfolio', label: 'Portfolio & Investments', component: PortfolioInvestmentsCard, showWhenRetired: true },
+  { id: 'spending', label: 'Spending & Healthcare', component: SpendingHealthcareCard, showWhenRetired: true },
+  { id: 'income', label: 'Retirement Income', component: IncomeCard, showWhenRetired: true },
+  { id: 'withdrawal', label: 'Withdrawal Strategy', component: WithdrawalStrategyCard, showWhenRetired: true },
 ] as const;
 
 interface SidebarProps {
@@ -22,18 +23,23 @@ interface SidebarProps {
 }
 
 export function Sidebar({ validationErrors }: SidebarProps) {
+  const { scenario } = useScenario();
   const [activeSection, setActiveSection] = useState<string>('profile');
+  const isRetired = scenario.currentAge >= scenario.retirementAge;
 
-  const activeItem = SECTIONS.find(s => s.id === activeSection)!;
+  const sections = ALL_SECTIONS.filter(s => !isRetired || s.showWhenRetired);
+
+  // If active section was hidden, reset to first available
+  const activeItem = sections.find(s => s.id === activeSection) ?? sections[0];
   const ActiveComponent = activeItem.component;
-  const activeErrors = validationErrors.filter(e => e.card === activeSection);
+  const activeErrors = validationErrors.filter(e => e.card === activeItem.id);
 
   return (
     <div className="flex h-full">
       {/* Card title strip */}
       <nav className="w-40 shrink-0 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 overflow-y-auto">
         <div className="py-2">
-          {SECTIONS.map(({ id, label }) => {
+          {sections.map(({ id, label }) => {
             const cardErrors = validationErrors.filter(e => e.card === id);
             const hasErrors = cardErrors.length > 0;
             const isActive = activeSection === id;

@@ -46,11 +46,14 @@ export function ProfileCard({ validationErrors }: CardProps) {
               type="number"
               className={`input-field text-center ${fieldErrorClass(ve, 'retirementAge')}`}
               value={scenario.retirementAge}
-              min={Math.max(scenario.currentAge + 1, 50)}
+              min={scenario.currentAge}
               max={80}
               onChange={e => setField('retirementAge', parseInt(e.target.value) || 65)}
             />
             <FieldError errors={ve} field="retirementAge" />
+            {scenario.currentAge >= scenario.retirementAge && (
+              <p className="text-[10px] text-green-600 dark:text-green-400 font-medium mt-0.5">Already retired</p>
+            )}
           </div>
           <div>
             <label className="input-label">Plan To</label>

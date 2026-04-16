@@ -85,6 +85,9 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
               ${(scenario.baseAnnualSpending * 12).toLocaleString()}/yr
             </div>
           )}
+          {hc.enabled && (
+            <p className="text-[10px] text-amber-500 mt-1">Exclude healthcare costs — they are modeled separately below.</p>
+          )}
         </div>
       </div>
 

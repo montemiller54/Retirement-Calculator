@@ -90,8 +90,10 @@ export function IncomeCard({ validationErrors }: CardProps) {
           </div>
         </div>
         {isAuto && (
-          <p className="text-[10px] text-gray-400 italic">
-            Estimated from ${(scenario.currentSalary * 12).toLocaleString()}/yr salary using SSA bend-point formula
+          <p className={`text-[10px] italic ${scenario.currentAge >= scenario.retirementAge && scenario.currentSalary === 0 ? 'text-amber-500' : 'text-gray-400'}`}>
+            {scenario.currentAge >= scenario.retirementAge && scenario.currentSalary === 0
+              ? 'Warning: auto-estimate uses salary ($0). Switch to manual and enter your actual SS benefit.'
+              : `Estimated from $${(scenario.currentSalary * 12).toLocaleString()}/yr salary using SSA bend-point formula`}
           </p>
         )}
         <div className="flex items-center justify-between">

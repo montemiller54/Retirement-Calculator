@@ -14,8 +14,8 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
   if (!s.currentAge || s.currentAge < 18 || s.currentAge > 99) {
     errors.push({ card: 'profile', field: 'currentAge', message: 'Current age must be between 18 and 99.' });
   }
-  if (!s.retirementAge || s.retirementAge <= s.currentAge) {
-    errors.push({ card: 'profile', field: 'retirementAge', message: 'Retirement age must be greater than current age.' });
+  if (!s.retirementAge || s.retirementAge < s.currentAge) {
+    errors.push({ card: 'profile', field: 'retirementAge', message: 'Retirement age must be at least current age.' });
   }
   if (!s.endAge || s.endAge <= s.retirementAge) {
     errors.push({ card: 'profile', field: 'endAge', message: 'Plan-through age must be greater than retirement age.' });
@@ -29,15 +29,18 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
     if (!s.spouse.currentAge || s.spouse.currentAge < 18 || s.spouse.currentAge > 99) {
       errors.push({ card: 'profile', field: 'spouse.currentAge', message: "Spouse's current age must be between 18 and 99." });
     }
-    if (!s.spouse.retirementAge || s.spouse.retirementAge <= s.spouse.currentAge) {
-      errors.push({ card: 'profile', field: 'spouse.retirementAge', message: "Spouse's retirement age must be greater than their current age." });
+    if (!s.spouse.retirementAge || s.spouse.retirementAge < s.spouse.currentAge) {
+      errors.push({ card: 'profile', field: 'spouse.retirementAge', message: "Spouse's retirement age must be at least their current age." });
     }
   }
 
-  // ── Earnings ──
-  const allocSum = ACCOUNT_TYPES.reduce((sum, a) => sum + (s.contributionAllocation[a] || 0), 0);
-  if (Math.abs(allocSum - 100) > 0.01) {
-    errors.push({ card: 'earnings', field: 'contributionAllocation', message: `Savings allocation adds up to ${Math.round(allocSum)}% — it must total exactly 100%.` });
+  // ── Earnings (skip if already retired) ──
+  const isRetired = s.currentAge >= s.retirementAge;
+  if (!isRetired) {
+    const allocSum = ACCOUNT_TYPES.reduce((sum, a) => sum + (s.contributionAllocation[a] || 0), 0);
+    if (Math.abs(allocSum - 100) > 0.01) {
+      errors.push({ card: 'earnings', field: 'contributionAllocation', message: `Savings allocation adds up to ${Math.round(allocSum)}% — it must total exactly 100%.` });
+    }
   }
 
   // ── Portfolio ──
