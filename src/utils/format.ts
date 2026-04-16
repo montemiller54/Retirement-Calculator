@@ -6,14 +6,6 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export function formatPct(value: number, decimals = 1): string {
-  return `${(value * 100).toFixed(decimals)}%`;
-}
-
-export function formatPctRaw(value: number, decimals = 1): string {
-  return `${value.toFixed(decimals)}%`;
-}
-
 export function formatCompact(value: number): string {
   if (Math.abs(value) >= 1_000_000) {
     return `$${(value / 1_000_000).toFixed(1)}M`;

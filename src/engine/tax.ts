@@ -1,9 +1,5 @@
 import type { FilingStatus } from '../types';
 import {
-  FEDERAL_BRACKETS_HOH,
-  STANDARD_DEDUCTION_HOH,
-  LTCG_BRACKETS_HOH,
-  NIIT_THRESHOLD,
   NIIT_RATE,
   SS_TAX_THRESHOLD_LOW,
   SS_TAX_THRESHOLD_HIGH,

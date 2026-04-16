@@ -127,11 +127,6 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
   return errors;
 }
 
-/** Get the set of card IDs that have errors */
-export function getErrorCards(errors: ValidationError[]): Set<string> {
-  return new Set(errors.map(e => e.card));
-}
-
 /** Check if a specific field (dot-path prefix match) has an error */
 export function hasFieldError(errors: ValidationError[], fieldPrefix: string): boolean {
   return errors.some(e => e.field === fieldPrefix || e.field.startsWith(fieldPrefix + '.'));

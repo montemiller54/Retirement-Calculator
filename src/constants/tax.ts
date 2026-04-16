@@ -86,10 +86,6 @@ export const FICA_MEDICARE_SURTAX_THRESHOLD_SINGLE = 200000;
 // Keep legacy export
 export const FICA_MEDICARE_SURTAX_THRESHOLD = 200000;
 
-// Iowa state tax
-export const IOWA_FLAT_RATE = 0.038;
-export const IOWA_RETIREMENT_EXEMPTION_AGE = 55; // age 55+ retirement income exempt
-
 // ── Filing-status lookup helpers ──
 
 export function getFederalBrackets(fs: FilingStatus): Bracket[] {
