@@ -3,6 +3,7 @@ import { runSimulation } from './simulation';
 
 self.onmessage = (e: MessageEvent<WorkerRequest>) => {
   const { scenario, params } = e.data;
+  console.log('[Worker] received message, currentAge:', scenario.currentAge, 'retirementAge:', scenario.retirementAge);
   try {
     const result = runSimulation(scenario, params, (completed, total) => {
       const msg: WorkerMessage = { type: 'progress', completed, total };

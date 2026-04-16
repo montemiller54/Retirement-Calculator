@@ -62,6 +62,10 @@ export function useSimulation(): UseSimulationReturn {
     };
 
     worker.onerror = (e) => {
+      console.error('[Worker onerror]', e);
+      console.error('[Worker onerror] message:', e.message);
+      console.error('[Worker onerror] filename:', e.filename);
+      console.error('[Worker onerror] lineno:', e.lineno);
       setError(e.message || 'Worker error');
       setIsRunning(false);
       worker.terminate();
