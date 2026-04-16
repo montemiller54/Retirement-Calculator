@@ -331,7 +331,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
             <div className="flex items-center gap-1">
               <span className="text-[11px] w-14"></span>
               <span className="text-[10px] text-gray-400 w-20 text-right">Avg Return %</span>
-              <span className="text-[10px] text-gray-400 flex-1 text-center">Variability</span>
+              <span className="text-[10px] text-gray-400 flex-1 text-center ml-2">Variability</span>
             </div>
             {ASSET_CLASSES.map(ac => {
               const ret = inv.assetClassReturns[ac] ?? DEFAULT_ASSET_RETURNS[ac];
@@ -345,7 +345,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                     value={ret.mean}
                     onChange={v => setField(`investments.assetClassReturns.${ac}.mean`, v)}
                   />
-                  <div className="flex-1 flex items-center justify-center gap-1">
+                  <div className="flex-1 flex items-center gap-1 ml-2">
                     <input
                       type="range"
                       className="w-[50%] h-1.5 accent-primary-600"
@@ -353,7 +353,10 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                       value={varVal}
                       onChange={e => setField(`investments.assetClassReturns.${ac}.stdDev`, variabilityToStdDev(parseFloat(e.target.value)))}
                     />
-                    <span className="text-[10px] text-gray-500 whitespace-nowrap w-20">{varVal.toFixed(1)} {varLabel}</span>
+                    <span className="text-[10px] whitespace-nowrap">
+                      <span className="text-white">{varVal.toFixed(1)}</span>{' '}
+                      <span className="text-gray-500">{varLabel}</span>
+                    </span>
                   </div>
                 </div>
               );
