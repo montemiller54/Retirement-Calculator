@@ -3,6 +3,7 @@ import { useScenario } from '../../context/ScenarioContext';
 import { ACCOUNT_LABELS, type AccountType } from '../../types';
 import { CurrencyInput } from './CurrencyInput';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
+import { PctSlider } from './shared';
 
 const ALLOCATION_ACCOUNTS: AccountType[] = [
   'traditional401k', 'roth401k', 'traditionalIRA', 'rothIRA', 'taxable', 'hsa', 'cashAccount', 'otherAssets',
@@ -16,29 +17,6 @@ function DollarInput({ value, onChange, label }: { value: number; onChange: (v: 
         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
         <CurrencyInput value={value} onChange={onChange} />
       </div>
-    </div>
-  );
-}
-
-function PctSlider({ value, onChange, label, min = 0, max = 100, step = 1, suffix = '%' }: {
-  value: number; onChange: (v: number) => void; label: string;
-  min?: number; max?: number; step?: number; suffix?: string;
-}) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <label className="input-label mb-0">{label}</label>
-        <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">{value.toFixed(step < 1 ? 1 : 0)}{suffix}</span>
-      </div>
-      <input
-        type="range"
-        className="w-full h-1.5 accent-primary-600 cursor-pointer"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={e => onChange(parseFloat(e.target.value))}
-      />
     </div>
   );
 }

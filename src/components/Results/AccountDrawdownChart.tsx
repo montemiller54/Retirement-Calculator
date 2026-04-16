@@ -4,6 +4,7 @@ import {
   Legend, ReferenceLine,
 } from 'recharts';
 import type { YearResult } from '../../types';
+import { ACCOUNT_LABELS } from '../../types';
 import { formatCompact } from '../../utils/format';
 
 interface AccountDrawdownChartProps {
@@ -20,17 +21,6 @@ const ACCOUNT_COLORS: Record<string, string> = {
   hsa: '#ec4899',
   cashAccount: '#6366f1',
   otherAssets: '#a3a3a3',
-};
-
-const ACCOUNT_NAMES: Record<string, string> = {
-  traditional401k: '401(k) Traditional',
-  roth401k: '401(k) Roth',
-  traditionalIRA: 'Traditional IRA',
-  rothIRA: 'Roth IRA',
-  taxable: 'Taxable',
-  hsa: 'Health Savings Acct',
-  cashAccount: 'Cash Account',
-  otherAssets: 'Other Assets',
 };
 
 export function AccountDrawdownChart({ data, retirementAge }: AccountDrawdownChartProps) {
@@ -71,13 +61,13 @@ export function AccountDrawdownChart({ data, retirementAge }: AccountDrawdownCha
             width={55}
           />
           <Tooltip
-            formatter={(val: number, name: string) => [formatCompact(val), ACCOUNT_NAMES[name] ?? name]}
+            formatter={(val: number, name: string) => [formatCompact(val), ACCOUNT_LABELS[name as keyof typeof ACCOUNT_LABELS] ?? name]}
             labelFormatter={(label) => `Age ${label}`}
             contentStyle={{ fontSize: 11 }}
           />
           <Legend
             wrapperStyle={{ fontSize: 10 }}
-            formatter={(value: string) => ACCOUNT_NAMES[value] ?? value}
+            formatter={(value: string) => ACCOUNT_LABELS[value as keyof typeof ACCOUNT_LABELS] ?? value}
           />
           <ReferenceLine
             x={retirementAge}
