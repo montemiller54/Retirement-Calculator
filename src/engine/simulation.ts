@@ -277,8 +277,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
           // consume bracket room that spending withdrawals will also need.
           let estTradWithdrawal = 0;
           if (isRetired) {
-            const retYears = age - s.retirementAge;
-            const estSpending = s.baseAnnualSpending * Math.pow(1 + s.spendingInflationRate, retYears);
+            const estSpending = s.baseAnnualSpending * Math.pow(1 + s.spendingInflationRate, yearsFromNow);
             const estIncome = socialSecurity + pension + otherIncome;
             const estCashNeed = Math.max(0, estSpending - estIncome);
             // Non-traditional accounts are tapped first in most strategies
@@ -321,8 +320,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     let rmdAmount = 0;
 
     if (isRetired) {
-      const retYears = age - s.retirementAge;
-      let baseSpending = s.baseAnnualSpending * Math.pow(1 + s.spendingInflationRate, retYears);
+      let baseSpending = s.baseAnnualSpending * Math.pow(1 + s.spendingInflationRate, yearsFromNow);
 
       // One-time expenses
       for (const exp of s.oneTimeExpenses) {
@@ -358,7 +356,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
         // Floor
         if (s.guardrails.minimumSpendingFloor > 0) {
           const inflatedFloor = s.guardrails.minimumSpendingFloor *
-            Math.pow(1 + s.spendingInflationRate, retYears);
+            Math.pow(1 + s.spendingInflationRate, yearsFromNow);
           baseSpending = Math.max(baseSpending, inflatedFloor);
         }
       }
