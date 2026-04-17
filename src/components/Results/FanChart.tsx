@@ -35,6 +35,7 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
             formatter={(val: number) => formatCompact(val)}
             labelFormatter={(label) => `Age ${label}`}
             contentStyle={{ fontSize: 11 }}
+            itemStyle={{ color: '#374151' }}
           />
           <ReferenceLine
             x={retirementAge}
