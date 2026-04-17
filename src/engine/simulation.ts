@@ -175,8 +175,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     let otherIncome = 0;
     for (const src of s.otherIncomeSources) {
       if (age >= src.startAge && age <= src.endAge) {
-        const srcYears = age - src.startAge;
-        otherIncome += src.annualAmount * Math.pow(1 + src.inflationRate, srcYears);
+        otherIncome += src.annualAmount * Math.pow(1 + src.inflationRate, yearsFromNow);
       }
     }
 
