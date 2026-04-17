@@ -35,7 +35,7 @@ export function Sidebar({ validationErrors }: SidebarProps) {
   const activeErrors = validationErrors.filter(e => e.card === activeItem.id);
 
   return (
-    <div className="flex h-full">
+    <div className="flex flex-1 min-h-0">
       {/* Card title strip */}
       <nav className="w-40 shrink-0 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 overflow-y-auto">
         <div className="py-2">
