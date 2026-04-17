@@ -35,7 +35,11 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-[10px] text-gray-400 mb-3">Monthly spending in retirement and healthcare costs.</p>
+        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded px-2.5 py-1.5 mb-3">
+          <p className="text-[10px] text-blue-700 dark:text-blue-300 leading-relaxed">
+            All amounts are in <strong>today's dollars</strong>. The simulation automatically increases them each year for inflation, so enter what these costs would be if you paid them today.
+          </p>
+        </div>
 
         <div>
           <label className="input-label">Base Monthly Spending (today's $)</label>
