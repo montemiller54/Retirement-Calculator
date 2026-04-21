@@ -80,12 +80,12 @@ function toAnnualScenario(s: ScenarioInput): ScenarioInput {
       lateLifeMonthly: resolved.healthcare.lateLifeMonthly * 12,
     },
     partTimeIncome: {
-      ...resolved.partTimeIncome,
-      monthlyAmount: resolved.partTimeIncome.monthlyAmount * 12,
+      ...(resolved.partTimeIncome ?? { enabled: false, monthlyAmount: 0, endAge: 70 }),
+      monthlyAmount: (resolved.partTimeIncome?.monthlyAmount ?? 0) * 12,
     },
     housing: {
-      ...resolved.housing,
-      mortgagePayment: resolved.housing.mortgagePayment * 12,
+      ...(resolved.housing ?? { enabled: false, mortgagePayment: 0, payoffAge: 65, downsizingProceeds: 0, downsizingAge: 70 }),
+      mortgagePayment: (resolved.housing?.mortgagePayment ?? 0) * 12,
     },
     spouse: resolved.spouse ? {
       ...resolved.spouse,
