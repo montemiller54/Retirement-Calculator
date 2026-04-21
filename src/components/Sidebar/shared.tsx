@@ -2,7 +2,7 @@ import React from 'react';
 
 export function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
-    <label className="flex items-center gap-2 cursor-pointer">
+    <label className="flex items-center justify-center gap-2 cursor-pointer">
       <div
         className={`relative inline-flex w-9 h-5 rounded-full transition-colors ${checked ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-500'}`}
         onClick={() => onChange(!checked)}
