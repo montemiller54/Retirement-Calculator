@@ -4,6 +4,8 @@ import { ACCOUNT_LABELS, type AccountType } from '../../types';
 import { CurrencyInput } from './CurrencyInput';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
 import { PctSlider } from './shared';
+import { InfoTip } from './InfoTip';
+import { ACCOUNT_DESCRIPTIONS } from '../../constants/descriptions';
 
 const ALLOCATION_ACCOUNTS: AccountType[] = [
   'traditional401k', 'roth401k', 'traditionalIRA', 'rothIRA', 'taxable', 'hsa', 'cashAccount', 'otherAssets',
@@ -25,6 +27,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
   const { scenario, setField } = useScenario();
   const ve = validationErrors;
   const [showDetails, setShowDetails] = useState(false);
+  const [showMatchAdvanced, setShowMatchAdvanced] = useState(false);
 
   const allocSum = ALLOCATION_ACCOUNTS.reduce(
     (s, a) => s + (scenario.contributionAllocation[a] || 0), 0
@@ -97,10 +100,32 @@ export function EarningsCard({ validationErrors }: CardProps) {
           {/* Allocation */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="input-label mb-0">Allocation</label>
+              <label className="input-label mb-0">Allocation
+                <InfoTip text="How your savings are split across different account types. Each account has different tax rules. The percentages must add up to 100%." />
+              </label>
               <span className={`text-[10px] font-medium ${allocSum === 100 ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
                 {allocSum}% of 100%{allocSum !== 100 && (allocSum < 100 ? ` — need ${100 - allocSum}% more` : ` — ${allocSum - 100}% over`)}
               </span>
+            </div>
+            {/* Preset buttons */}
+            <div className="flex gap-1 mb-2">
+              {[
+                { label: '100% Trad 401(k)', alloc: { traditional401k: 100, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 } },
+                { label: '100% Roth 401(k)', alloc: { traditional401k: 0, roth401k: 100, traditionalIRA: 0, rothIRA: 0, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 } },
+                { label: '50/50 Split', alloc: { traditional401k: 50, roth401k: 50, traditionalIRA: 0, rothIRA: 0, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 } },
+              ].map(preset => (
+                <button
+                  key={preset.label}
+                  className="flex-1 text-[10px] py-1 rounded border border-gray-300 dark:border-gray-600 hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
+                  onClick={() => {
+                    ALLOCATION_ACCOUNTS.forEach(acct => {
+                      setField(`contributionAllocation.${acct}`, (preset.alloc as Record<string, number>)[acct] ?? 0);
+                    });
+                  }}
+                >
+                  {preset.label}
+                </button>
+              ))}
             </div>
             <FieldError errors={ve} field="contributionAllocation" />
             <div className="space-y-1">
@@ -108,6 +133,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
                 <div key={acct} className="flex items-center gap-2">
                   <span className="text-[11px] w-28 truncate text-gray-600 dark:text-gray-400" title={ACCOUNT_LABELS[acct]}>
                     {ACCOUNT_LABELS[acct]}
+                    <InfoTip text={ACCOUNT_DESCRIPTIONS[acct]} />
                   </span>
                   <div className="flex items-center gap-0.5">
                     <input
@@ -126,10 +152,17 @@ export function EarningsCard({ validationErrors }: CardProps) {
 
           {/* Employer match */}
           <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-            <label className="input-label font-medium">Employer Match</label>
+            <label className="input-label font-medium">Employer Match
+              <InfoTip text="Many employers match a percentage of what you contribute to your 401(k). This is essentially free money added to your retirement savings." />
+            </label>
             <p className="text-[10px] text-gray-500 dark:text-gray-400 -mt-1">
               Employer matches {Math.round(scenario.employerMatchRate * 100)}% of your contributions on the first {(scenario.employerMatchCapPct * 100).toFixed(1)}% of salary.
             </p>
+            {scenario.currentSalary > 0 && scenario.employerMatchRate > 0 && (
+              <p className="text-[10px] text-primary-600 dark:text-primary-400 font-medium -mt-1">
+                ≈ Your employer contributes ${Math.round(scenario.currentSalary * 12 * scenario.employerMatchCapPct * scenario.employerMatchRate).toLocaleString()}/yr
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-2">
               <PctSlider
                 label="Match Rate"
@@ -144,12 +177,20 @@ export function EarningsCard({ validationErrors }: CardProps) {
                 min={0} max={15} step={0.5}
               />
             </div>
-            <PctSlider
-              label="Match → Roth 401(k)"
-              value={scenario.employerRothPct}
-              onChange={v => setField('employerRothPct', Math.round(v))}
-              min={0} max={100} step={10}
-            />
+            <button
+              className="text-[11px] text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              onClick={() => setShowMatchAdvanced(!showMatchAdvanced)}
+            >
+              {showMatchAdvanced ? '▾ Hide advanced' : '▸ Advanced'}
+            </button>
+            {showMatchAdvanced && (
+              <PctSlider
+                label="Match → Roth 401(k)"
+                value={scenario.employerRothPct}
+                onChange={v => setField('employerRothPct', Math.round(v))}
+                min={0} max={100} step={10}
+              />
+            )}
           </div>
         </div>
       )}

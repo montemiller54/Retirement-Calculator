@@ -14,6 +14,7 @@ export function TrajectoryTable({ data }: TrajectoryTableProps) {
     <div className="card overflow-x-auto">
       <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
         Typical Outcome Summary
+        <span className="text-[10px] font-normal text-gray-400 ml-1">(nominal dollars — not adjusted for inflation)</span>
       </h4>
       <table className="w-full text-xs">
         <thead>

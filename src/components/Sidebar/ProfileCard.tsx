@@ -4,6 +4,7 @@ import { FILING_STATUS_LABELS, type FilingStatus } from '../../types';
 import { STATE_TAX_DATA, STATE_CODES } from '../../constants/state-tax';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
 import { Toggle } from './shared';
+import { InfoTip } from './InfoTip';
 
 export function ProfileCard({ validationErrors }: CardProps) {
   const { scenario, setField } = useScenario();
@@ -43,7 +44,9 @@ export function ProfileCard({ validationErrors }: CardProps) {
             )}
           </div>
           <div>
-            <label className="input-label">Plan To</label>
+            <label className="input-label">Plan To
+            <InfoTip text="The age you want your retirement plan to last until. A common choice is 90–95 to be safe against living longer than expected." />
+          </label>
             <input
               type="number"
               className={`input-field text-center ${fieldErrorClass(ve, 'endAge')}`}
@@ -71,7 +74,9 @@ export function ProfileCard({ validationErrors }: CardProps) {
           </select>
         </div>
         <div>
-          <label className="input-label">Filing Status</label>
+          <label className="input-label">Filing Status
+            <InfoTip text="Your tax filing status affects your income tax brackets. 'Married Filing Jointly' generally gives the best rates for married couples." />
+          </label>
           <select
             className="input-field"
             value={scenario.filingStatus ?? 'hoh'}

@@ -4,6 +4,8 @@ import { WITHDRAWAL_STRATEGY_LABELS, type WithdrawalStrategy, type RothConversio
 import { CurrencyInput } from './CurrencyInput';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
 import { Toggle } from './shared';
+import { InfoTip } from './InfoTip';
+import { WITHDRAWAL_STRATEGY_DESCRIPTIONS } from '../../constants/descriptions';
 
 const STRATEGIES: WithdrawalStrategy[] = ['taxEfficient', 'rothPreserving', 'proRata'];
 
@@ -50,7 +52,7 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
           {STRATEGIES.map(s => (
             <button
               key={s}
-              className={`flex-1 text-[11px] py-1.5 rounded border ${
+              className={`flex-1 text-[11px] py-1.5 rounded border relative ${
                 scenario.withdrawalStrategy === s
                   ? 'border-primary-500 bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
                   : 'border-gray-300 dark:border-gray-600'
@@ -58,6 +60,9 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
               onClick={() => setField('withdrawalStrategy', s)}
             >
               {WITHDRAWAL_STRATEGY_LABELS[s]}
+              {s === 'taxEfficient' && (
+                <span className="block text-[9px] font-normal text-green-600 dark:text-green-400">Recommended</span>
+              )}
             </button>
           ))}
         </div>
@@ -65,16 +70,20 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
           {scenario.withdrawalStrategy === 'taxEfficient' && 'Brokerage first → 401(k)/IRA next → Roth last'}
           {scenario.withdrawalStrategy === 'rothPreserving' && 'Brokerage first → 401(k)/IRA next to preserve Roth'}
           {scenario.withdrawalStrategy === 'proRata' && 'Withdraw proportionally from all accounts'}
+          <InfoTip text={WITHDRAWAL_STRATEGY_DESCRIPTIONS[scenario.withdrawalStrategy]} />
         </p>
       </div>
 
       {/* Roth Conversions */}
       <div className="pt-3 border-t border-gray-100 dark:border-gray-700 space-y-3">
-        <Toggle
-          checked={rc.enabled}
-          onChange={v => setField('rothConversion.enabled', v)}
-          label="Tax-Bracket Conversions"
-        />
+        <div className="flex items-center gap-1">
+          <Toggle
+            checked={rc.enabled}
+            onChange={v => setField('rothConversion.enabled', v)}
+            label="Tax-Bracket Conversions"
+          />
+          <InfoTip text="Convert money from Traditional (tax-deferred) accounts to Roth (tax-free) accounts during low-income years. You pay taxes now at a lower rate to avoid higher taxes later." />
+        </div>
 
         {rc.enabled && (
           <div className="space-y-2">
@@ -135,15 +144,18 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
 
       {/* Guardrails */}
       <div className="pt-3 border-t border-gray-100 dark:border-gray-700 space-y-3">
-        <Toggle
-          checked={g.enabled}
-          onChange={v => setField('guardrails.enabled', v)}
-          label="Spending Safety Rules"
-        />
+        <div className="flex items-center gap-1">
+          <Toggle
+            checked={g.enabled}
+            onChange={v => setField('guardrails.enabled', v)}
+            label="Spending Safety Rules"
+          />
+          <InfoTip text="Automatically reduce your spending if your portfolio drops significantly, helping your money last longer during market downturns." />
+        </div>
 
         {g.enabled && (
           <div className="space-y-2">
-            <p className="text-[10px] text-gray-400">Cut spending when portfolio drops from high-water mark.</p>
+            <p className="text-[10px] text-gray-400">If your portfolio drops from its highest value by the percentage on the left, reduce spending by the percentage on the right.</p>
 
             {g.tiers.map((tier: GuardrailTier, idx: number) => (
               <div key={idx}>
@@ -178,11 +190,14 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
 
       {/* Cash Buffer */}
       <div className="pt-3 border-t border-gray-100 dark:border-gray-700 space-y-3">
-        <Toggle
-          checked={cb.enabled}
-          onChange={v => setField('cashBuffer.enabled', v)}
-          label="Emergency Cash Reserve"
-        />
+        <div className="flex items-center gap-1">
+          <Toggle
+            checked={cb.enabled}
+            onChange={v => setField('cashBuffer.enabled', v)}
+            label="Emergency Cash Reserve"
+          />
+          <InfoTip text="Keeps a cash reserve equal to several years of expenses so you don't have to sell investments at a loss during market downturns." />
+        </div>
 
         {cb.enabled && (
           <div className="space-y-2">

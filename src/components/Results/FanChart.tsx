@@ -91,6 +91,7 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
           />
         </AreaChart>
       </ResponsiveContainer>
+      <p className="text-[10px] text-gray-400 mt-2 px-1">The dark blue line shows the most likely outcome. The shaded areas show the range of possibilities across {data.length > 0 ? 'thousands of' : ''} simulated market scenarios.</p>
     </div>
   );
 }

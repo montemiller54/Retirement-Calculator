@@ -5,6 +5,7 @@ import { CurrencyInput } from './CurrencyInput';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
 import { Toggle } from './shared';
 import { estimateSSBenefit } from '../../utils/social-security';
+import { InfoTip } from './InfoTip';
 
 export function IncomeCard({ validationErrors }: CardProps) {
   const { scenario, setField } = useScenario();
@@ -43,7 +44,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
 
   return (
     <div className="space-y-4">
-      <p className="text-[10px] text-gray-400 mb-1">Social Security, pensions, and other income in retirement.</p>
+      <p className="text-[10px] text-gray-400 mb-1">Social Security, pensions, and other income in retirement. All amounts are in <strong>today's dollars</strong>.</p>
 
       {/* Your Social Security */}
       <div className="space-y-1.5">
@@ -84,7 +85,9 @@ export function IncomeCard({ validationErrors }: CardProps) {
           </p>
         )}
         <div className="flex items-center justify-between">
-          <label className="input-label mb-0">Yearly Increase</label>
+          <label className="input-label mb-0">Yearly Increase
+            <InfoTip text="Cost-of-Living Adjustment (COLA) — the annual percentage increase to your Social Security benefit to keep up with inflation. The historical average is about 2.5%." />
+          </label>
           <div className="flex items-center gap-1">
             <input
               type="range" className="w-20 h-1.5 accent-primary-600" min={0} max={5} step={0.1}
@@ -125,7 +128,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
             <p className="text-[10px] text-gray-400 italic">
               {scenario.spouse.currentSalary > 0
                 ? `Estimated from $${(scenario.spouse.currentSalary * 12).toLocaleString()}/yr salary`
-                : `Spousal benefit: 50% of your $${estimatedSS.toLocaleString()}/mo PIA`}
+                : `Spousal benefit: 50% of your $${estimatedSS.toLocaleString()}/mo Social Security benefit`}
             </p>
           )}
         </div>

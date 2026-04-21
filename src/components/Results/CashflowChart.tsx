@@ -79,6 +79,7 @@ export function CashflowChart({ data, retirementAge }: CashflowChartProps) {
           />
         </ComposedChart>
       </ResponsiveContainer>
+      <p className="text-[10px] text-gray-400 mt-2 px-1">Shows where your retirement income comes from each year, averaged across all simulations. The dashed red line is your total spending.</p>
     </div>
   );
 }

@@ -48,6 +48,7 @@ export function ScenarioManager() {
 
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 p-3">
+      <p className="text-[10px] text-gray-400 mb-2">Save different retirement plans to compare.</p>
       <div className="flex items-center gap-2">
         <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 shrink-0">Scenario</label>
         <input

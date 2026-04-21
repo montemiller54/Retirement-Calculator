@@ -4,6 +4,7 @@ import type { OneTimeExpense } from '../../types';
 import { CurrencyInput } from './CurrencyInput';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
 import { Toggle, PctSlider } from './shared';
+import { InfoTip } from './InfoTip';
 
 export function SpendingHealthcareCard({ validationErrors }: CardProps) {
   const { scenario, setField } = useScenario();
@@ -108,6 +109,11 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
               <div className="w-16">
                 <label className="input-label">Age</label>
                 <input type="number" className={`input-field ${fieldErrorClass(ve, `oneTimeExpense.${exp.id}`)}`} value={exp.age} onChange={e => updateExpense(exp.id, 'age', parseInt(e.target.value) || 0)} />
+                {exp.age > 0 && (
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    ({new Date().getFullYear() + (exp.age - scenario.currentAge)})
+                  </p>
+                )}
               </div>
             </div>
             <FieldError errors={ve} field={`oneTimeExpense.${exp.id}`} />

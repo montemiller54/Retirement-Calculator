@@ -70,6 +70,11 @@ export function Sidebar({ validationErrors }: SidebarProps) {
       {/* Active card content */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-3">
+          <div className="bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800 rounded px-2.5 py-1.5 mb-3">
+            <p className="text-[10px] text-primary-700 dark:text-primary-300 leading-relaxed">
+              Defaults are pre-filled with reasonable values — you only need to change what applies to you. Hover the <strong>ℹ</strong> icons for explanations.
+            </p>
+          </div>
           <ActiveComponent validationErrors={activeErrors} />
         </div>
       </div>

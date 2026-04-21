@@ -73,7 +73,7 @@ export type WithdrawalStrategy =
 export const WITHDRAWAL_STRATEGY_LABELS: Record<WithdrawalStrategy, string> = {
   taxEfficient: 'Tax-Efficient Default',
   rothPreserving: 'Roth-Preserving',
-  proRata: 'Pro-Rata',
+  proRata: 'Proportional',
 };
 
 // ── Contribution allocation ──

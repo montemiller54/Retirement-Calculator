@@ -14,14 +14,15 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
   );
 }
 
-export function PctSlider({ value, onChange, label, min = 0, max = 10, step = 0.1, suffix = '%' }: {
+export function PctSlider({ value, onChange, label, min = 0, max = 10, step = 0.1, suffix = '%', tooltip }: {
   value: number; onChange: (v: number) => void; label: string;
   min?: number; max?: number; step?: number; suffix?: string;
+  tooltip?: React.ReactNode;
 }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <label className="input-label mb-0">{label}</label>
+        <label className="input-label mb-0">{label}{tooltip}</label>
         <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">{value.toFixed(step < 1 ? 1 : 0)}{suffix}</span>
       </div>
       <input

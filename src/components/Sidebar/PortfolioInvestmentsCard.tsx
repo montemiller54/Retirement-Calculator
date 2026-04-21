@@ -9,6 +9,8 @@ import { CurrencyInput } from './CurrencyInput';
 import { PercentInput } from './PercentInput';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
 import { Toggle } from './shared';
+import { InfoTip } from './InfoTip';
+import { ACCOUNT_DESCRIPTIONS } from '../../constants/descriptions';
 
 // ── Variability scale: 1–10 (0.5 steps) ↔ stdDev (decimal) ──
 // Curve: vol = 0.01 + ((v-1)/9)^1.6888 * 0.59
@@ -98,6 +100,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
               <div key={acct} className="flex items-center gap-2">
                 <span className="text-[11px] w-28 truncate text-gray-600 dark:text-gray-400" title={ACCOUNT_LABELS[acct]}>
                   {ACCOUNT_LABELS[acct]}
+                  <InfoTip text={ACCOUNT_DESCRIPTIONS[acct]} />
                 </span>
                 <span className="text-[11px] text-gray-400">$</span>
                 <CurrencyInput
@@ -116,7 +119,9 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
           </div>
           <div className="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-gray-700">
             <div className="flex-1">
-              <label className="input-label">Original Investment %</label>
+              <label className="input-label">Original Investment %
+                <InfoTip text="The percentage of your taxable brokerage account that represents money you originally invested (your 'cost basis'), versus gains from growth. This affects how much tax you pay when selling." />
+              </label>
               <p className="text-[10px] text-gray-400">How much of your brokerage account is money you put in (vs. growth)</p>
             </div>
             <div className="flex items-center gap-1">
@@ -320,7 +325,10 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
       {sectionBtn('returns', 'Rate Assumptions')}
       {activeSection === 'returns' && (
         <div className="px-1 pb-2 space-y-2">
-          <p className="text-[10px] text-gray-400">Expected nominal returns and variability by asset class.</p>
+          <p className="text-[10px] text-gray-400">
+            Expected nominal returns and variability by asset class.
+            <InfoTip text="'Nominal' means before subtracting inflation. The simulation handles inflation separately. 'Variability' controls how much returns can swing up or down each year." />
+          </p>
           <div className="space-y-1.5">
             {/* Column headers */}
             <div className="flex items-center gap-1">
