@@ -1,5 +1,5 @@
 import type { AccountType, ContributionAllocation, AccountBalances } from '../types';
-import { CATCHUP_AGE, DEFAULT_HSA_SELF_ONLY, DEFAULT_401K_CATCHUP, DEFAULT_IRA_CATCHUP } from '../constants/contribution-limits';
+import { CATCHUP_AGE, SUPER_CATCHUP_START_AGE, SUPER_CATCHUP_END_AGE, DEFAULT_HSA_SELF_ONLY, DEFAULT_401K_CATCHUP, DEFAULT_401K_SUPER_CATCHUP, DEFAULT_IRA_CATCHUP } from '../constants/contribution-limits';
 
 export interface ContributionInput {
   totalSavings: number;           // total $ employee contributes this year
@@ -16,6 +16,7 @@ export interface ContributionInput {
 
   // Inflation-adjusted limits (optional; defaults to current-year constants)
   catchUp401k?: number;
+  superCatchUp401k?: number;
   catchUpIRA?: number;
   hsaLimit?: number;
 }
@@ -34,13 +35,16 @@ export function allocateContributions(input: ContributionInput): ContributionRes
     enable401kCatchUp, enableIRACatchUp,
     employerMatch = 0, employerRothPct = 0,
     catchUp401k = DEFAULT_401K_CATCHUP,
+    superCatchUp401k = DEFAULT_401K_SUPER_CATCHUP,
     catchUpIRA = DEFAULT_IRA_CATCHUP,
     hsaLimit = DEFAULT_HSA_SELF_ONLY,
   } = input;
 
-  // Effective limits
+  // Effective limits — SECURE 2.0 super catch-up for ages 60-63
   const catchUpEligible = age >= CATCHUP_AGE;
-  const eff401k = limit401k + (catchUpEligible && enable401kCatchUp ? catchUp401k : 0);
+  const superCatchUpEligible = age >= SUPER_CATCHUP_START_AGE && age <= SUPER_CATCHUP_END_AGE;
+  const effective401kCatchUp = superCatchUpEligible ? superCatchUp401k : catchUp401k;
+  const eff401k = limit401k + (catchUpEligible && enable401kCatchUp ? effective401kCatchUp : 0);
   const effIRA = limitIRA + (catchUpEligible && enableIRACatchUp ? catchUpIRA : 0);
   const effHSA = hsaLimit;
 

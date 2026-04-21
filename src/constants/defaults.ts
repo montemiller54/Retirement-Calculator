@@ -80,6 +80,29 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
   // Withdrawal
   withdrawalStrategy: 'taxEfficient',
 
+  // Early withdrawal settings
+  ruleof55Eligible: false,
+  rothContributionBasis: 0,
+
+  // Part-time retirement income
+  partTimeIncome: {
+    enabled: false,
+    monthlyAmount: 2000,
+    endAge: 70,
+  },
+
+  // Housing / mortgage
+  housing: {
+    enabled: false,
+    mortgagePayment: 1500,
+    payoffAge: 65,
+    downsizingProceeds: 0,
+    downsizingAge: 70,
+  },
+
+  // Variable inflation
+  inflationVolatility: 0,
+
   // Guardrails
   guardrails: {
     enabled: false,

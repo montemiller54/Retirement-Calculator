@@ -8,10 +8,10 @@ import { PRNG, cholesky, generateCorrelatedReturns, blendedReturn } from './math
 import { DEFAULT_CORRELATION_MATRIX, DEFAULT_ASSET_RETURNS } from '../constants/asset-classes';
 import { allocateContributions } from './contributions';
 import { executeWithdrawals } from './withdrawals';
-import { estimateSSBenefit } from '../utils/social-security';
+import { estimateSSBenefit, getFullRetirementAgeMonths } from '../utils/social-security';
 import { calculateTaxes, type TaxInput } from './tax';
 import { getFederalBrackets, getStandardDeduction, getSSThresholds } from '../constants/tax';
-import { DEFAULT_401K_CATCHUP, DEFAULT_IRA_CATCHUP, DEFAULT_HSA_SELF_ONLY } from '../constants/contribution-limits';
+import { DEFAULT_401K_CATCHUP, DEFAULT_401K_SUPER_CATCHUP, DEFAULT_IRA_CATCHUP, DEFAULT_HSA_SELF_ONLY } from '../constants/contribution-limits';
 
 function emptyBalances(): AccountBalances {
   return {
@@ -79,6 +79,14 @@ function toAnnualScenario(s: ScenarioInput): ScenarioInput {
       medicareMonthly: resolved.healthcare.medicareMonthly * 12,
       lateLifeMonthly: resolved.healthcare.lateLifeMonthly * 12,
     },
+    partTimeIncome: {
+      ...resolved.partTimeIncome,
+      monthlyAmount: resolved.partTimeIncome.monthlyAmount * 12,
+    },
+    housing: {
+      ...resolved.housing,
+      mortgagePayment: resolved.housing.mortgagePayment * 12,
+    },
     spouse: resolved.spouse ? {
       ...resolved.spouse,
       currentSalary: resolved.spouse.currentSalary * 12,
@@ -107,6 +115,10 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
   let highWaterMark = sumBalances(balances);
   let currentSpendingAdjustment = 1.0; // for guardrails
 
+  // Roth 5-year rule: track conversion amounts by year (age)
+  // Converted amounts can't be withdrawn penalty-free until 5 years later
+  const rothConversionsByAge: Map<number, number> = new Map();
+
   // Track prior-year-end traditional balances for RMD (IRS uses Dec 31 balance of prior year)
   let priorYearEnd401k = balances.traditional401k;
   let priorYearEndIRA = balances.traditionalIRA;
@@ -133,14 +145,52 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       portfolioReturnSignal = totalWeight > 0 ? portfolioReturnSignal / totalWeight : 0;
     }
 
+    // ── Variable inflation for this year ──
+    // If inflationVolatility > 0, randomize the spending inflation for this year
+    let yearInflationFactor: number;
+    if (s.inflationVolatility > 0 && yearsFromNow > 0) {
+      // Draw a random inflation rate centered on the configured rate, with the configured volatility
+      const inflationNoise = rng.nextGaussian() * s.inflationVolatility;
+      const yearInflation = Math.max(0, s.spendingInflationRate + inflationNoise);
+      // Compound from the start: use product of all prior year inflation factors
+      // For simplicity, apply random deviation to the exponent
+      yearInflationFactor = Math.pow(1 + s.spendingInflationRate, yearsFromNow) *
+        Math.pow(1 + inflationNoise / s.spendingInflationRate, yearsFromNow > 0 ? 1 : 0);
+      // Clamp to avoid negative
+      yearInflationFactor = Math.max(1, yearInflationFactor);
+    } else {
+      yearInflationFactor = Math.pow(1 + s.spendingInflationRate, yearsFromNow);
+    }
+
     // ── Income ──
     const salary = isRetired ? 0 : s.currentSalary * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
 
+    // ── Part-time retirement income ──
+    let partTimeIncome = 0;
+    if (s.partTimeIncome.enabled && isRetired && age < s.partTimeIncome.endAge) {
+      partTimeIncome = s.partTimeIncome.monthlyAmount * yearInflationFactor;
+    }
+
     const ssClaiming = age >= s.socialSecurityClaimAge;
     const ssYears = ssClaiming ? age - s.socialSecurityClaimAge : 0;
-    const socialSecurity = ssClaiming
+    let socialSecurity = ssClaiming
       ? s.socialSecurityBenefit * Math.pow(1 + s.socialSecurityCOLA, ssYears)
       : 0;
+
+    // ── Social Security earnings test ──
+    // Before Full Retirement Age, SS benefits are reduced if earned income exceeds threshold
+    const birthYear = new Date().getFullYear() - s.currentAge;
+    const fraMonths = getFullRetirementAgeMonths(birthYear);
+    const fraAge = Math.ceil(fraMonths / 12);
+    const earnedIncome = salary + partTimeIncome;
+    let ssEarningsTestReduction = 0;
+    if (socialSecurity > 0 && age < fraAge && earnedIncome > 0) {
+      // 2026 exempt amount (~$23,400, indexed) — $1 reduction per $2 earned above threshold
+      const ssEarningsExempt = 23400 * Math.pow(1 + (s.taxBracketInflationRate ?? 0.02), yearsFromNow);
+      const excessEarnings = Math.max(0, earnedIncome - ssEarningsExempt);
+      ssEarningsTestReduction = Math.min(socialSecurity, excessEarnings * 0.5);
+      socialSecurity -= ssEarningsTestReduction;
+    }
 
     const pensionActive = isRetired && age >= s.pensionStartAge && s.pensionAmount > 0;
     const pensionYears = pensionActive ? age - s.pensionStartAge : 0;
@@ -180,7 +230,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     }
 
     const totalIncome = salary + socialSecurity + pension + otherIncome
-      + spouseSalary + spouseSS + spousePension;
+      + spouseSalary + spouseSS + spousePension + partTimeIncome;
 
     // ── Contributions (accumulation) ──
     const contributions = emptyBalances();
@@ -209,6 +259,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
         employerMatch: employerMatchAmount,
         employerRothPct: s.employerRothPct,
         catchUp401k: DEFAULT_401K_CATCHUP * limIdx,
+        superCatchUp401k: DEFAULT_401K_SUPER_CATCHUP * limIdx,
         catchUpIRA: DEFAULT_IRA_CATCHUP * limIdx,
         hsaLimit: DEFAULT_HSA_SELF_ONLY * limIdx,
       });
@@ -308,6 +359,8 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
           balances.traditional401k -= from401k;
           balances.traditionalIRA -= fromIRA;
           balances.rothIRA += rothConversionAmount;
+          // Track for Roth 5-year rule
+          rothConversionsByAge.set(age, (rothConversionsByAge.get(age) || 0) + rothConversionAmount);
         }
       }
     }
@@ -318,8 +371,62 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     let capitalGains = 0;
     let rmdAmount = 0;
 
+    // ── Early withdrawal penalty helper ──
+    // 10% penalty on Traditional 401k/IRA withdrawals before 59.5
+    // Rule of 55: 401k penalty-free if separated from service at 55+
+    // Roth IRA: contribution basis is always penalty-free
+    // Roth 5-year rule: converted amounts subject to penalty if < 5 years
+    const calcPenaltyAmount = (w: AccountBalances, conversionAmt: number): number => {
+      if (age >= 60) return 0; // 59.5 — using 60 as annual approximation
+      let penalizable = 0;
+
+      // Traditional 401k — penalty-free if Rule of 55 eligible and age >= 55
+      if (w.traditional401k > 0 && !(s.ruleof55Eligible && age >= 55)) {
+        penalizable += w.traditional401k;
+      }
+      // Traditional IRA — always subject to penalty before 59.5
+      penalizable += w.traditionalIRA;
+
+      // Roth IRA withdrawals: contributions are penalty-free, earnings are penalized
+      if (w.rothIRA > 0) {
+        const rothBasis = Math.max(0, s.rothContributionBasis);
+        // Penalty only on amount exceeding contribution basis
+        penalizable += Math.max(0, w.rothIRA - rothBasis);
+      }
+
+      // Roth 5-year rule: conversions done within last 5 years are penalized on withdrawal
+      let unconvertedPenalty = 0;
+      for (const [convAge, convAmt] of rothConversionsByAge) {
+        if (age - convAge < 5 && age < 60) {
+          unconvertedPenalty += convAmt;
+        }
+      }
+      // The conversion penalty applies to Roth withdrawals from converted amounts
+      penalizable += Math.min(unconvertedPenalty, w.roth401k + w.rothIRA);
+
+      // Roth conversion this year is also subject to penalty if early
+      if (conversionAmt > 0) {
+        penalizable += conversionAmt;
+      }
+
+      return penalizable;
+    };
+
     if (isRetired) {
-      let baseSpending = s.baseAnnualSpending * Math.pow(1 + s.spendingInflationRate, yearsFromNow);
+      let baseSpending = s.baseAnnualSpending * yearInflationFactor;
+
+      // Housing: subtract mortgage payment if paid off, add downsizing proceeds
+      if (s.housing.enabled) {
+        if (age < s.housing.payoffAge) {
+          baseSpending += s.housing.mortgagePayment * yearInflationFactor;
+        }
+        if (age === s.housing.downsizingAge && s.housing.downsizingProceeds > 0) {
+          // Downsizing proceeds go into taxable account
+          const proceeds = s.housing.downsizingProceeds * yearInflationFactor;
+          balances.taxable += proceeds;
+          taxableCostBasis += proceeds;
+        }
+      }
 
       // One-time expenses
       for (const exp of s.oneTimeExpenses) {
@@ -382,7 +489,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       // Withdraw enough to cover spending + taxes on those withdrawals.
       // Tax on traditional withdrawals creates additional cash need; iterate to converge.
       const incomeFromSources = socialSecurity + pension + otherIncome
-        + spouseSS + spousePension + spouseSalary;
+        + spouseSS + spousePension + spouseSalary + partTimeIncome;
       let totalCashNeed = Math.max(0, spending - incomeFromSources);
 
       if ((totalCashNeed > 0 || rothConversionAmount > 0) && !depleted) {
@@ -431,8 +538,9 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
 
           // Estimate taxes on these withdrawals
           const tradW = withdrawals.traditional401k + withdrawals.traditionalIRA;
+          const iterPenaltyAmount = calcPenaltyAmount(withdrawals, rothConversionAmount);
           const iterTaxInput: TaxInput = {
-            wages: spouseSalary > 0 ? spouseSalary * (1 - s.totalSavingsRate) : 0,
+            wages: (spouseSalary > 0 ? spouseSalary * (1 - s.totalSavingsRate) : 0) + partTimeIncome,
             traditionalWithdrawals: tradW + rothConversionAmount,
             socialSecurity: socialSecurity + spouseSS,
             pension: pension + spousePension,
@@ -444,6 +552,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
             stateCode: s.stateCode,
             yearsFromNow,
             taxBracketInflationRate: s.taxBracketInflationRate ?? 0,
+            earlyWithdrawalPenaltyAmount: iterPenaltyAmount,
           };
           const iterTax = calculateTaxes(iterTaxInput);
 
@@ -462,8 +571,9 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     const traditionalWithdrawals = withdrawals.traditional401k + withdrawals.traditionalIRA + rothConversionAmount;
     const combinedSS = socialSecurity + spouseSS;
     const combinedPension = pension + spousePension;
+    const penaltyAmount = isRetired ? calcPenaltyAmount(withdrawals, rothConversionAmount) : 0;
     const taxInput: TaxInput = {
-      wages: isRetired ? 0 : salary * (1 - s.totalSavingsRate), // taxable wages after pre-tax contributions
+      wages: isRetired ? partTimeIncome : salary * (1 - s.totalSavingsRate),
       traditionalWithdrawals,
       socialSecurity: combinedSS,
       pension: combinedPension,
@@ -475,6 +585,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       stateCode: s.stateCode,
       yearsFromNow,
       taxBracketInflationRate: s.taxBracketInflationRate ?? 0,
+      earlyWithdrawalPenaltyAmount: penaltyAmount,
     };
 
     // Adjust wages for pre-tax employee contributions (traditional 401k + HSA reduce taxable wages)
@@ -486,6 +597,10 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     if (spouseSalary > 0) {
       taxInput.wages += spouseSalary * (1 - s.totalSavingsRate);
     }
+    // Add part-time income as wages (subject to FICA)
+    if (partTimeIncome > 0) {
+      taxInput.wages += partTimeIncome;
+    }
 
     const taxResult = calculateTaxes(taxInput);
 
@@ -493,7 +608,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     // When retirement income exceeds spending + taxes, reinvest surplus into taxable
     if (isRetired) {
       const retirementIncome = socialSecurity + pension + otherIncome
-        + spouseSS + spousePension + spouseSalary;
+        + spouseSS + spousePension + spouseSalary + partTimeIncome;
       const surplus = retirementIncome - spending - taxResult.total;
       if (surplus > 0) {
         balances.taxable += surplus;
@@ -556,7 +671,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       totalBalance: totalBal,
       balances: cloneBalances(balances),
       income: {
-        salary: (isRetired ? 0 : salary) + spouseSalary,
+        salary: (isRetired ? partTimeIncome : salary) + spouseSalary,
         socialSecurity: socialSecurity + spouseSS,
         pension: pension + spousePension,
         other: otherIncome,

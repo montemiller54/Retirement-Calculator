@@ -161,6 +161,32 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
           pensionCOLA: 0.0,
         };
       }
+      // New fields migration
+      if (patched.ruleof55Eligible == null) {
+        (patched as Record<string, unknown>).ruleof55Eligible = false;
+      }
+      if (patched.rothContributionBasis == null) {
+        (patched as Record<string, unknown>).rothContributionBasis = 0;
+      }
+      if (!patched.partTimeIncome) {
+        (patched as Record<string, unknown>).partTimeIncome = {
+          enabled: false,
+          monthlyAmount: 2000,
+          endAge: 70,
+        };
+      }
+      if (!patched.housing) {
+        (patched as Record<string, unknown>).housing = {
+          enabled: false,
+          mortgagePayment: 1500,
+          payoffAge: 65,
+          downsizingProceeds: 0,
+          downsizingAge: 70,
+        };
+      }
+      if (patched.inflationVolatility == null) {
+        (patched as Record<string, unknown>).inflationVolatility = 0;
+      }
       dispatch({ type: 'LOAD_SCENARIO', scenario: patched });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

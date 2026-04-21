@@ -74,6 +74,30 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
         </p>
       </div>
 
+      {/* Early withdrawal rules */}
+      <div className="pt-3 border-t border-gray-100 dark:border-gray-700 space-y-2">
+        <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Early Withdrawal Rules</label>
+        <p className="text-[10px] text-gray-400">A 10% penalty applies to retirement account withdrawals before age 59½, with some exceptions.</p>
+
+        <div className="flex items-center gap-1">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={scenario.ruleof55Eligible} onChange={e => setField('ruleof55Eligible', e.target.checked)} className="accent-primary-600" />
+            <span className="text-xs text-gray-700 dark:text-gray-300">Rule of 55 eligible</span>
+          </label>
+          <InfoTip text="If you leave your employer at age 55 or later, you can withdraw from that employer's 401(k) penalty-free. Does not apply to IRAs." />
+        </div>
+
+        <div>
+          <label className="input-label">Roth IRA Contributions Basis
+            <InfoTip text="Total amount you've directly contributed to Roth IRAs (not conversions or earnings). This amount can always be withdrawn penalty-free and tax-free, even before 59½." />
+          </label>
+          <div className="relative">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
+            <CurrencyInput value={scenario.rothContributionBasis} onChange={v => setField('rothContributionBasis', v)} />
+          </div>
+        </div>
+      </div>
+
       {/* Roth Conversions */}
       <div className="pt-3 border-t border-gray-100 dark:border-gray-700 space-y-3">
         <div className="flex items-center gap-1">

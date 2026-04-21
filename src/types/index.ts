@@ -228,6 +228,29 @@ export interface ScenarioInput {
   // Withdrawal
   withdrawalStrategy: WithdrawalStrategy;
 
+  // Early withdrawal settings
+  ruleof55Eligible: boolean;       // allows penalty-free 401k access at age 55 if separated from service
+  rothContributionBasis: number;   // total Roth IRA contributions (penalty-free withdrawal amount)
+
+  // Part-time retirement income
+  partTimeIncome: {
+    enabled: boolean;
+    monthlyAmount: number;         // monthly in today's dollars
+    endAge: number;                // age at which part-time income stops
+  };
+
+  // Housing / mortgage
+  housing: {
+    enabled: boolean;
+    mortgagePayment: number;       // monthly mortgage payment (today's dollars)
+    payoffAge: number;             // age when mortgage is paid off
+    downsizingProceeds: number;    // one-time lump sum from downsizing
+    downsizingAge: number;         // age at which downsizing occurs
+  };
+
+  // Variable inflation
+  inflationVolatility: number;     // std dev of inflation rate (0 = fixed, e.g. 0.01 = 1%)
+
   // Guardrails
   guardrails: GuardrailConfig;
 

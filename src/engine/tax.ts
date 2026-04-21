@@ -87,6 +87,7 @@ export interface TaxInput {
   stateCode?: string;                     // defaults to 'IA' for backward compat
   yearsFromNow?: number;             // years elapsed since simulation start
   taxBracketInflationRate?: number;   // annual indexing rate for brackets/thresholds
+  earlyWithdrawalPenaltyAmount?: number;  // amount subject to 10% early withdrawal penalty
 }
 
 export interface TaxResult {
@@ -94,6 +95,7 @@ export interface TaxResult {
   state: number;
   capitalGains: number;
   fica: number;
+  earlyWithdrawalPenalty: number;
   total: number;
   effectiveRate: number;
   marginalRate: number;
@@ -106,6 +108,7 @@ export function calculateTaxes(input: TaxInput): TaxResult {
     filingStatus = 'hoh',
     stateCode = 'IA',
     yearsFromNow = 0, taxBracketInflationRate = 0,
+    earlyWithdrawalPenaltyAmount = 0,
   } = input;
 
   // Inflation factor for indexing brackets/thresholds
@@ -192,8 +195,11 @@ export function calculateTaxes(input: TaxInput): TaxResult {
     age,
   });
 
+  // ── Early withdrawal penalty (10% on amounts withdrawn before 59½) ──
+  const earlyWithdrawalPenalty = earlyWithdrawalPenaltyAmount > 0 ? earlyWithdrawalPenaltyAmount * 0.10 : 0;
+
   // ── Totals ──
-  const total = totalFederal + stateTax + fica;
+  const total = totalFederal + stateTax + fica + earlyWithdrawalPenalty;
   const grossIncome = wages + traditionalWithdrawals + socialSecurity +
     pension + capitalGains + taxableInterest + otherTaxableIncome;
 
@@ -208,6 +214,7 @@ export function calculateTaxes(input: TaxInput): TaxResult {
     state: stateTax,
     capitalGains: ltcgTax,
     fica,
+    earlyWithdrawalPenalty,
     total,
     effectiveRate: grossIncome > 0 ? total / grossIncome : 0,
     marginalRate,

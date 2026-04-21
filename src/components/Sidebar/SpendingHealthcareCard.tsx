@@ -77,6 +77,60 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
         />
       </div>
 
+      {/* Variable inflation */}
+      <div>
+        <PctSlider
+          label="Inflation Variability"
+          value={scenario.inflationVolatility * 100}
+          onChange={v => setField('inflationVolatility', v / 100)}
+          min={0} max={3} step={0.1}
+          tooltip={<InfoTip text="How much inflation can vary year to year in the simulation. 0% = fixed inflation rate. 1% = inflation can swing ±1% from the base rate each year." />}
+        />
+      </div>
+
+      {/* Housing / Mortgage */}
+      <div className="pt-3 border-t border-gray-100 dark:border-gray-700 space-y-3">
+        <div className="flex items-center gap-1">
+          <Toggle
+            checked={scenario.housing.enabled}
+            onChange={v => setField('housing.enabled', v)}
+            label="Housing / Mortgage"
+          />
+          <InfoTip text="Model your mortgage payment ending at a specific age, and optionally include proceeds from downsizing your home." />
+        </div>
+        {scenario.housing.enabled && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="input-label">Monthly Mortgage</label>
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
+                  <CurrencyInput value={scenario.housing.mortgagePayment} onChange={v => setField('housing.mortgagePayment', v)} />
+                </div>
+              </div>
+              <div>
+                <label className="input-label">Payoff Age</label>
+                <input type="number" className="input-field text-center" value={scenario.housing.payoffAge} onChange={e => setField('housing.payoffAge', parseInt(e.target.value) || 65)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="input-label">Downsizing Proceeds</label>
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
+                  <CurrencyInput value={scenario.housing.downsizingProceeds} onChange={v => setField('housing.downsizingProceeds', v)} />
+                </div>
+                <p className="text-[10px] text-gray-400 mt-0.5">0 = no downsizing</p>
+              </div>
+              <div>
+                <label className="input-label">Downsizing Age</label>
+                <input type="number" className="input-field text-center" value={scenario.housing.downsizingAge} onChange={e => setField('housing.downsizingAge', parseInt(e.target.value) || 70)} />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* One-time expenses */}
       <div>
         <div className="flex items-center justify-between">

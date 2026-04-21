@@ -124,6 +124,23 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
     }
   }
 
+  // ── Housing ──
+  if (s.housing?.enabled) {
+    if (s.housing.payoffAge < s.currentAge) {
+      errors.push({ card: 'spending', field: 'housing.payoffAge', message: 'Mortgage payoff age must be at or after your current age.' });
+    }
+    if (s.housing.downsizingProceeds > 0 && (s.housing.downsizingAge < s.currentAge || s.housing.downsizingAge > s.endAge)) {
+      errors.push({ card: 'spending', field: 'housing.downsizingAge', message: `Downsizing age must be between ${s.currentAge} and ${s.endAge}.` });
+    }
+  }
+
+  // ── Part-time income ──
+  if (s.partTimeIncome?.enabled) {
+    if (s.partTimeIncome.endAge <= s.retirementAge) {
+      errors.push({ card: 'income', field: 'partTimeIncome.endAge', message: 'Part-time income end age must be after retirement age.' });
+    }
+  }
+
   return errors;
 }
 
