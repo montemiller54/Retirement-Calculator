@@ -48,7 +48,9 @@ const ScenarioContext = createContext<ScenarioContextType | null>(null);
 
 function getInitialState(): ScenarioInput {
   const saved = loadWorkingState();
-  return saved ?? DEFAULT_SCENARIO;
+  if (!saved) return DEFAULT_SCENARIO;
+  // Merge defaults for any missing top-level fields (handles old localStorage data)
+  return { ...DEFAULT_SCENARIO, ...saved };
 }
 
 export function ScenarioProvider({ children }: { children: ReactNode }) {
@@ -72,7 +74,12 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
       (!scenario.healthcare) ||
       (!scenario.rothConversion) ||
       (!scenario.cashBuffer) ||
-      (!scenario.spouse);
+      (!scenario.spouse) ||
+      (!scenario.partTimeIncome) ||
+      (!scenario.housing) ||
+      (scenario.inflationVolatility == null) ||
+      (scenario.rothContributionBasis == null) ||
+      (scenario.ruleof55Eligible == null);
     if (needsPatch) {
       const patched = { ...scenario };
       // Patch asset allocations
