@@ -181,11 +181,13 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
 
       {/* Healthcare */}
       <div className="pt-3 border-t border-gray-100 dark:border-gray-700 space-y-3">
-        <Toggle
-          checked={hc.enabled}
-          onChange={v => setField('healthcare.enabled', v)}
-          label="Healthcare Cost Modeling"
-        />
+        <div className="flex items-center gap-1">
+          <Toggle
+            checked={hc.enabled}
+            onChange={v => setField('healthcare.enabled', v)}
+            label="Healthcare Cost Modeling"
+          />
+        </div>
 
         {hc.enabled && (
           <div className="space-y-3">
