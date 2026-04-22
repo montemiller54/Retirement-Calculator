@@ -14,10 +14,15 @@ function setNestedField(obj: Record<string, unknown>, path: string, value: unkno
   const keys = path.split('.');
   const result = { ...obj };
   let current: Record<string, unknown> = result;
+  const defaults = DEFAULT_SCENARIO as unknown as Record<string, unknown>;
+  let currentDefault: Record<string, unknown> = defaults;
   for (let i = 0; i < keys.length - 1; i++) {
     const key = keys[i];
-    current[key] = { ...(current[key] as Record<string, unknown>) };
+    const defaultVal = currentDefault?.[key] as Record<string, unknown> | undefined;
+    // If the current value is missing, seed it from defaults so all sibling fields are present
+    current[key] = { ...(defaultVal ?? {}), ...(current[key] as Record<string, unknown> ?? {}) };
     current = current[key] as Record<string, unknown>;
+    currentDefault = defaultVal ?? {} as Record<string, unknown>;
   }
   current[keys[keys.length - 1]] = value;
   return result;

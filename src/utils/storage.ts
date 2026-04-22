@@ -1,6 +1,7 @@
 import type { SavedScenario, ScenarioInput } from '../types';
 import { ASSET_CLASSES, ACCOUNT_TYPES } from '../types';
 import { DEFAULT_ASSET_RETURNS, makeUniformAllocations, RISK_PROFILES } from '../constants/asset-classes';
+import { DEFAULT_SCENARIO } from '../constants/defaults';
 
 const STORAGE_KEY = 'retirement-planner-scenarios';
 const WORKING_KEY = 'retirement-planner-working';
@@ -86,83 +87,19 @@ function migrateScenario(s: ScenarioInput): ScenarioInput {
     (s as unknown as Record<string, unknown>).stateCode = 'IA';
   }
 
-  // Patch healthcare costs
-  if (!s.healthcare) {
-    (s as unknown as Record<string, unknown>).healthcare = {
-      enabled: false,
-      preMedicareMonthly: 1500,
-      medicareMonthly: 500,
-      lateLifeMonthly: 1000,
-      medicareStartAge: 65,
-      lateLifeStartAge: 80,
-      inflationRate: 0.05,
-    };
-  }
-
-  // Patch cash buffer
-  if (!s.cashBuffer) {
-    (s as unknown as Record<string, unknown>).cashBuffer = {
-      enabled: false,
-      yearsOfExpenses: 3,
-      refillInUpMarkets: true,
-    };
-  }
-
-  // Patch Roth conversion
-  if (!s.rothConversion) {
-    (s as unknown as Record<string, unknown>).rothConversion = {
-      enabled: false,
-      strategy: 'fillBracket',
-      targetBracketRate: 0.12,
-      fixedAnnualAmount: 50000,
-      startAge: 65,
-      endAge: 72,
-    };
-  }
-
-  // Patch guardrails
-  if (!s.guardrails) {
-    (s as unknown as Record<string, unknown>).guardrails = {
-      enabled: false,
-      tiers: [{ drawdownPct: 15, spendingCutPct: 10 }],
-      minimumSpendingFloor: 2500,
-    };
-  }
-
-  // Patch part-time income
-  if (!s.partTimeIncome) {
-    (s as unknown as Record<string, unknown>).partTimeIncome = {
-      enabled: false,
-      monthlyAmount: 2000,
-      endAge: 70,
-    };
-  }
-
-  // Patch housing
-  if (!s.housing) {
-    (s as unknown as Record<string, unknown>).housing = {
-      enabled: false,
-      mortgagePayment: 1500,
-      payoffAge: 65,
-      downsizingProceeds: 0,
-      downsizingAge: 70,
-    };
-  }
-
-  // Patch spouse config
-  if (!s.spouse) {
-    (s as unknown as Record<string, unknown>).spouse = {
-      enabled: false,
-      currentAge: 33,
-      retirementAge: 65,
-      currentSalary: 0,
-      salaryGrowthRate: 0.03,
-      socialSecurityBenefit: 1500,
-      socialSecurityClaimAge: 67,
-      pensionAmount: 0,
-      pensionStartAge: 65,
-      pensionCOLA: 0.0,
-    };
+  // Patch nested objects: merge with defaults so partially-defined objects get all fields
+  const nestedKeys = [
+    'healthcare', 'cashBuffer', 'rothConversion', 'guardrails',
+    'partTimeIncome', 'housing', 'spouse',
+  ] as const;
+  for (const key of nestedKeys) {
+    const defaultVal = DEFAULT_SCENARIO[key];
+    if (!s[key]) {
+      (s as unknown as Record<string, unknown>)[key] = { ...defaultVal };
+    } else {
+      // Merge: fill in any missing fields from defaults while keeping existing values
+      (s as unknown as Record<string, unknown>)[key] = { ...defaultVal, ...s[key] };
+    }
   }
 
   // Migrate old asset class names: usStocks+intlStocks→stocks, usBonds→bonds

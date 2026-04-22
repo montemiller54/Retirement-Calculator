@@ -13,7 +13,7 @@ export function CurrencyInput({ value, onChange, className = '' }: {
   const [raw, setRaw] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const formatted = value.toLocaleString('en-US');
+  const formatted = (value ?? 0).toLocaleString('en-US');
 
   const handleFocus = () => {
     setEditing(true);

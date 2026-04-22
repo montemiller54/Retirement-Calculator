@@ -77,7 +77,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
-            {scenario.spouse.enabled ? 'Your Social Security' : 'Social Security'}
+            {scenario.spouse?.enabled ? 'Your Social Security' : 'Social Security'}
           </label>
           <Toggle
             checked={isAuto}
@@ -129,7 +129,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
       </div>
 
       {/* Spouse Social Security */}
-      {scenario.spouse.enabled && (
+      {scenario.spouse?.enabled && (
         <div className="space-y-1.5 pt-2 border-t border-gray-100 dark:border-gray-700">
           <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Spouse Social Security</label>
           <div className="grid grid-cols-2 gap-2">
@@ -164,7 +164,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
       {/* Your Pension */}
       <div className="space-y-1.5 pt-2 border-t border-gray-100 dark:border-gray-700">
         <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
-          {scenario.spouse.enabled ? 'Your Pension' : 'Pension'}
+          {scenario.spouse?.enabled ? 'Your Pension' : 'Pension'}
         </label>
         <div className="grid grid-cols-2 gap-2">
           <div>
@@ -196,7 +196,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
       </div>
 
       {/* Spouse Pension */}
-      {scenario.spouse.enabled && (
+      {scenario.spouse?.enabled && (
         <div className="space-y-1.5 pt-2 border-t border-gray-100 dark:border-gray-700">
           <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Spouse Pension</label>
           <div className="grid grid-cols-2 gap-2">

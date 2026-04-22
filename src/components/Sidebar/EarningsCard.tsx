@@ -65,20 +65,20 @@ export function EarningsCard({ validationErrors }: CardProps) {
     }
   };
 
-  const totalMonthly = scenario.currentSalary + (scenario.spouse.enabled ? scenario.spouse.currentSalary : 0);
+  const totalMonthly = scenario.currentSalary + (scenario.spouse?.enabled ? scenario.spouse.currentSalary : 0);
 
   return (
     <div className="space-y-4">
       <div>
         <p className="text-[10px] text-gray-400 mb-3">Current income and how you save it.</p>
 
-        <div className={`grid ${scenario.spouse.enabled ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
+        <div className={`grid ${scenario.spouse?.enabled ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
           <DollarInput
-            label={scenario.spouse.enabled ? 'Your Monthly Salary' : 'Monthly Salary'}
+            label={scenario.spouse?.enabled ? 'Your Monthly Salary' : 'Monthly Salary'}
             value={scenario.currentSalary}
             onChange={v => setField('currentSalary', v)}
           />
-          {scenario.spouse.enabled && (
+          {scenario.spouse?.enabled && (
             <DollarInput
               label="Spouse Monthly Salary"
               value={scenario.spouse.currentSalary}

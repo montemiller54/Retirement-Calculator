@@ -92,11 +92,11 @@ export function ProfileCard({ validationErrors }: CardProps) {
       {/* Spouse */}
       <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
         <Toggle
-          checked={scenario.spouse.enabled}
+          checked={scenario.spouse?.enabled ?? false}
           onChange={v => setField('spouse.enabled', v)}
           label="Include Spouse"
         />
-        {scenario.spouse.enabled && (
+        {scenario.spouse?.enabled && (
           <div className="grid grid-cols-2 gap-2 mt-3">
             <div>
               <label className="input-label">Spouse Age</label>
