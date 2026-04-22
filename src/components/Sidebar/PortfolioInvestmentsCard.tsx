@@ -317,6 +317,17 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                 ))}
               </div>
             )}
+            {/* Rule of 55 / Early withdrawal penalty toggle */}
+            <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex items-center gap-1">
+                <Toggle
+                  checked={!scenario.ruleof55Eligible}
+                  onChange={v => setField('ruleof55Eligible', !v)}
+                  label="10% Early Withdrawal Penalty"
+                />
+                <InfoTip text="When enabled, withdrawals from 401(k) and Roth 401(k) accounts before age 59½ incur a 10% IRS penalty. Disable this if you qualify for the Rule of 55 — which allows penalty-free 401(k) withdrawals if you separate from your employer at age 55 or later." />
+              </div>
+            </div>
           </div>
         );
       })()}

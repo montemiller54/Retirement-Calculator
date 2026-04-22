@@ -46,33 +46,6 @@ export function IncomeCard({ validationErrors }: CardProps) {
     <div className="space-y-4">
       <p className="text-[10px] text-gray-400 mb-1">Social Security, pensions, and other income in retirement. All amounts are in <strong>today's dollars</strong>.</p>
 
-      {/* Part-time retirement income */}
-      <div className="space-y-1.5 pb-2 border-b border-gray-100 dark:border-gray-700">
-        <div className="flex items-center gap-1">
-          <Toggle
-            checked={scenario.partTimeIncome?.enabled ?? false}
-            onChange={v => setField('partTimeIncome.enabled', v)}
-            label="Part-Time Income"
-          />
-          <InfoTip text="Income from part-time work, consulting, or freelancing during early retirement. Stops at the age you specify." />
-        </div>
-        {scenario.partTimeIncome?.enabled && (
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="input-label">Monthly Amount</label>
-              <div className="relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
-                <CurrencyInput value={scenario.partTimeIncome.monthlyAmount} onChange={v => setField('partTimeIncome.monthlyAmount', v)} />
-              </div>
-            </div>
-            <div>
-              <label className="input-label">Until Age</label>
-              <input type="number" className="input-field text-center" value={scenario.partTimeIncome.endAge} min={scenario.retirementAge} max={scenario.endAge} onChange={e => setField('partTimeIncome.endAge', parseInt(e.target.value) || 70)} />
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Your Social Security */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
