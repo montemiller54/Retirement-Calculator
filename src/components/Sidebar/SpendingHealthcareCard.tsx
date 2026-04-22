@@ -92,13 +92,13 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
       <div className="pt-3 border-t border-gray-100 dark:border-gray-700 space-y-3">
         <div className="flex items-center gap-1">
           <Toggle
-            checked={scenario.housing.enabled}
+            checked={scenario.housing?.enabled ?? false}
             onChange={v => setField('housing.enabled', v)}
             label="Housing / Mortgage"
           />
           <InfoTip text="Model your mortgage payment ending at a specific age, and optionally include proceeds from downsizing your home." />
         </div>
-        {scenario.housing.enabled && (
+        {scenario.housing?.enabled && (
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div>

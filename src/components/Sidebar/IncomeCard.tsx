@@ -50,13 +50,13 @@ export function IncomeCard({ validationErrors }: CardProps) {
       <div className="space-y-1.5 pb-2 border-b border-gray-100 dark:border-gray-700">
         <div className="flex items-center gap-1">
           <Toggle
-            checked={scenario.partTimeIncome.enabled}
+            checked={scenario.partTimeIncome?.enabled ?? false}
             onChange={v => setField('partTimeIncome.enabled', v)}
             label="Part-Time Income"
           />
           <InfoTip text="Income from part-time work, consulting, or freelancing during early retirement. Stops at the age you specify." />
         </div>
-        {scenario.partTimeIncome.enabled && (
+        {scenario.partTimeIncome?.enabled && (
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="input-label">Monthly Amount</label>

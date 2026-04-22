@@ -167,7 +167,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
 
     // ── Part-time retirement income ──
     let partTimeIncome = 0;
-    if (s.partTimeIncome.enabled && isRetired && age < s.partTimeIncome.endAge) {
+    if (s.partTimeIncome?.enabled && isRetired && age < s.partTimeIncome.endAge) {
       partTimeIncome = s.partTimeIncome.monthlyAmount * yearInflationFactor;
     }
 
@@ -416,7 +416,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       let baseSpending = s.baseAnnualSpending * yearInflationFactor;
 
       // Housing: subtract mortgage payment if paid off, add downsizing proceeds
-      if (s.housing.enabled) {
+      if (s.housing?.enabled) {
         if (age < s.housing.payoffAge) {
           baseSpending += s.housing.mortgagePayment * yearInflationFactor;
         }
@@ -439,7 +439,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       }
 
       // Guardrails
-      if (s.guardrails.enabled) {
+      if (s.guardrails?.enabled) {
         const currentTotal = sumBalances(balances);
         highWaterMark = Math.max(highWaterMark, currentTotal);
         const drawdownPct = highWaterMark > 0
@@ -470,7 +470,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       spending = baseSpending;
 
       // ── Healthcare costs (non-discretionary, not subject to guardrails) ──
-      if (s.healthcare.enabled) {
+      if (s.healthcare?.enabled) {
         const hc = s.healthcare;
         let annualHealthcare: number;
         if (age < hc.medicareStartAge) {

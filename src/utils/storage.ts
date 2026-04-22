@@ -120,6 +120,35 @@ function migrateScenario(s: ScenarioInput): ScenarioInput {
     };
   }
 
+  // Patch guardrails
+  if (!s.guardrails) {
+    (s as unknown as Record<string, unknown>).guardrails = {
+      enabled: false,
+      tiers: [{ drawdownPct: 15, spendingCutPct: 10 }],
+      minimumSpendingFloor: 2500,
+    };
+  }
+
+  // Patch part-time income
+  if (!s.partTimeIncome) {
+    (s as unknown as Record<string, unknown>).partTimeIncome = {
+      enabled: false,
+      monthlyAmount: 2000,
+      endAge: 70,
+    };
+  }
+
+  // Patch housing
+  if (!s.housing) {
+    (s as unknown as Record<string, unknown>).housing = {
+      enabled: false,
+      mortgagePayment: 1500,
+      payoffAge: 65,
+      downsizingProceeds: 0,
+      downsizingAge: 70,
+    };
+  }
+
   // Patch spouse config
   if (!s.spouse) {
     (s as unknown as Record<string, unknown>).spouse = {
