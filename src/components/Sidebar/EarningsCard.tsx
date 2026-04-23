@@ -36,33 +36,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
   // Auto-adjust: when one field changes, adjust the largest *other* field to keep total at 100%
   const handleAllocChange = (changedAcct: AccountType, newValue: number) => {
     newValue = Math.max(0, Math.min(100, newValue));
-    const oldValue = scenario.contributionAllocation[changedAcct] || 0;
-    const delta = newValue - oldValue;
-    if (delta === 0) { return; }
-
-    // Find the largest other account to absorb the change
-    const others = ALLOCATION_ACCOUNTS.filter(a => a !== changedAcct);
-    const othersBySize = [...others].sort(
-      (a, b) => (scenario.contributionAllocation[b] || 0) - (scenario.contributionAllocation[a] || 0)
-    );
-
-    // Try to absorb delta from the largest other account
-    let remaining = delta;
-    const adjustments: { acct: AccountType; val: number }[] = [];
-    for (const acct of othersBySize) {
-      if (remaining === 0) break;
-      const cur = scenario.contributionAllocation[acct] || 0;
-      const maxAbsorb = Math.min(remaining, cur); // can only reduce to 0
-      if (maxAbsorb > 0) {
-        adjustments.push({ acct, val: cur - maxAbsorb });
-        remaining -= maxAbsorb;
-      }
-    }
-
     setField(`contributionAllocation.${changedAcct}`, newValue);
-    for (const adj of adjustments) {
-      setField(`contributionAllocation.${adj.acct}`, adj.val);
-    }
   };
 
   const totalMonthly = scenario.currentSalary + (scenario.spouse?.enabled ? scenario.spouse.currentSalary : 0);
