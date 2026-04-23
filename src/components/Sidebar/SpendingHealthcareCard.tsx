@@ -56,8 +56,8 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
               ${(scenario.baseAnnualSpending * 12).toLocaleString()}/yr
             </div>
           )}
-          {hc.enabled && (
-            <p className="text-[10px] text-amber-500 mt-1">Exclude healthcare costs — they are modeled separately below.</p>
+          {(hc?.enabled || scenario.housing?.enabled) && (
+            <p className="text-[10px] text-amber-500 mt-1">Exclude{scenario.housing?.enabled ? ' mortgage principal & interest' : ''}{scenario.housing?.enabled && hc?.enabled ? ' and' : ''}{hc?.enabled ? ' healthcare costs' : ''} — {scenario.housing?.enabled && hc?.enabled ? 'they are' : 'it is'} modeled separately below.</p>
           )}
         </div>
       </div>
@@ -102,14 +102,18 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="input-label">Monthly Mortgage</label>
+                <label className="input-label">Monthly Mortgage
+                  <InfoTip text="Enter only principal and interest — exclude taxes, insurance, and HOA fees. Those should be included in your base monthly spending." />
+                </label>
                 <div className="relative">
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
                   <CurrencyInput value={scenario.housing.mortgagePayment} onChange={v => setField('housing.mortgagePayment', v)} />
                 </div>
               </div>
               <div>
-                <label className="input-label">Payoff Age</label>
+                <label className="input-label">Payoff Age
+                  <InfoTip text="At this age your mortgage is paid off. During retirement, the mortgage amount is added on top of your base spending until this age, then it drops off — so your base spending should not include mortgage P&I." />
+                </label>
                 <input type="number" className="input-field text-center" value={scenario.housing.payoffAge} onChange={e => setField('housing.payoffAge', parseInt(e.target.value) || 65)} />
               </div>
             </div>
