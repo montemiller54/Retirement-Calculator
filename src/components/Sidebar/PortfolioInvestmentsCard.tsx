@@ -45,6 +45,26 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
 
   const totalBalance = ACCOUNT_TYPES.reduce((s, a) => s + scenario.balances[a], 0);
 
+  const visibleAccounts = scenario.visibleAccounts ?? ['traditional401k', 'cashAccount'];
+  const hiddenAccounts = ACCOUNT_TYPES.filter(a => !visibleAccounts.includes(a));
+
+  const addAccount = (acct: AccountType) => {
+    setField('visibleAccounts', [...visibleAccounts, acct]);
+  };
+
+  const removeAccount = (acct: AccountType) => {
+    const balance = scenario.balances[acct] || 0;
+    const alloc = scenario.contributionAllocation[acct] || 0;
+    if (balance > 0 || alloc > 0) {
+      if (!window.confirm(`${ACCOUNT_LABELS[acct]} has a balance of $${balance.toLocaleString()} and ${alloc}% allocation. Removing it will zero out both. Continue?`)) {
+        return;
+      }
+      setField(`balances.${acct}`, 0);
+      setField(`contributionAllocation.${acct}`, 0);
+    }
+    setField('visibleAccounts', visibleAccounts.filter(a => a !== acct));
+  };
+
   const handleRiskProfile = (profile: RiskProfile) => {
     setField('investments.riskProfile', profile);
     setField('investments.mode', 'simple');
@@ -96,7 +116,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
       {activeSection === 'balances' && (
         <div className="px-1 pb-2 space-y-2">
           <div className="space-y-1">
-            {ACCOUNT_TYPES.map(acct => (
+            {visibleAccounts.map(acct => (
               <div key={acct} className="flex items-center gap-2">
                 <span className="text-[11px] w-28 truncate text-gray-600 dark:text-gray-400" title={ACCOUNT_LABELS[acct]}>
                   {ACCOUNT_LABELS[acct]}
@@ -108,15 +128,33 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                   value={scenario.balances[acct]}
                   onChange={v => setField(`balances.${acct}`, v)}
                 />
+                <button
+                  className="text-red-400 hover:text-red-600 text-xs px-0.5"
+                  onClick={() => removeAccount(acct)}
+                  title={`Remove ${ACCOUNT_LABELS[acct]}`}
+                >✕</button>
               </div>
             ))}
           </div>
+          {hiddenAccounts.length > 0 && (
+            <select
+              className="input-field text-[11px] py-1"
+              value=""
+              onChange={e => { if (e.target.value) addAccount(e.target.value as AccountType); }}
+            >
+              <option value="">+ Add account type...</option>
+              {hiddenAccounts.map(acct => (
+                <option key={acct} value={acct}>{ACCOUNT_LABELS[acct]}</option>
+              ))}
+            </select>
+          )}
           <div className="flex items-center justify-between text-[11px]">
             <span className="text-gray-500">Total Portfolio</span>
             <span className="font-semibold text-primary-600 dark:text-primary-400">
               ${totalBalance.toLocaleString()}
             </span>
           </div>
+          {visibleAccounts.includes('taxable') && (
           <div className="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-gray-700">
             <div className="flex-1">
               <label className="input-label">Original Investment %
@@ -137,6 +175,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
               </span>
             </div>
           </div>
+          )}
         </div>
       )}
 
@@ -287,7 +326,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {ACCOUNT_TYPES.map(acct => {
+                      {visibleAccounts.map(acct => {
                         const alloc = currentAllocations[acct];
                         const sum = ASSET_CLASSES.reduce((s, ac) => s + alloc[ac], 0);
                         return (

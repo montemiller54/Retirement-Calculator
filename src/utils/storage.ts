@@ -102,6 +102,16 @@ function migrateScenario(s: ScenarioInput): ScenarioInput {
     }
   }
 
+  // Patch visibleAccounts — derive from non-zero balances/allocations for old scenarios
+  if (!s.visibleAccounts) {
+    const visible = new Set<AccountType>(['traditional401k', 'cashAccount']);
+    for (const acct of ACCOUNT_TYPES) {
+      if ((s.balances as Record<string, number>)?.[acct] > 0) visible.add(acct);
+      if ((s.contributionAllocation as Record<string, number>)?.[acct] > 0) visible.add(acct);
+    }
+    (s as unknown as Record<string, unknown>).visibleAccounts = ACCOUNT_TYPES.filter(a => visible.has(a));
+  }
+
   // Migrate old asset class names: usStocks+intlStocks→stocks, usBonds→bonds
   const migrateAlloc = (alloc: Record<string, number>): void => {
     if ('usStocks' in alloc || 'intlStocks' in alloc) {

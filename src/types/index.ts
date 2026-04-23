@@ -204,6 +204,7 @@ export interface ScenarioInput {
 
   // Current portfolio
   balances: AccountBalances;
+  visibleAccounts: AccountType[]; // which accounts are shown in the UI
   taxableCostBasisPct: number;   // e.g., 0.70 means 70% is basis
 
   // Spending

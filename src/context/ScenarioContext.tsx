@@ -84,7 +84,8 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
       (!scenario.housing) ||
       (scenario.inflationVolatility == null) ||
       (scenario.rothContributionBasis == null) ||
-      (scenario.ruleof55Eligible == null);
+      (scenario.ruleof55Eligible == null) ||
+      (!scenario.visibleAccounts);
     if (needsPatch) {
       const patched = { ...scenario };
       // Patch asset allocations
@@ -198,6 +199,14 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
       }
       if (patched.inflationVolatility == null) {
         (patched as Record<string, unknown>).inflationVolatility = 0;
+      }
+      if (!patched.visibleAccounts) {
+        const visible = new Set<string>(['traditional401k', 'cashAccount']);
+        for (const acct of ACCOUNT_TYPES) {
+          if ((patched.balances as Record<string, number>)[acct] > 0) visible.add(acct);
+          if ((patched.contributionAllocation as Record<string, number>)[acct] > 0) visible.add(acct);
+        }
+        (patched as Record<string, unknown>).visibleAccounts = ACCOUNT_TYPES.filter(a => visible.has(a));
       }
       dispatch({ type: 'LOAD_SCENARIO', scenario: patched });
     }

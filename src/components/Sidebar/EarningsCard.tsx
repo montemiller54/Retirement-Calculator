@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useScenario } from '../../context/ScenarioContext';
-import { ACCOUNT_LABELS, type AccountType } from '../../types';
+import { ACCOUNT_LABELS, ACCOUNT_TYPES, type AccountType } from '../../types';
 import { CurrencyInput } from './CurrencyInput';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
 import { PctSlider } from './shared';
@@ -29,9 +29,29 @@ export function EarningsCard({ validationErrors }: CardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [showMatchAdvanced, setShowMatchAdvanced] = useState(false);
 
-  const allocSum = ALLOCATION_ACCOUNTS.reduce(
+  const allocSum = ACCOUNT_TYPES.reduce(
     (s, a) => s + (scenario.contributionAllocation[a] || 0), 0
   );
+
+  const visibleAccounts = scenario.visibleAccounts ?? ['traditional401k', 'cashAccount'];
+  const hiddenAccounts = ACCOUNT_TYPES.filter(a => !visibleAccounts.includes(a));
+
+  const addAccount = (acct: AccountType) => {
+    setField('visibleAccounts', [...visibleAccounts, acct]);
+  };
+
+  const removeAccount = (acct: AccountType) => {
+    const balance = scenario.balances[acct] || 0;
+    const alloc = scenario.contributionAllocation[acct] || 0;
+    if (balance > 0 || alloc > 0) {
+      if (!window.confirm(`${ACCOUNT_LABELS[acct]} has a balance of $${balance.toLocaleString()} and ${alloc}% allocation. Removing it will zero out both. Continue?`)) {
+        return;
+      }
+      setField(`balances.${acct}`, 0);
+      setField(`contributionAllocation.${acct}`, 0);
+    }
+    setField('visibleAccounts', visibleAccounts.filter(a => a !== acct));
+  };
 
   // Auto-adjust: when one field changes, adjust the largest *other* field to keep total at 100%
   const handleAllocChange = (changedAcct: AccountType, newValue: number) => {
@@ -135,7 +155,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
             </div>
             <FieldError errors={ve} field="contributionAllocation" />
             <div className="space-y-1">
-              {ALLOCATION_ACCOUNTS.map(acct => (
+              {visibleAccounts.map(acct => (
                 <div key={acct} className="flex items-center gap-2">
                   <span className="text-[11px] w-28 truncate text-gray-600 dark:text-gray-400" title={ACCOUNT_LABELS[acct]}>
                     {ACCOUNT_LABELS[acct]}
@@ -151,9 +171,28 @@ export function EarningsCard({ validationErrors }: CardProps) {
                     />
                     <span className="text-[10px] text-gray-400">%</span>
                   </div>
+                  <button
+                    className="text-red-400 hover:text-red-600 text-xs px-0.5"
+                    onClick={() => removeAccount(acct)}
+                    title={`Remove ${ACCOUNT_LABELS[acct]}`}
+                  >✕</button>
                 </div>
               ))}
             </div>
+            {hiddenAccounts.length > 0 && (
+              <div className="mt-2">
+                <select
+                  className="input-field text-[11px] py-1"
+                  value=""
+                  onChange={e => { if (e.target.value) addAccount(e.target.value as AccountType); }}
+                >
+                  <option value="">+ Add account type...</option>
+                  {hiddenAccounts.map(acct => (
+                    <option key={acct} value={acct}>{ACCOUNT_LABELS[acct]}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Employer match */}

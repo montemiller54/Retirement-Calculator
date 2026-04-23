@@ -49,6 +49,7 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
     cashAccount: 0,
     otherAssets: 0,
   },
+  visibleAccounts: ['traditional401k', 'cashAccount'],
   taxableCostBasisPct: 0.80,
 
   // Spending (monthly amounts)
