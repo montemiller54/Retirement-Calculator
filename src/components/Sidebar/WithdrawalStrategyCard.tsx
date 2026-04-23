@@ -88,13 +88,19 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
         </div>
 
         <div>
-          <label className="input-label">Roth IRA Contributions Basis
+          <div className="flex items-center gap-1">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={scenario.rothContributionBasis > 0} onChange={e => { if (!e.target.checked) setField('rothContributionBasis', 0); else setField('rothContributionBasis', 1); }} className="accent-primary-600" />
+              <span className="text-xs text-gray-700 dark:text-gray-300">Roth IRA Contributions Basis</span>
+            </label>
             <InfoTip text="Total amount you've directly contributed to Roth IRAs (not conversions or earnings). This amount can always be withdrawn penalty-free and tax-free, even before 59½." />
-          </label>
-          <div className="relative">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
-            <CurrencyInput value={scenario.rothContributionBasis} onChange={v => setField('rothContributionBasis', v)} />
           </div>
+          {scenario.rothContributionBasis > 0 && (
+            <div className="relative mt-1">
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
+              <CurrencyInput value={scenario.rothContributionBasis} onChange={v => setField('rothContributionBasis', v)} />
+            </div>
+          )}
         </div>
       </div>
 
