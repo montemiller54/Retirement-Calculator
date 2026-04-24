@@ -421,8 +421,9 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
           baseSpending += s.housing.mortgagePayment * yearInflationFactor;
         }
         if (age === s.housing.downsizingAge && s.housing.downsizingProceeds > 0) {
-          // Downsizing proceeds go into taxable account
-          const proceeds = s.housing.downsizingProceeds * yearInflationFactor;
+          // Downsizing proceeds appreciate at inflation + 1% (historical real home appreciation)
+          const homeAppreciation = s.spendingInflationRate + 0.01;
+          const proceeds = s.housing.downsizingProceeds * Math.pow(1 + homeAppreciation, yearsFromNow);
           balances.taxable += proceeds;
           taxableCostBasis += proceeds;
         }

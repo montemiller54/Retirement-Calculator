@@ -245,7 +245,7 @@ export interface ScenarioInput {
     enabled: boolean;
     mortgagePayment: number;       // monthly mortgage payment (today's dollars)
     payoffAge: number;             // age when mortgage is paid off
-    downsizingProceeds: number;    // one-time lump sum from downsizing
+    downsizingProceeds: number;    // one-time lump sum from downsizing (today's dollars)
     downsizingAge: number;         // age at which downsizing occurs
   };
 
