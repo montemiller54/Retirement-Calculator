@@ -62,20 +62,13 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 items-stretch">
+      <div>
         <PctSlider
           label="Spending Inflation"
           value={scenario.spendingInflationRate * 100}
           onChange={v => setField('spendingInflationRate', v / 100)}
           min={0} max={8} step={0.1}
-          tooltip={<InfoTip text="The annual rate your everyday expenses increase. Historically ~2.5-3%. Higher values model more aggressive cost-of-living growth." />}
-        />
-        <PctSlider
-          label="Tax Threshold Increases"
-          value={((scenario.taxBracketInflationRate ?? 0.02) * 100)}
-          onChange={v => setField('taxBracketInflationRate', v / 100)}
-          min={0} max={5} step={0.1}
-          tooltip={<InfoTip text="How fast IRS tax brackets, standard deduction, and contribution limits adjust for inflation. Historically ~2%. Set to 0% to model bracket creep." />}
+          tooltip={<InfoTip text="The annual rate your everyday expenses increase. Historically ~2.5-3%. Higher values model more aggressive cost-of-living growth. Tax brackets and IRS limits automatically adjust at 0.3% below this rate." />}
         />
       </div>
 

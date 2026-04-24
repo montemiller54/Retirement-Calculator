@@ -59,8 +59,11 @@ function resolveSSBenefits(s: ScenarioInput): ScenarioInput {
 // ── Convert monthly inputs to annual for the simulation loop ──
 function toAnnualScenario(s: ScenarioInput): ScenarioInput {
   const resolved = resolveSSBenefits(s);
+  // Derive tax bracket inflation from spending inflation minus 0.3% (chained CPI-U lag)
+  const derivedTaxBracketRate = resolved.taxBracketInflationRate ?? Math.max(0, resolved.spendingInflationRate - 0.003);
   return {
     ...resolved,
+    taxBracketInflationRate: derivedTaxBracketRate,
     currentSalary: resolved.currentSalary * 12,
     baseAnnualSpending: resolved.baseAnnualSpending * 12,
     socialSecurityBenefit: resolved.socialSecurityBenefit * 12,

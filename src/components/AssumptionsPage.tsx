@@ -37,7 +37,7 @@ export function AssumptionsPage() {
           <li>Catch-up contributions for age 50+: +$7,500 for 401(k), +$1,000 for IRA. SECURE 2.0 super catch-up: +$11,250 for 401(k) at ages 60–63.</li>
           <li>Excess contributions above limits automatically spill over to the taxable brokerage account.</li>
           <li>Employer match: configurable match rate and cap (% of salary). Match can be split between Traditional and Roth 401(k). Match does not count against employee deferral limits.</li>
-          <li>All contribution limits are inflation-indexed annually using the Tax Threshold Increases rate (default 2%).</li>
+          <li>All contribution limits are inflation-indexed annually at 0.3% below the spending inflation rate.</li>
           <li>No Roth IRA income limits, backdoor Roth, or mega-backdoor Roth modeling.</li>
         </ul>
       </section>
@@ -51,7 +51,7 @@ export function AssumptionsPage() {
           <li>Social Security benefits taxed using the provisional income method (0%/50%/85% taxable tiers).</li>
           <li>SS & Medicare Tax (FICA): employee-side Social Security (6.2% up to $176,100 wage base) + Medicare (1.45%) + Medicare surtax (0.9% above threshold).</li>
           <li>State income tax: all 50 states + DC modeled with flat effective rates, Social Security exemptions, and age-gated retirement income exemptions (e.g., Iowa: 3.8% rate, full retirement income exemption at age 55+).</li>
-          <li>All federal brackets, deductions, and thresholds are inflation-indexed annually.</li>
+          <li>All federal brackets, deductions, and thresholds are inflation-indexed annually at 0.3% below the spending inflation rate (modeling chained CPI-U).</li>
           <li>Iterative tax-aware withdrawal loop: withdrawals are recalculated up to 5 times to converge on the correct amount needed to cover spending + taxes on the withdrawal itself.</li>
           <li>Limitations: standard deduction only (no itemized), no AMT, no short-term capital gains, no qualified dividends tracked separately, state tax uses a single flat rate (not actual progressive brackets), no local/city taxes.</li>
         </ul>
