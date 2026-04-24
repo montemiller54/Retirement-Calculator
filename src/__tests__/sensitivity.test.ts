@@ -105,6 +105,15 @@ describe('HIGH IMPACT: Spending', () => {
     const high = run({ spendingInflationRate: 0.05 });
     expect(low.successRate).toBeGreaterThan(high.successRate);
   });
+
+  it('#18b inflation variability has moderate impact, not catastrophic', () => {
+    const none = run({ inflationVolatility: 0 });
+    const high = run({ inflationVolatility: 0.03 });
+    // Variable inflation should reduce success rate somewhat
+    expect(none.successRate).toBeGreaterThanOrEqual(high.successRate);
+    // But not catastrophically — gap should be < 15 percentage points
+    expect(none.successRate - high.successRate).toBeLessThan(0.15);
+  });
 });
 
 describe('HIGH IMPACT: Income Sources', () => {

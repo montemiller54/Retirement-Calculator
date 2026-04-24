@@ -198,7 +198,7 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
         };
       }
       if (patched.inflationVolatility == null) {
-        (patched as Record<string, unknown>).inflationVolatility = 0;
+        (patched as Record<string, unknown>).inflationVolatility = 0.015;
       }
       if (!patched.visibleAccounts) {
         const visible = new Set<string>(['traditional401k', 'cashAccount']);

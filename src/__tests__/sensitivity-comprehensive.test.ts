@@ -552,3 +552,125 @@ describe('Benchmark: Inflation Erosion', () => {
     expect(lowInflation.successRate - highInflation.successRate).toBeGreaterThan(0.10);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════
+// PART-TIME INCOME
+// ═══════════════════════════════════════════════════════════════════
+
+describe('Part-Time Income', () => {
+  const retiredBase: Partial<ScenarioInput> = {
+    currentAge: 60, retirementAge: 60, endAge: 90,
+    balances: { traditional401k: 800000, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 200000, hsa: 0, cashAccount: 0, otherAssets: 0 },
+    baseAnnualSpending: 4000,
+    socialSecurityBenefit: 2000,
+    socialSecurityClaimAge: 67,
+  };
+
+  it('part-time income enabled → higher success rate', () => {
+    const without = run({ ...retiredBase, partTimeIncome: { enabled: false, monthlyAmount: 2000, endAge: 70 } });
+    const withPT = run({ ...retiredBase, partTimeIncome: { enabled: true, monthlyAmount: 2000, endAge: 70 } });
+    expect(withPT.successRate).toBeGreaterThanOrEqual(without.successRate);
+    expect(withPT.medianEnding).toBeGreaterThan(without.medianEnding);
+  });
+
+  it('higher part-time monthly amount → higher median ending', () => {
+    const low = run({ ...retiredBase, partTimeIncome: { enabled: true, monthlyAmount: 500, endAge: 72 } });
+    const high = run({ ...retiredBase, partTimeIncome: { enabled: true, monthlyAmount: 3000, endAge: 72 } });
+    expect(high.medianEnding).toBeGreaterThan(low.medianEnding);
+  });
+
+  it('longer part-time duration → higher median ending', () => {
+    const short = run({ ...retiredBase, partTimeIncome: { enabled: true, monthlyAmount: 2000, endAge: 67 } });
+    const long = run({ ...retiredBase, partTimeIncome: { enabled: true, monthlyAmount: 2000, endAge: 75 } });
+    expect(long.medianEnding).toBeGreaterThan(short.medianEnding);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// HOUSING / MORTGAGE
+// ═══════════════════════════════════════════════════════════════════
+
+describe('Housing / Mortgage', () => {
+  const retiredBase: Partial<ScenarioInput> = {
+    currentAge: 55, retirementAge: 65, endAge: 95,
+    balances: { traditional401k: 600000, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 200000, hsa: 0, cashAccount: 0, otherAssets: 0 },
+    baseAnnualSpending: 4000,
+    socialSecurityBenefit: 2000,
+  };
+
+  it('housing enabled with mortgage → lower success rate (higher spending)', () => {
+    const noHousing = run({ ...retiredBase, housing: { enabled: false, mortgagePayment: 1500, payoffAge: 70, downsizingProceeds: 0, downsizingAge: 75 } });
+    const withHousing = run({ ...retiredBase, housing: { enabled: true, mortgagePayment: 1500, payoffAge: 70, downsizingProceeds: 0, downsizingAge: 75 } });
+    expect(noHousing.successRate).toBeGreaterThanOrEqual(withHousing.successRate);
+  });
+
+  it('higher mortgage payment → lower success rate', () => {
+    const low = run({ ...retiredBase, housing: { enabled: true, mortgagePayment: 500, payoffAge: 70, downsizingProceeds: 0, downsizingAge: 75 } });
+    const high = run({ ...retiredBase, housing: { enabled: true, mortgagePayment: 3000, payoffAge: 70, downsizingProceeds: 0, downsizingAge: 75 } });
+    expect(low.successRate).toBeGreaterThanOrEqual(high.successRate);
+  });
+
+  it('earlier payoff age → higher success rate', () => {
+    const late = run({ ...retiredBase, housing: { enabled: true, mortgagePayment: 2000, payoffAge: 80, downsizingProceeds: 0, downsizingAge: 85 } });
+    const early = run({ ...retiredBase, housing: { enabled: true, mortgagePayment: 2000, payoffAge: 65, downsizingProceeds: 0, downsizingAge: 85 } });
+    expect(early.medianEnding).toBeGreaterThan(late.medianEnding);
+  });
+
+  it('downsizing proceeds → higher median ending', () => {
+    const noDownsize = run({ ...retiredBase, housing: { enabled: true, mortgagePayment: 1500, payoffAge: 70, downsizingProceeds: 0, downsizingAge: 72 } });
+    const withDownsize = run({ ...retiredBase, housing: { enabled: true, mortgagePayment: 1500, payoffAge: 70, downsizingProceeds: 300000, downsizingAge: 72 } });
+    expect(withDownsize.medianEnding).toBeGreaterThan(noDownsize.medianEnding);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// EARLY WITHDRAWAL CONTROLS
+// ═══════════════════════════════════════════════════════════════════
+
+describe('Early Withdrawal Controls', () => {
+  // Early retiree with traditional 401k who needs withdrawals before 59.5
+  const earlyRetiree: Partial<ScenarioInput> = {
+    currentAge: 50, retirementAge: 50, endAge: 90,
+    balances: { traditional401k: 1000000, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 50000, hsa: 0, cashAccount: 0, otherAssets: 0 },
+    baseAnnualSpending: 4000,
+    socialSecurityBenefit: 2000,
+    socialSecurityClaimAge: 67,
+  };
+
+  it('rule of 55 eligible → higher median ending (avoids penalties)', () => {
+    const noPenaltyExempt = run({ ...earlyRetiree, ruleof55Eligible: false });
+    const penaltyExempt = run({ ...earlyRetiree, ruleof55Eligible: true });
+    expect(penaltyExempt.medianEnding).toBeGreaterThanOrEqual(noPenaltyExempt.medianEnding);
+  });
+
+  it('higher Roth contribution basis → higher median ending (penalty-free access)', () => {
+    const lowBasis = run({ ...earlyRetiree, rothContributionBasis: 0,
+      balances: { traditional401k: 500000, roth401k: 0, traditionalIRA: 0, rothIRA: 500000, taxable: 50000, hsa: 0, cashAccount: 0, otherAssets: 0 } });
+    const highBasis = run({ ...earlyRetiree, rothContributionBasis: 300000,
+      balances: { traditional401k: 500000, roth401k: 0, traditionalIRA: 0, rothIRA: 500000, taxable: 50000, hsa: 0, cashAccount: 0, otherAssets: 0 } });
+    expect(highBasis.medianEnding).toBeGreaterThanOrEqual(lowBasis.medianEnding);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// SPOUSE PARAMETERS (PREVIOUSLY UNCOVERED IN ISOLATION)
+// ═══════════════════════════════════════════════════════════════════
+
+describe('Spouse Parameters (isolated)', () => {
+  const spouseBase: Partial<ScenarioInput> = {
+    currentAge: 35, retirementAge: 65, endAge: 95,
+    spouse: { enabled: true, currentAge: 33, retirementAge: 65, currentSalary: 5000, salaryGrowthRate: 0.03, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67, pensionAmount: 0, pensionStartAge: 65, pensionCOLA: 0.0 },
+  };
+
+  it('higher spouse salary growth → higher median ending', () => {
+    const low = run({ ...spouseBase, spouse: { ...spouseBase.spouse!, salaryGrowthRate: 0.01 } });
+    const high = run({ ...spouseBase, spouse: { ...spouseBase.spouse!, salaryGrowthRate: 0.05 } });
+    expect(high.medianEnding).toBeGreaterThan(low.medianEnding);
+  });
+
+  it('higher spouse pension COLA → higher median ending', () => {
+    const low = run({ ...spouseBase, spouse: { ...spouseBase.spouse!, pensionAmount: 1500, pensionCOLA: 0.0 } });
+    const high = run({ ...spouseBase, spouse: { ...spouseBase.spouse!, pensionAmount: 1500, pensionCOLA: 0.04 } });
+    expect(high.medianEnding).toBeGreaterThan(low.medianEnding);
+  });
+});

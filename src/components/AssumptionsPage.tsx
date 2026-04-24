@@ -12,7 +12,7 @@ export function AssumptionsPage() {
           <li>Each simulated year processes: income → contributions → Roth conversions → spending → withdrawals → taxes → investment returns → cash buffer refill.</li>
           <li>Results include success rate, percentile bands (Best 10% / Best 25% / Typical / Worst 25% / Worst 10%), median/average/worst-decile paths, ending balance distribution, and depletion ages.</li>
           <li>All monthly user inputs (salary, spending, etc.) are converted to annual amounts internally.</li>
-          <li>All "today's dollars" inputs (spending, healthcare, guardrail floors) are inflated from your current age forward, not from your retirement age.</li>
+          <li>All "today's dollars" inputs (spending, healthcare) are inflated from your current age forward, not from your retirement age.</li>
           <li>Surplus retirement income (income exceeding spending + taxes) is reinvested into the taxable account.</li>
         </ul>
       </section>
@@ -25,7 +25,7 @@ export function AssumptionsPage() {
           <li>Default returns: Stocks 10%/16% vol, Bonds 4%/6% vol, Cash 2.5%/1% vol, Crypto 15%/50% vol (all nominal).</li>
           <li>Cross-asset correlations use Cholesky decomposition of a fixed correlation matrix (e.g., stocks-bonds: −0.10, stocks-crypto: 0.30).</li>
           <li>Returns are applied annually (not monthly). No intra-year rebalancing.</li>
-          <li>Inflation is fixed (not random) — the same rate is used every year.</li>
+          <li>Inflation varies year-to-year with a built-in 1.5% standard deviation around the configured spending inflation rate, modeling real-world inflation uncertainty.</li>
         </ul>
       </section>
 
@@ -34,12 +34,11 @@ export function AssumptionsPage() {
         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4">
           <li>Contributions are allocated by user-defined percentages across 8 account types (must sum to 100%).</li>
           <li>IRS limits enforced: 401(k) $24,500, IRA $7,500, HSA $4,400 (2026 values, self-only).</li>
-          <li>Catch-up contributions for age 50+: +$7,500 for 401(k), +$1,000 for IRA.</li>
+          <li>Catch-up contributions for age 50+: +$7,500 for 401(k), +$1,000 for IRA. SECURE 2.0 super catch-up: +$11,250 for 401(k) at ages 60–63.</li>
           <li>Excess contributions above limits automatically spill over to the taxable brokerage account.</li>
           <li>Employer match: configurable match rate and cap (% of salary). Match can be split between Traditional and Roth 401(k). Match does not count against employee deferral limits.</li>
           <li>All contribution limits are inflation-indexed annually using the Tax Threshold Increases rate (default 2%).</li>
           <li>No Roth IRA income limits, backdoor Roth, or mega-backdoor Roth modeling.</li>
-          <li>No SECURE 2.0 enhanced catch-up ($10,000 for ages 60–63) — uses flat $7,500.</li>
         </ul>
       </section>
 
@@ -54,7 +53,7 @@ export function AssumptionsPage() {
           <li>State income tax: all 50 states + DC modeled with flat effective rates, Social Security exemptions, and age-gated retirement income exemptions (e.g., Iowa: 3.8% rate, full retirement income exemption at age 55+).</li>
           <li>All federal brackets, deductions, and thresholds are inflation-indexed annually.</li>
           <li>Iterative tax-aware withdrawal loop: withdrawals are recalculated up to 5 times to converge on the correct amount needed to cover spending + taxes on the withdrawal itself.</li>
-          <li>Limitations: standard deduction only (no itemized), no AMT, no short-term capital gains, no qualified dividends tracked separately, state tax uses a single flat rate (not actual progressive brackets), no local/city taxes, no early withdrawal penalty (pre-59½).</li>
+          <li>Limitations: standard deduction only (no itemized), no AMT, no short-term capital gains, no qualified dividends tracked separately, state tax uses a single flat rate (not actual progressive brackets), no local/city taxes.</li>
         </ul>
       </section>
 
@@ -69,6 +68,16 @@ export function AssumptionsPage() {
           <li>Taxable account withdrawals realize capital gains proportionally based on the aggregate cost basis ratio.</li>
           <li>Roth 401(k) is treated like Roth IRA (no RMDs for owner).</li>
           <li>Limitations: no lot-by-lot cost basis tracking, no Joint Life table for much-younger spouse, no 72(t)/SEPP distributions.</li>
+        </ul>
+      </section>
+
+      <section className="space-y-2">
+        <h3 className="font-semibold text-sm">Early Withdrawal Penalties</h3>
+        <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4">
+          <li>10% early withdrawal penalty applies to Traditional 401(k)/IRA withdrawals before age 59½.</li>
+          <li>Rule of 55: if eligible and age 55+, 401(k) withdrawals are penalty-free.</li>
+          <li>Roth IRA: contributions (basis) are always penalty-free; only earnings are subject to penalty before 59½.</li>
+          <li>Roth 5-year rule: converted amounts are subject to penalty if withdrawn within 5 years of conversion and before age 59½.</li>
         </ul>
       </section>
 
@@ -112,6 +121,25 @@ export function AssumptionsPage() {
           <li>Default monthly costs: $1,500 Before Age 65, $500 Medicare, $1,000 Late-Life.</li>
           <li>Separate Medical Inflation rate (default 5%) applied to healthcare costs, inflated from your current age forward.</li>
           <li>Healthcare costs are added on top of base spending.</li>
+        </ul>
+      </section>
+
+      <section className="space-y-2">
+        <h3 className="font-semibold text-sm">Housing / Mortgage</h3>
+        <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4">
+          <li>Optional mortgage modeling: monthly mortgage payment is added to spending until a configurable payoff age.</li>
+          <li>Downsizing proceeds: optional one-time lump sum deposited into the taxable account at a specified age.</li>
+          <li>Downsizing proceeds appreciate at inflation + 1% annually (historical real home appreciation).</li>
+          <li>Mortgage payments are inflation-adjusted; enter today's equivalent.</li>
+        </ul>
+      </section>
+
+      <section className="space-y-2">
+        <h3 className="font-semibold text-sm">Part-Time Retirement Income</h3>
+        <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4">
+          <li>Optional part-time income during early retirement, with a configurable monthly amount and end age.</li>
+          <li>Part-time income is inflation-adjusted and included in taxable earned income.</li>
+          <li>Subject to Social Security earnings test if claimed before Full Retirement Age.</li>
         </ul>
       </section>
 

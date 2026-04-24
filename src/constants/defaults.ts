@@ -102,7 +102,7 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
   },
 
   // Variable inflation
-  inflationVolatility: 0,
+  inflationVolatility: 0.015,
 
   // Guardrails
   guardrails: {

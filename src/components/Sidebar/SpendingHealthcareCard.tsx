@@ -79,17 +79,6 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
         />
       </div>
 
-      {/* Variable inflation */}
-      <div>
-        <PctSlider
-          label="Inflation Variability"
-          value={scenario.inflationVolatility * 100}
-          onChange={v => setField('inflationVolatility', v / 100)}
-          min={0} max={3} step={0.1}
-          tooltip={<InfoTip text="How much inflation can vary year to year in the simulation. 0% = fixed inflation rate. 1% = inflation can swing ±1% from the base rate each year." />}
-        />
-      </div>
-
       {/* Housing / Mortgage */}
       <div className="pt-3 border-t border-gray-100 dark:border-gray-700 space-y-3">
         <div className="flex items-center gap-1">
