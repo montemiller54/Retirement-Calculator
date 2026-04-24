@@ -39,7 +39,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
   const ve = validationErrors;
   const inv = scenario.investments;
   const [phase, setPhase] = useState<'pre' | 'post'>(scenario.currentAge >= scenario.retirementAge ? 'post' : 'pre');
-  const [activeSection, setActiveSection] = useState<'balances' | 'allocations' | 'returns'>('balances');
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set(['balances']));
   const [customizeDefaults, setCustomizeDefaults] = useState(false);
   const isRetired = scenario.currentAge >= scenario.retirementAge;
 
@@ -88,7 +88,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
   };
 
   const sectionBtn = (id: 'balances' | 'allocations' | 'returns', label: string) => {
-    const isOpen = activeSection === id;
+    const isOpen = openSections.has(id);
     return (
       <button
         className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-md border transition-colors ${
@@ -96,7 +96,11 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
             ? 'bg-primary-50 dark:bg-primary-900/50 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300 font-medium'
             : 'bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/60'
         }`}
-        onClick={() => setActiveSection(id)}
+        onClick={() => {
+          const next = new Set(openSections);
+          if (next.has(id)) next.delete(id); else next.add(id);
+          setOpenSections(next);
+        }}
       >
         <span>{label}</span>
         <svg
@@ -113,7 +117,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
     <div className="space-y-1">
       {/* ── Account Balances ── */}
       {sectionBtn('balances', 'Account Balances')}
-      {activeSection === 'balances' && (
+      {openSections.has('balances') && (
         <div className="px-1 pb-2 space-y-2">
           <div className="space-y-1">
             {visibleAccounts.map(acct => (
@@ -181,7 +185,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
 
       {/* ── Allocations ── */}
       {sectionBtn('allocations', 'Allocations')}
-      {activeSection === 'allocations' && (() => {
+      {openSections.has('allocations') && (() => {
         const preAlloc = inv.preRetirement[ACCOUNT_TYPES[0]];
         const postAlloc = inv.postRetirement[ACCOUNT_TYPES[0]];
         const preSum = ASSET_CLASSES.reduce((s, ac) => s + preAlloc[ac], 0);
@@ -373,7 +377,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
 
       {/* ── Rate Assumptions ── */}
       {sectionBtn('returns', 'Rate Assumptions')}
-      {activeSection === 'returns' && (
+      {openSections.has('returns') && (
         <div className="px-1 pb-2 space-y-2">
           <p className="text-[10px] text-gray-400">
             Expected nominal returns and variability by asset class.
