@@ -47,7 +47,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-[1fr_100px] gap-2 items-end">
         <div>
           <label className="input-label">Monthly Spending</label>
           <div className="relative">
@@ -100,7 +100,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
                 <input type="number" className="input-field text-center" value={scenario.housing.payoffAge} onChange={e => setField('housing.payoffAge', parseInt(e.target.value) || 65)} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 mt-3">
               <div>
                 <label className="input-label">Downsizing Proceeds</label>
                 <div className="relative">
@@ -137,6 +137,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
                   <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
                   <CurrencyInput value={hc.preMedicareMonthly} onChange={v => setField('healthcare.preMedicareMonthly', v)} />
                 </div>
+                <p className="text-[10px] text-gray-400 mt-0.5 text-center">age {scenario.retirementAge}–{hc.medicareStartAge - 1}</p>
                 <FieldError errors={ve} field="healthcare.medicareStartAge" />
               </div>
               <div>
@@ -145,7 +146,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
                   <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
                   <CurrencyInput value={hc.medicareMonthly} onChange={v => setField('healthcare.medicareMonthly', v)} />
                 </div>
-                <p className="text-[10px] text-gray-400 mt-0.5">{hc.medicareStartAge}–{hc.lateLifeStartAge - 1}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5 text-center">age {hc.medicareStartAge}–{hc.lateLifeStartAge - 1}</p>
               </div>
               <div>
                 <label className="input-label">Late <input type="number" className={`inline-input w-8 ${fieldErrorClass(ve, 'healthcare.lateLifeStartAge')}`} value={hc.lateLifeStartAge} onChange={e => setField('healthcare.lateLifeStartAge', parseInt(e.target.value) || 80)} />+ $/mo</label>
@@ -153,6 +154,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
                   <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
                   <CurrencyInput value={hc.lateLifeMonthly} onChange={v => setField('healthcare.lateLifeMonthly', v)} />
                 </div>
+                <p className="text-[10px] text-gray-400 mt-0.5 text-center">age {hc.lateLifeStartAge}–{scenario.endAge}</p>
               </div>
             </div>
 

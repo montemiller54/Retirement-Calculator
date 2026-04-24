@@ -62,8 +62,11 @@ export function IncomeCard({ validationErrors }: CardProps) {
           <div>
             <label className="input-label">Monthly Benefit</label>
             {isAuto ? (
-              <div className="input-field bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 cursor-default pl-6">
-                ${estimatedSS.toLocaleString()}
+              <div className="relative">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
+                <div className="input-field pl-6 text-right bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 cursor-default">
+                  {estimatedSS.toLocaleString()}
+                </div>
               </div>
             ) : (
               <div className="relative">
@@ -109,8 +112,11 @@ export function IncomeCard({ validationErrors }: CardProps) {
             <div>
               <label className="input-label">Monthly Benefit</label>
               {isAuto ? (
-                <div className="input-field bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 cursor-default pl-6">
-                  ${estimatedSpouseSS.toLocaleString()}
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
+                  <div className="input-field pl-6 text-right bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 cursor-default">
+                    {estimatedSpouseSS.toLocaleString()}
+                  </div>
                 </div>
               ) : (
                 <div className="relative">
