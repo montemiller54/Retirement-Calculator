@@ -110,7 +110,6 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
     tiers: [
       { drawdownPct: 15, spendingCutPct: 10 },
     ],
-    minimumSpendingFloor: 2500,
   },
 
   // Healthcare

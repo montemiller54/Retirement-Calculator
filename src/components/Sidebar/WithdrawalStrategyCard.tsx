@@ -205,15 +205,6 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
             ))}
 
             <button className="text-xs text-primary-600 dark:text-primary-400 hover:underline" onClick={addTier}>+ Add tier</button>
-
-            <div>
-              <label className="input-label">Min Monthly Spending Floor</label>
-              <div className="relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
-                <CurrencyInput className="w-28" value={g.minimumSpendingFloor} onChange={v => setField('guardrails.minimumSpendingFloor', v)} />
-              </div>
-              <p className="text-[10px] text-gray-400 mt-0.5">0 = no floor</p>
-            </div>
           </div>
         )}
       </div>

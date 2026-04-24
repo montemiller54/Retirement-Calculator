@@ -161,7 +161,6 @@ describe('Healthcare cost modeling', () => {
       guardrails: {
         enabled: true,
         tiers: [{ drawdownPct: 0.001, spendingCutPct: 50 }], // always triggers 50% cut
-        minimumSpendingFloor: 0,
       },
       healthcare: { ...BASE_HEALTHCARE, inflationRate: 0 },
       balances: { ...DEFAULT_SCENARIO.balances, traditional401k: 500000 },

@@ -108,7 +108,6 @@ export interface GuardrailTier {
 export interface GuardrailConfig {
   enabled: boolean;
   tiers: GuardrailTier[];
-  minimumSpendingFloor: number; // in today's dollars, 0 = no floor
 }
 
 // ── Healthcare costs ──

@@ -526,8 +526,8 @@ describe('Benchmark: Spending Guardrails Effectiveness', () => {
       cashBuffer: { ...DEFAULT_SCENARIO.cashBuffer, enabled: false },
       rothConversion: { ...DEFAULT_SCENARIO.rothConversion, enabled: false },
     };
-    const noGuard = run({ ...stressed, guardrails: { enabled: false, tiers: [{ drawdownPct: 15, spendingCutPct: 20 }], minimumSpendingFloor: 2000 } });
-    const withGuard = run({ ...stressed, guardrails: { enabled: true, tiers: [{ drawdownPct: 15, spendingCutPct: 20 }, { drawdownPct: 30, spendingCutPct: 40 }], minimumSpendingFloor: 2000 } });
+    const noGuard = run({ ...stressed, guardrails: { enabled: false, tiers: [{ drawdownPct: 15, spendingCutPct: 20 }] } });
+    const withGuard = run({ ...stressed, guardrails: { enabled: true, tiers: [{ drawdownPct: 15, spendingCutPct: 20 }, { drawdownPct: 30, spendingCutPct: 40 }] } });
     expect(withGuard.successRate).toBeGreaterThanOrEqual(noGuard.successRate + 0.03);
   });
 });

@@ -119,7 +119,7 @@ export function AssumptionsPage() {
         <h3 className="font-semibold text-sm">Emergency Cash Reserve & Spending Safety Rules</h3>
         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4">
           <li>Emergency Cash Reserve (cash buffer): configurable number of years of expenses held in cash account, refilled when markets are up.</li>
-          <li>Spending Safety Rules (guardrails): configurable spending-cut tiers based on portfolio drawdown from peak. When the portfolio drops below a threshold, spending is reduced by a configured percentage, subject to a minimum spending floor.</li>
+          <li>Spending Safety Rules (guardrails): configurable spending-cut tiers based on portfolio drawdown from peak. When the portfolio drops below a threshold, spending is reduced by a configured percentage.</li>
         </ul>
       </section>
 

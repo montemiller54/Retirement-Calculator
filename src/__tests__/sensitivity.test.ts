@@ -196,7 +196,6 @@ describe('HIGH IMPACT: Guardrails', () => {
       guardrails: {
         enabled: false,
         tiers: [{ drawdownPct: 15, spendingCutPct: 20 }],
-        minimumSpendingFloor: 2000,
       },
     };
     const disabled = run(base);
@@ -396,7 +395,6 @@ describe('MEDIUM IMPACT: Guardrail Parameters', () => {
       guardrails: {
         enabled: true,
         tiers: [{ drawdownPct: 40, spendingCutPct: 20 }],
-        minimumSpendingFloor: 2000,
       },
     });
     const lowThreshold = run({
@@ -404,7 +402,6 @@ describe('MEDIUM IMPACT: Guardrail Parameters', () => {
       guardrails: {
         enabled: true,
         tiers: [{ drawdownPct: 10, spendingCutPct: 20 }],
-        minimumSpendingFloor: 2000,
       },
     });
     // Lower threshold triggers sooner → cuts spending earlier → more money preserved
@@ -417,7 +414,6 @@ describe('MEDIUM IMPACT: Guardrail Parameters', () => {
       guardrails: {
         enabled: true,
         tiers: [{ drawdownPct: 15, spendingCutPct: 5 }],
-        minimumSpendingFloor: 2000,
       },
     });
     const bigCut = run({
@@ -425,30 +421,9 @@ describe('MEDIUM IMPACT: Guardrail Parameters', () => {
       guardrails: {
         enabled: true,
         tiers: [{ drawdownPct: 15, spendingCutPct: 40 }],
-        minimumSpendingFloor: 2000,
       },
     });
     expect(bigCut.successRate).toBeGreaterThanOrEqual(smallCut.successRate);
-  });
-
-  it('#41 higher spending floor → less flexibility to cut → lower success', () => {
-    const lowFloor = run({
-      ...guardrailBase,
-      guardrails: {
-        enabled: true,
-        tiers: [{ drawdownPct: 15, spendingCutPct: 30 }],
-        minimumSpendingFloor: 1000, // low floor allows aggressive cutting
-      },
-    });
-    const highFloor = run({
-      ...guardrailBase,
-      guardrails: {
-        enabled: true,
-        tiers: [{ drawdownPct: 15, spendingCutPct: 30 }],
-        minimumSpendingFloor: 6000, // floor nearly equals spending, guardrails can't help
-      },
-    });
-    expect(lowFloor.successRate).toBeGreaterThanOrEqual(highFloor.successRate);
   });
 });
 

@@ -116,9 +116,8 @@ describe('Monthly-to-annual conversion (toAnnualScenario)', () => {
       guardrails: {
         enabled: true,
         tiers: [
-          { drawdownPct: 5, spendingCutPct: 90 }, // 90% cut at 5% drawdown → floor kicks in
+          { drawdownPct: 5, spendingCutPct: 90 }, // 90% cut at 5% drawdown
         ],
-        minimumSpendingFloor: 2500, // monthly → 30k/yr floor
       },
     });
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });
@@ -317,7 +316,6 @@ describe('Guardrail spending cuts', () => {
       guardrails: {
         enabled: true,
         tiers: [{ drawdownPct: 10, spendingCutPct: 20 }],
-        minimumSpendingFloor: 0,
       },
       balances: {
         traditional401k: 500000, roth401k: 0,

@@ -71,7 +71,6 @@ function toAnnualScenario(s: ScenarioInput): ScenarioInput {
     })),
     guardrails: {
       ...resolved.guardrails,
-      minimumSpendingFloor: resolved.guardrails.minimumSpendingFloor * 12,
     },
     healthcare: {
       ...resolved.healthcare,
@@ -123,6 +122,9 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
   let priorYearEnd401k = balances.traditional401k;
   let priorYearEndIRA = balances.traditionalIRA;
 
+  // Cumulative inflation factor — compounds year over year with random variation
+  let cumulativeInflationFactor = 1.0;
+
   for (let age = s.currentAge; age <= s.endAge; age++) {
     const isRetired = age >= s.retirementAge;
     const yearsFromNow = age - s.currentAge;
@@ -146,21 +148,18 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     }
 
     // ── Variable inflation for this year ──
-    // If inflationVolatility > 0, randomize the spending inflation for this year
+    // Compound inflation year by year; if volatility > 0, randomize each year's rate
     let yearInflationFactor: number;
-    if (s.inflationVolatility > 0 && yearsFromNow > 0) {
-      // Draw a random inflation rate centered on the configured rate, with the configured volatility
-      const inflationNoise = rng.nextGaussian() * s.inflationVolatility;
-      const yearInflation = Math.max(0, s.spendingInflationRate + inflationNoise);
-      // Compound from the start: use product of all prior year inflation factors
-      // For simplicity, apply random deviation to the exponent
-      yearInflationFactor = Math.pow(1 + s.spendingInflationRate, yearsFromNow) *
-        Math.pow(1 + inflationNoise / s.spendingInflationRate, yearsFromNow > 0 ? 1 : 0);
-      // Clamp to avoid negative
-      yearInflationFactor = Math.max(1, yearInflationFactor);
+    if (yearsFromNow === 0) {
+      cumulativeInflationFactor = 1.0;
+    } else if (s.inflationVolatility > 0) {
+      const noise = rng.nextGaussian() * s.inflationVolatility;
+      const yearRate = Math.max(0, s.spendingInflationRate + noise);
+      cumulativeInflationFactor *= (1 + yearRate);
     } else {
-      yearInflationFactor = Math.pow(1 + s.spendingInflationRate, yearsFromNow);
+      cumulativeInflationFactor *= (1 + s.spendingInflationRate);
     }
+    yearInflationFactor = cumulativeInflationFactor;
 
     // ── Income ──
     const salary = isRetired ? 0 : s.currentSalary * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
@@ -459,13 +458,6 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
         currentSpendingAdjustment = yearAdjustment;
 
         baseSpending *= currentSpendingAdjustment;
-
-        // Floor
-        if (s.guardrails.minimumSpendingFloor > 0) {
-          const inflatedFloor = s.guardrails.minimumSpendingFloor *
-            Math.pow(1 + s.spendingInflationRate, yearsFromNow);
-          baseSpending = Math.max(baseSpending, inflatedFloor);
-        }
       }
 
       spending = baseSpending;
