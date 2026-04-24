@@ -51,6 +51,11 @@
   .input-label {
     @apply block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1;
   }
+  .inline-input {
+    @apply inline-block text-center text-xs font-semibold border-b border-gray-400 dark:border-gray-500 bg-transparent text-gray-700 dark:text-gray-300 focus:border-primary-500 focus:outline-none;
+    -moz-appearance: textfield;
+    padding: 0 1px;
+  }
   .section-title {
     @apply text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2;
   }
