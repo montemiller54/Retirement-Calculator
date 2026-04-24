@@ -82,7 +82,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
           <InfoTip text="Model your mortgage payment ending at a specific age, and optionally include proceeds from downsizing your home." />
         </div>
         {scenario.housing?.enabled && (
-          <div className="space-y-2">
+          <div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="input-label">Monthly Mortgage
@@ -100,7 +100,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
                 <input type="number" className="input-field text-center" value={scenario.housing.payoffAge} onChange={e => setField('housing.payoffAge', parseInt(e.target.value) || 65)} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 mt-6">
+            <div className="grid grid-cols-2 gap-2 mt-5">
               <div>
                 <label className="input-label">Downsizing Proceeds</label>
                 <div className="relative">
