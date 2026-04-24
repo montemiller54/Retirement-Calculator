@@ -165,7 +165,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
             <div className="flex items-center gap-1">
               <input
                 type="range"
-                className="w-20 h-1.5 accent-primary-600"
+                className="w-20"
                 min={0} max={100} step={5}
                 value={Math.round(scenario.taxableCostBasisPct * 100)}
                 onChange={e => setField('taxableCostBasisPct', parseInt(e.target.value) / 100)}
@@ -401,7 +401,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                   <div className="flex-1 flex items-center gap-1 ml-4">
                     <input
                       type="range"
-                      className="w-[50%] h-1.5 accent-primary-600"
+                      className="w-[50%]"
                       min={1} max={10} step={0.5}
                       value={varVal}
                       onChange={e => setField(`investments.assetClassReturns.${ac}.stdDev`, variabilityToStdDev(parseFloat(e.target.value)))}
@@ -421,7 +421,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
               <span className="text-[10px] text-gray-400">Low</span>
               <input
                 type="range"
-                className={`flex-1 h-1.5 accent-primary-600 ${fieldErrorClass(ve, 'investments.fatTailDf')}`}
+                className={`flex-1 ${fieldErrorClass(ve, 'investments.fatTailDf')}`}
                 min={1} max={10} step={0.5}
                 value={dfToCrashFreq(inv.fatTailDf)}
                 onChange={e => setField('investments.fatTailDf', crashFreqToDf(parseFloat(e.target.value)))}

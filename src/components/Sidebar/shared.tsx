@@ -27,7 +27,7 @@ export function PctSlider({ value, onChange, label, min = 0, max = 10, step = 0.
       </div>
       <input
         type="range"
-        className="w-full h-1.5 accent-primary-600 cursor-pointer"
+        className="w-full cursor-pointer"
         min={min} max={max} step={step}
         value={value}
         onChange={e => onChange(parseFloat(e.target.value))}

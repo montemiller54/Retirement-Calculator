@@ -90,7 +90,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
           </label>
           <div className="flex items-center gap-1">
             <input
-              type="range" className="w-20 h-1.5 accent-primary-600" min={0} max={5} step={0.1}
+              type="range" className="w-20" min={0} max={5} step={0.1}
               value={scenario.socialSecurityCOLA * 100}
               onChange={e => setField('socialSecurityCOLA', parseFloat(e.target.value) / 100)}
             />
@@ -157,7 +157,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
           <label className="input-label mb-0">Yearly Increase</label>
           <div className="flex items-center gap-1">
             <input
-              type="range" className="w-20 h-1.5 accent-primary-600" min={0} max={5} step={0.1}
+              type="range" className="w-20" min={0} max={5} step={0.1}
               value={scenario.pensionCOLA * 100}
               onChange={e => setField('pensionCOLA', parseFloat(e.target.value) / 100)}
             />
@@ -190,7 +190,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
             <label className="input-label mb-0">Yearly Increase</label>
             <div className="flex items-center gap-1">
               <input
-                type="range" className="w-20 h-1.5 accent-primary-600" min={0} max={5} step={0.1}
+                type="range" className="w-20" min={0} max={5} step={0.1}
                 value={scenario.spouse.pensionCOLA * 100}
                 onChange={e => setField('spouse.pensionCOLA', parseFloat(e.target.value) / 100)}
               />

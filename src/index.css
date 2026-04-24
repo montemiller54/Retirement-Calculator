@@ -43,6 +43,7 @@
     -webkit-appearance: none;
     appearance: none;
     background: transparent;
+    height: 16px;
   }
   input[type='range']::-webkit-slider-runnable-track {
     height: 6px;

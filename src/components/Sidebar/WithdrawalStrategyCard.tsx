@@ -237,7 +237,7 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
               <span>Years of expenses</span>
               <div className="flex items-center gap-1">
                 <input
-                  type="range" className="w-20 h-1.5 accent-primary-600" min={1} max={5} step={1}
+                  type="range" className="w-20" min={1} max={5} step={1}
                   value={cb.yearsOfExpenses}
                   onChange={e => setField('cashBuffer.yearsOfExpenses', parseInt(e.target.value))}
                 />
