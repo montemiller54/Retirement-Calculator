@@ -135,54 +135,6 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
         )}
       </div>
 
-      {/* One-time expenses */}
-      <div>
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-gray-700 dark:text-gray-300">One-Time Expenses</label>
-          <button
-            className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
-            onClick={addExpense}
-          >
-            + Add
-          </button>
-        </div>
-        {scenario.oneTimeExpenses.map(exp => (
-          <div key={exp.id} className="mt-1 p-2 bg-gray-50 dark:bg-gray-800 rounded text-xs space-y-1">
-            <div className="flex gap-1">
-              <input
-                className="input-field flex-1"
-                value={exp.name}
-                onChange={e => updateExpense(exp.id, 'name', e.target.value)}
-              />
-              <button className="text-red-400 hover:text-red-600 px-1" onClick={() => removeExpense(exp.id)}>✕</button>
-            </div>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label className="input-label">Amount ($)</label>
-                <div className="relative">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
-                  <CurrencyInput value={exp.amount as number} onChange={v => updateExpense(exp.id, 'amount', v)} />
-                </div>
-              </div>
-              <div className="w-16">
-                <label className="input-label">Age</label>
-                <input type="number" className={`input-field ${fieldErrorClass(ve, `oneTimeExpense.${exp.id}`)}`} value={exp.age} onChange={e => updateExpense(exp.id, 'age', parseInt(e.target.value) || 0)} />
-                {exp.age > 0 && (
-                  <p className="text-[10px] text-gray-400 mt-0.5">
-                    ({new Date().getFullYear() + (exp.age - scenario.currentAge)})
-                  </p>
-                )}
-              </div>
-            </div>
-            <FieldError errors={ve} field={`oneTimeExpense.${exp.id}`} />
-            <label className="flex items-center gap-1 cursor-pointer">
-              <input type="checkbox" checked={exp.inflationAdjusted} onChange={e => updateExpense(exp.id, 'inflationAdjusted', e.target.checked)} className="accent-primary-600" />
-              Inflation-adjusted
-            </label>
-          </div>
-        ))}
-      </div>
-
       {/* Healthcare */}
       <div className="pt-3 border-t border-gray-100 dark:border-gray-700 space-y-3">
         <div className="flex items-center gap-1">
@@ -245,6 +197,55 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* One-time expenses */}
+      <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-300">One-Time Expenses</label>
+          <button
+            className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+            onClick={addExpense}
+          >
+            + Add
+          </button>
+        </div>
+        <p className="text-[10px] text-gray-400 mt-0.5 mb-1">Lump-sum costs at a specific age (e.g. new car, wedding, home repair)</p>
+        {scenario.oneTimeExpenses.map(exp => (
+          <div key={exp.id} className="mt-1 p-2 bg-gray-50 dark:bg-gray-800 rounded text-xs space-y-1">
+            <div className="flex gap-1">
+              <input
+                className="input-field flex-1"
+                value={exp.name}
+                onChange={e => updateExpense(exp.id, 'name', e.target.value)}
+              />
+              <button className="text-red-400 hover:text-red-600 px-1" onClick={() => removeExpense(exp.id)}>✕</button>
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="input-label">Amount ($)</label>
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
+                  <CurrencyInput value={exp.amount as number} onChange={v => updateExpense(exp.id, 'amount', v)} />
+                </div>
+              </div>
+              <div className="w-16">
+                <label className="input-label">Age</label>
+                <input type="number" className={`input-field ${fieldErrorClass(ve, `oneTimeExpense.${exp.id}`)}`} value={exp.age} onChange={e => updateExpense(exp.id, 'age', parseInt(e.target.value) || 0)} />
+                {exp.age > 0 && (
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    ({new Date().getFullYear() + (exp.age - scenario.currentAge)})
+                  </p>
+                )}
+              </div>
+            </div>
+            <FieldError errors={ve} field={`oneTimeExpense.${exp.id}`} />
+            <label className="flex items-center gap-1 cursor-pointer">
+              <input type="checkbox" checked={exp.inflationAdjusted} onChange={e => updateExpense(exp.id, 'inflationAdjusted', e.target.checked)} className="accent-primary-600" />
+              Inflation-adjusted
+            </label>
+          </div>
+        ))}
       </div>
     </div>
   );
