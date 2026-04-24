@@ -1,4 +1,4 @@
-import type { SavedScenario, ScenarioInput } from '../types';
+import type { SavedScenario, ScenarioInput, AccountType } from '../types';
 import { ASSET_CLASSES, ACCOUNT_TYPES } from '../types';
 import { DEFAULT_ASSET_RETURNS, makeUniformAllocations, RISK_PROFILES } from '../constants/asset-classes';
 import { DEFAULT_SCENARIO } from '../constants/defaults';
