@@ -100,7 +100,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
                 <input type="number" className="input-field text-center" value={scenario.housing.payoffAge} onChange={e => setField('housing.payoffAge', parseInt(e.target.value) || 65)} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 mt-4">
+            <div className="grid grid-cols-2 gap-2 mt-6">
               <div>
                 <label className="input-label">Downsizing Proceeds</label>
                 <div className="relative">
@@ -158,7 +158,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
               </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-4">
               <PctSlider
                 label="Medical Inflation"
                 value={hc.inflationRate * 100}
