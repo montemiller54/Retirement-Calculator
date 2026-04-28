@@ -43,16 +43,6 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
             strokeDasharray="5 5"
             label={{ value: 'Retire', position: 'top', fontSize: 10, fill: '#ef4444' }}
           />
-          {/* P10-P90 band */}
-          <Area
-            type="monotone"
-            dataKey="p90"
-            stackId="band"
-            stroke="none"
-            fill="#dbeafe"
-            fillOpacity={0.4}
-            name="Best 10%"
-          />
           <Area
             type="monotone"
             dataKey="p75"
