@@ -46,7 +46,6 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
           <Area
             type="monotone"
             dataKey="p75"
-            stackId="band2"
             stroke="none"
             fill="#93c5fd"
             fillOpacity={0.4}
@@ -66,8 +65,8 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
             type="monotone"
             dataKey="p25"
             stroke="none"
-            fill="#bfdbfe"
-            fillOpacity={0.3}
+            fill="#dbeafe"
+            fillOpacity={0.6}
             name="Worst 25%"
           />
           <Area
