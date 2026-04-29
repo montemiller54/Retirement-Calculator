@@ -34,7 +34,7 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
   // ── Jobs ──
   if (s.jobs && s.jobs.length > 0) {
     for (const job of s.jobs) {
-      if (job.startAge >= job.endAge) {
+      if (job.startAge > job.endAge) {
         errors.push({ card: 'earnings', field: `job.${job.id}.startAge`, message: `"${job.name || 'Unnamed'}" start age (${job.startAge}) must be before end age (${job.endAge}).` });
       }
       if (job.monthlyPay < 0) {

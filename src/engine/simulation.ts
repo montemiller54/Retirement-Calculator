@@ -167,7 +167,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     let totalJobSalary = 0;
     const activeJobs: typeof s.jobs = [];
     for (const job of (s.jobs ?? [])) {
-      if (age >= job.startAge && age < job.endAge) {
+      if (age >= job.startAge && age <= job.endAge) {
         const jobSalary = job.monthlyPay * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
         totalJobSalary += jobSalary;
         activeJobs.push(job);
@@ -291,14 +291,6 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
           balances[acct] += result.employerContributions[acct];
         }
       }
-    }
-
-    // Post-retirement job income: savings go to taxable account
-    if (isRetired && salary > 0) {
-      const postRetSavings = salary * s.totalSavingsRate;
-      contributions.taxable += postRetSavings;
-      balances.taxable += postRetSavings;
-      taxableCostBasis += postRetSavings;
     }
 
     // ── Roth Conversion ──
@@ -541,7 +533,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
           const tradW = withdrawals.traditional401k + withdrawals.traditionalIRA;
           const iterPenaltyAmount = calcPenaltyAmount(withdrawals, rothConversionAmount);
           const iterTaxInput: TaxInput = {
-            wages: isRetired ? salary * (1 - s.totalSavingsRate) : 0,
+            wages: isRetired ? salary : 0,
             traditionalWithdrawals: tradW + rothConversionAmount,
             socialSecurity: socialSecurity + spouseSS,
             pension,
@@ -572,7 +564,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     const traditionalWithdrawals = withdrawals.traditional401k + withdrawals.traditionalIRA + rothConversionAmount;
     const penaltyAmount = isRetired ? calcPenaltyAmount(withdrawals, rothConversionAmount) : 0;
     const taxInput: TaxInput = {
-      wages: isRetired ? salary * (1 - s.totalSavingsRate) : salary * (1 - s.totalSavingsRate),
+      wages: isRetired ? salary : salary * (1 - s.totalSavingsRate),
       traditionalWithdrawals,
       socialSecurity: socialSecurity + spouseSS,
       pension,

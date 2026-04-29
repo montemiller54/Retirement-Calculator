@@ -89,7 +89,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
   };
 
   // Total current monthly income from active jobs
-  const activeJobs = jobs.filter(j => scenario.currentAge >= j.startAge && scenario.currentAge < j.endAge);
+  const activeJobs = jobs.filter(j => scenario.currentAge >= j.startAge && scenario.currentAge <= j.endAge);
   const totalMonthly = activeJobs.reduce((sum, j) => sum + j.monthlyPay, 0);
 
   return (
@@ -100,7 +100,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
         {/* Jobs list */}
         <div className="space-y-2">
           {jobs.map(job => {
-            const isActive = scenario.currentAge >= job.startAge && scenario.currentAge < job.endAge;
+            const isActive = scenario.currentAge >= job.startAge && scenario.currentAge <= job.endAge;
             const isExpanded = expandedJobId === job.id;
             return (
               <div key={job.id} className={`p-2 rounded border text-xs space-y-1.5 ${isActive ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>

@@ -101,6 +101,7 @@ describe('Cash Buffer Strategy', () => {
   // Use a scenario with some volatility where buffer can help
   const bufferBase: Partial<ScenarioInput> = {
     currentAge: 65, retirementAge: 65, endAge: 90,
+    jobs: [] as ScenarioInput['jobs'],
     balances: { traditional401k: 300000, roth401k: 0, traditionalIRA: 0, rothIRA: 100000, taxable: 100000, hsa: 0, cashAccount: 150000, otherAssets: 0 },
     baseAnnualSpending: 4500, socialSecurityBenefit: 2000,
   };
