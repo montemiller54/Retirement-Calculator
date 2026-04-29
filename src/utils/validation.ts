@@ -29,8 +29,17 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
     if (!s.spouse.currentAge || s.spouse.currentAge < 18 || s.spouse.currentAge > 99) {
       errors.push({ card: 'profile', field: 'spouse.currentAge', message: "Spouse's current age must be between 18 and 99." });
     }
-    if (!s.spouse.retirementAge || s.spouse.retirementAge < 18) {
-      errors.push({ card: 'profile', field: 'spouse.retirementAge', message: "Spouse's retirement age must be at least 18." });
+  }
+
+  // ── Jobs ──
+  if (s.jobs && s.jobs.length > 0) {
+    for (const job of s.jobs) {
+      if (job.startAge >= job.endAge) {
+        errors.push({ card: 'earnings', field: `job.${job.id}.startAge`, message: `"${job.name || 'Unnamed'}" start age (${job.startAge}) must be before end age (${job.endAge}).` });
+      }
+      if (job.monthlyPay < 0) {
+        errors.push({ card: 'earnings', field: `job.${job.id}.monthlyPay`, message: `"${job.name || 'Unnamed'}" monthly pay cannot be negative.` });
+      }
     }
   }
 
@@ -99,12 +108,6 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
     }
   }
 
-  if (s.spouse?.enabled) {
-    if (s.spouse.pensionAmount > 0 && s.spouse.pensionStartAge > s.endAge) {
-      errors.push({ card: 'income', field: 'spouse.pensionStartAge', message: `Spouse's pension starts at age ${s.spouse.pensionStartAge}, which is past the plan-through age.` });
-    }
-  }
-
   // ── Withdrawal Strategy ──
   if (s.rothConversion?.enabled) {
     if (s.rothConversion.startAge > s.rothConversion.endAge) {
@@ -131,13 +134,6 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
     }
     if (s.housing.downsizingProceeds > 0 && (s.housing.downsizingAge < s.currentAge || s.housing.downsizingAge > s.endAge)) {
       errors.push({ card: 'spending', field: 'housing.downsizingAge', message: `Downsizing age must be between ${s.currentAge} and ${s.endAge}.` });
-    }
-  }
-
-  // ── Part-time income ──
-  if (s.partTimeIncome?.enabled) {
-    if (s.partTimeIncome.endAge <= s.retirementAge) {
-      errors.push({ card: 'income', field: 'partTimeIncome.endAge', message: 'Part-time income end age must be after retirement age.' });
     }
   }
 

@@ -12,8 +12,19 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
   filingStatus: 'hoh',
   stateCode: 'IA',
 
-  // Earnings (monthly amounts)
-  currentSalary: 8333,
+  // Jobs & Earnings (monthly amounts)
+  jobs: [
+    {
+      id: 'default-job',
+      name: 'Primary Job',
+      monthlyPay: 8333,
+      startAge: 35,
+      endAge: 65,
+      has401k: true,
+      employerMatchRate: 0,
+      employerMatchCapPct: 0,
+    },
+  ],
   salaryGrowthRate: 0.03,
   totalSavingsRate: 0.20,
   contributionAllocation: {
@@ -27,9 +38,7 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
     otherAssets: 0,
   },
 
-  // Employer match
-  employerMatchRate: 0,        // 0 = no employer match
-  employerMatchCapPct: 0,
+  // Employer match (advanced: Roth split)
   employerRothPct: 0,          // 100% of match goes to Traditional 401k by default
 
   // Contribution limits
@@ -85,13 +94,6 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
   ruleof55Eligible: false,
   rothContributionBasis: 0,
 
-  // Part-time retirement income
-  partTimeIncome: {
-    enabled: false,
-    monthlyAmount: 2000,
-    endAge: 70,
-  },
-
   // Housing / mortgage
   housing: {
     enabled: false,
@@ -144,13 +146,5 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
   spouse: {
     enabled: false,
     currentAge: 33,
-    retirementAge: 65,
-    currentSalary: 0,
-    salaryGrowthRate: 0.03,
-    socialSecurityBenefit: 1500,
-    socialSecurityClaimAge: 67,
-    pensionAmount: 0,
-    pensionStartAge: 65,
-    pensionCOLA: 0.0,
   },
 };

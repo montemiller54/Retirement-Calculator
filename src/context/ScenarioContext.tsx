@@ -80,7 +80,7 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
       (!scenario.rothConversion) ||
       (!scenario.cashBuffer) ||
       (!scenario.spouse) ||
-      (!scenario.partTimeIncome) ||
+      (!scenario.jobs) ||
       (!scenario.housing) ||
       (scenario.inflationVolatility == null) ||
       (scenario.rothContributionBasis == null) ||
@@ -164,14 +164,6 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
         (patched as Record<string, unknown>).spouse = {
           enabled: false,
           currentAge: 33,
-          retirementAge: 65,
-          currentSalary: 0,
-          salaryGrowthRate: 0.03,
-          socialSecurityBenefit: 1500,
-          socialSecurityClaimAge: 67,
-          pensionAmount: 0,
-          pensionStartAge: 65,
-          pensionCOLA: 0.0,
         };
       }
       // New fields migration
@@ -181,12 +173,24 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
       if (patched.rothContributionBasis == null) {
         (patched as Record<string, unknown>).rothContributionBasis = 0;
       }
-      if (!patched.partTimeIncome) {
-        (patched as Record<string, unknown>).partTimeIncome = {
-          enabled: false,
-          monthlyAmount: 2000,
-          endAge: 70,
-        };
+      if (!patched.jobs) {
+        // Migrate from old currentSalary format
+        const raw = patched as unknown as Record<string, unknown>;
+        const oldSalary = (raw.currentSalary as number) ?? 0;
+        const oldMatchRate = (raw.employerMatchRate as number) ?? 0;
+        const oldMatchCap = (raw.employerMatchCapPct as number) ?? 0;
+        (patched as Record<string, unknown>).jobs = [
+          {
+            id: 'migrated-primary',
+            name: 'Primary Job',
+            monthlyPay: oldSalary,
+            startAge: patched.currentAge,
+            endAge: patched.retirementAge,
+            has401k: true,
+            employerMatchRate: oldMatchRate,
+            employerMatchCapPct: oldMatchCap,
+          },
+        ];
       }
       if (!patched.housing) {
         (patched as Record<string, unknown>).housing = {

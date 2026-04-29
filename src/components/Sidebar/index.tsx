@@ -11,7 +11,7 @@ import { useScenario } from '../../context/ScenarioContext';
 
 const ALL_SECTIONS = [
   { id: 'profile', label: 'You & Spouse', component: ProfileCard, showWhenRetired: true },
-  { id: 'earnings', label: 'Earnings & Savings', component: EarningsCard, showWhenRetired: false },
+  { id: 'earnings', label: 'Jobs & Savings', component: EarningsCard, showWhenRetired: true },
   { id: 'portfolio', label: 'Portfolio & Investments', component: PortfolioInvestmentsCard, showWhenRetired: true },
   { id: 'spending', label: 'Spending & Healthcare', component: SpendingHealthcareCard, showWhenRetired: true },
   { id: 'income', label: 'Retirement Income', component: IncomeCard, showWhenRetired: true },

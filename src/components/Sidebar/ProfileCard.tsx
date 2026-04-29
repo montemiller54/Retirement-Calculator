@@ -97,7 +97,7 @@ export function ProfileCard({ validationErrors }: CardProps) {
           label="Include Spouse"
         />
         {scenario.spouse?.enabled && (
-          <div className="grid grid-cols-2 gap-2 mt-3">
+          <div className="mt-3">
             <div>
               <label className="input-label">Spouse Age</label>
               <input
@@ -109,18 +109,6 @@ export function ProfileCard({ validationErrors }: CardProps) {
                 onChange={e => setField('spouse.currentAge', parseInt(e.target.value) || 0)}
               />
               <FieldError errors={ve} field="spouse.currentAge" />
-            </div>
-            <div>
-              <label className="input-label">Spouse Retires At</label>
-              <input
-                type="number"
-                className={`input-field text-center ${fieldErrorClass(ve, 'spouse.retirementAge')}`}
-                value={scenario.spouse.retirementAge}
-                min={Math.max(scenario.spouse.currentAge + 1, 50)}
-                max={80}
-                onChange={e => setField('spouse.retirementAge', parseInt(e.target.value) || 65)}
-              />
-              <FieldError errors={ve} field="spouse.retirementAge" />
             </div>
           </div>
         )}

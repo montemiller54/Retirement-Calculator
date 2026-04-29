@@ -90,7 +90,7 @@ function migrateScenario(s: ScenarioInput): ScenarioInput {
   // Patch nested objects: merge with defaults so partially-defined objects get all fields
   const nestedKeys = [
     'healthcare', 'cashBuffer', 'rothConversion', 'guardrails',
-    'partTimeIncome', 'housing', 'spouse',
+    'housing', 'spouse',
   ] as const;
   for (const key of nestedKeys) {
     const defaultVal = DEFAULT_SCENARIO[key];
@@ -101,6 +101,31 @@ function migrateScenario(s: ScenarioInput): ScenarioInput {
       (s as unknown as Record<string, unknown>)[key] = { ...defaultVal, ...s[key] };
     }
   }
+
+  // Migrate old currentSalary → jobs array
+  const raw = s as unknown as Record<string, unknown>;
+  if (!s.jobs) {
+    const oldSalary = (raw.currentSalary as number) ?? 0;
+    const oldMatchRate = (raw.employerMatchRate as number) ?? 0;
+    const oldMatchCap = (raw.employerMatchCapPct as number) ?? 0;
+    (raw as Record<string, unknown>).jobs = [
+      {
+        id: 'migrated-primary',
+        name: 'Primary Job',
+        monthlyPay: oldSalary,
+        startAge: s.currentAge,
+        endAge: s.retirementAge,
+        has401k: true,
+        employerMatchRate: oldMatchRate,
+        employerMatchCapPct: oldMatchCap,
+      },
+    ];
+  }
+  // Clean up removed fields from old data
+  delete raw.currentSalary;
+  delete raw.employerMatchRate;
+  delete raw.employerMatchCapPct;
+  delete raw.partTimeIncome;
 
   // Patch visibleAccounts — derive from non-zero balances/allocations for old scenarios
   if (!s.visibleAccounts) {

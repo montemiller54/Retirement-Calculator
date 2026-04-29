@@ -64,7 +64,7 @@ const benchmarks: Benchmark[] = [
     scenario: scenario({
       currentAge: 65, retirementAge: 65, endAge: 95,
       filingStatus: 'single',
-      currentSalary: 0, totalSavingsRate: 0,
+      jobs: [], totalSavingsRate: 0,
       baseAnnualSpending: 40000 / 12,
       spendingInflationRate: 0.025,
       socialSecurityBenefit: 0, socialSecurityClaimAge: 99,
@@ -97,7 +97,7 @@ const benchmarks: Benchmark[] = [
     scenario: scenario({
       currentAge: 65, retirementAge: 65, endAge: 95,
       filingStatus: 'single',
-      currentSalary: 0, totalSavingsRate: 0,
+      jobs: [], totalSavingsRate: 0,
       baseAnnualSpending: 40000 / 12,
       spendingInflationRate: 0.025,
       socialSecurityBenefit: 0, socialSecurityClaimAge: 99,
@@ -130,7 +130,7 @@ const benchmarks: Benchmark[] = [
     scenario: scenario({
       currentAge: 65, retirementAge: 65, endAge: 95,
       filingStatus: 'single',
-      currentSalary: 0, totalSavingsRate: 0,
+      jobs: [], totalSavingsRate: 0,
       baseAnnualSpending: 30000 / 12,
       spendingInflationRate: 0.025,
       socialSecurityBenefit: 0, socialSecurityClaimAge: 99,
@@ -163,7 +163,7 @@ const benchmarks: Benchmark[] = [
     scenario: scenario({
       currentAge: 65, retirementAge: 65, endAge: 95,
       filingStatus: 'single',
-      currentSalary: 0, totalSavingsRate: 0,
+      jobs: [], totalSavingsRate: 0,
       baseAnnualSpending: 50000 / 12,
       spendingInflationRate: 0.025,
       socialSecurityBenefit: 0, socialSecurityClaimAge: 99,
@@ -197,7 +197,7 @@ const benchmarks: Benchmark[] = [
     scenario: scenario({
       currentAge: 55, retirementAge: 55, endAge: 90,
       filingStatus: 'single',
-      currentSalary: 0, totalSavingsRate: 0,
+      jobs: [], totalSavingsRate: 0,
       baseAnnualSpending: 5000,
       spendingInflationRate: 0.025,
       socialSecurityBenefit: 2500, socialSecurityClaimAge: 67,
@@ -232,7 +232,7 @@ const benchmarks: Benchmark[] = [
     scenario: scenario({
       currentAge: 40, retirementAge: 40, endAge: 95,
       filingStatus: 'single',
-      currentSalary: 0, totalSavingsRate: 0,
+      jobs: [], totalSavingsRate: 0,
       baseAnnualSpending: 40000 / 12,
       spendingInflationRate: 0.025,
       socialSecurityBenefit: 1500, socialSecurityClaimAge: 67,
@@ -267,7 +267,7 @@ const benchmarks: Benchmark[] = [
     scenario: scenario({
       currentAge: 65, retirementAge: 65, endAge: 95,
       filingStatus: 'single',
-      currentSalary: 0, totalSavingsRate: 0,
+      jobs: [], totalSavingsRate: 0,
       baseAnnualSpending: 40000 / 12,
       spendingInflationRate: 0.025,
       socialSecurityBenefit: 0, socialSecurityClaimAge: 99,

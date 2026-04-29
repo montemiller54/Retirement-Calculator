@@ -42,17 +42,15 @@ function getAllocation(scenario: ScenarioInput, account: AccountType, isRetired:
 function resolveSSBenefits(s: ScenarioInput): ScenarioInput {
   if (s.socialSecurityMode !== 'auto') return s;
 
-  const ssBenefit = estimateSSBenefit(s.currentSalary, s.socialSecurityClaimAge, s.currentAge);
-  const spouseBenefit = s.spouse?.enabled
-    ? s.spouse.currentSalary > 0
-      ? estimateSSBenefit(s.spouse.currentSalary, s.spouse.socialSecurityClaimAge, s.spouse.currentAge)
-      : Math.round(ssBenefit * 0.5)  // Spousal benefit: 50% of primary PIA
-    : s.spouse?.socialSecurityBenefit ?? 0;
+  // Use highest-paying job for SS estimation
+  const highestSalary = (s.jobs ?? []).length > 0
+    ? Math.max(...(s.jobs ?? []).map(j => j.monthlyPay))
+    : 0;
+  const ssBenefit = estimateSSBenefit(highestSalary, s.socialSecurityClaimAge, s.currentAge);
 
   return {
     ...s,
     socialSecurityBenefit: ssBenefit,
-    spouse: s.spouse ? { ...s.spouse, socialSecurityBenefit: spouseBenefit } : s.spouse,
   };
 }
 
@@ -64,7 +62,7 @@ function toAnnualScenario(s: ScenarioInput): ScenarioInput {
   return {
     ...resolved,
     taxBracketInflationRate: derivedTaxBracketRate,
-    currentSalary: resolved.currentSalary * 12,
+    jobs: (resolved.jobs ?? []).map(j => ({ ...j, monthlyPay: j.monthlyPay * 12 })),
     baseAnnualSpending: resolved.baseAnnualSpending * 12,
     socialSecurityBenefit: resolved.socialSecurityBenefit * 12,
     pensionAmount: resolved.pensionAmount * 12,
@@ -81,20 +79,10 @@ function toAnnualScenario(s: ScenarioInput): ScenarioInput {
       medicareMonthly: resolved.healthcare.medicareMonthly * 12,
       lateLifeMonthly: resolved.healthcare.lateLifeMonthly * 12,
     },
-    partTimeIncome: {
-      ...(resolved.partTimeIncome ?? { enabled: false, monthlyAmount: 0, endAge: 70 }),
-      monthlyAmount: (resolved.partTimeIncome?.monthlyAmount ?? 0) * 12,
-    },
     housing: {
       ...(resolved.housing ?? { enabled: false, mortgagePayment: 0, payoffAge: 65, downsizingProceeds: 0, downsizingAge: 70 }),
       mortgagePayment: (resolved.housing?.mortgagePayment ?? 0) * 12,
     },
-    spouse: resolved.spouse ? {
-      ...resolved.spouse,
-      currentSalary: resolved.spouse.currentSalary * 12,
-      socialSecurityBenefit: resolved.spouse.socialSecurityBenefit * 12,
-      pensionAmount: resolved.spouse.pensionAmount * 12,
-    } : resolved.spouse,
   };
 }
 
@@ -164,14 +152,18 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     }
     yearInflationFactor = cumulativeInflationFactor;
 
-    // ── Income ──
-    const salary = isRetired ? 0 : s.currentSalary * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
-
-    // ── Part-time retirement income ──
-    let partTimeIncome = 0;
-    if (s.partTimeIncome?.enabled && isRetired && age < s.partTimeIncome.endAge) {
-      partTimeIncome = s.partTimeIncome.monthlyAmount * yearInflationFactor;
+    // ── Income from jobs ──
+    // Sum salary from all active jobs at this age
+    let totalJobSalary = 0;
+    const activeJobs: typeof s.jobs = [];
+    for (const job of (s.jobs ?? [])) {
+      if (age >= job.startAge && age < job.endAge) {
+        const jobSalary = job.monthlyPay * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
+        totalJobSalary += jobSalary;
+        activeJobs.push(job);
+      }
     }
+    const salary = totalJobSalary;
 
     const ssClaiming = age >= s.socialSecurityClaimAge;
     const ssYears = ssClaiming ? age - s.socialSecurityClaimAge : 0;
@@ -184,7 +176,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     const birthYear = new Date().getFullYear() - s.currentAge;
     const fraMonths = getFullRetirementAgeMonths(birthYear);
     const fraAge = Math.ceil(fraMonths / 12);
-    const earnedIncome = salary + partTimeIncome;
+    const earnedIncome = salary;
     let ssEarningsTestReduction = 0;
     if (socialSecurity > 0 && age < fraAge && earnedIncome > 0) {
       // 2026 exempt amount (~$23,400, indexed) — $1 reduction per $2 earned above threshold
@@ -200,30 +192,6 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       ? s.pensionAmount * Math.pow(1 + s.pensionCOLA, pensionYears)
       : 0;
 
-    // ── Spouse income ──
-    let spouseSalary = 0;
-    let spouseSS = 0;
-    let spousePension = 0;
-    const sp = s.spouse;
-    if (sp?.enabled) {
-      const spouseAge = sp.currentAge + yearsFromNow;
-      const spouseRetired = spouseAge >= sp.retirementAge;
-
-      spouseSalary = spouseRetired ? 0 : sp.currentSalary * Math.pow(1 + sp.salaryGrowthRate, yearsFromNow);
-
-      const spouseSsClaiming = spouseAge >= sp.socialSecurityClaimAge;
-      const spouseSsYears = spouseSsClaiming ? spouseAge - sp.socialSecurityClaimAge : 0;
-      spouseSS = spouseSsClaiming
-        ? sp.socialSecurityBenefit * Math.pow(1 + s.socialSecurityCOLA, spouseSsYears)
-        : 0;
-
-      const spousePensionActive = spouseRetired && spouseAge >= sp.pensionStartAge && sp.pensionAmount > 0;
-      const spousePensionYears = spousePensionActive ? spouseAge - sp.pensionStartAge : 0;
-      spousePension = spousePensionActive
-        ? sp.pensionAmount * Math.pow(1 + sp.pensionCOLA, spousePensionYears)
-        : 0;
-    }
-
     let otherIncome = 0;
     for (const src of s.otherIncomeSources) {
       if (age >= src.startAge && age <= src.endAge) {
@@ -231,34 +199,49 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       }
     }
 
-    const totalIncome = salary + socialSecurity + pension + otherIncome
-      + spouseSalary + spouseSS + spousePension + partTimeIncome;
+    const totalIncome = salary + socialSecurity + pension + otherIncome;
 
-    // ── Contributions (accumulation) ──
+    // ── Contributions (from jobs before retirement age) ──
     const contributions = emptyBalances();
     let employeePreTax401k = 0; // for wage tax calculation
     let employeeHSA = 0;
     if (!isRetired && salary > 0) {
       const totalSavings = salary * s.totalSavingsRate;
 
-      // Compute employer match: matchRate × min(employee 401k deferrals, salary × matchCapPct)
-      const desired401k = totalSavings *
-        ((s.contributionAllocation.traditional401k + s.contributionAllocation.roth401k) / 100);
-      const matchableAmount = Math.min(desired401k, salary * s.employerMatchCapPct);
-      const employerMatchAmount = matchableAmount * s.employerMatchRate;
+      // Compute employer match from all jobs that have 401k
+      let totalEmployerMatch = 0;
+      for (const job of activeJobs) {
+        if (job.has401k && job.employerMatchRate > 0 && job.employerMatchCapPct > 0) {
+          const jobSalary = job.monthlyPay * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
+          const desired401k = totalSavings *
+            ((s.contributionAllocation.traditional401k + s.contributionAllocation.roth401k) / 100);
+          const matchableAmount = Math.min(desired401k, jobSalary * job.employerMatchCapPct);
+          totalEmployerMatch += matchableAmount * job.employerMatchRate;
+        }
+      }
 
       // Inflate contribution limits by the same rate as tax brackets (IRS CPI indexing)
       const limIdx = Math.pow(1 + (s.taxBracketInflationRate ?? 0), yearsFromNow);
 
+      // Only allow 401k contributions if at least one active job has 401k
+      const has401k = activeJobs.some(j => j.has401k);
+      const effectiveAllocation = { ...s.contributionAllocation };
+      if (!has401k) {
+        // Redirect 401k allocation to taxable
+        effectiveAllocation.taxable += effectiveAllocation.traditional401k + effectiveAllocation.roth401k;
+        effectiveAllocation.traditional401k = 0;
+        effectiveAllocation.roth401k = 0;
+      }
+
       const result = allocateContributions({
         totalSavings,
-        allocation: s.contributionAllocation,
+        allocation: effectiveAllocation,
         age,
         limit401k: s.limit401k * limIdx,
         limitIRA: s.limitIRA * limIdx,
         enable401kCatchUp: s.enable401kCatchUp,
         enableIRACatchUp: s.enableIRACatchUp,
-        employerMatch: employerMatchAmount,
+        employerMatch: totalEmployerMatch,
         employerRothPct: s.employerRothPct,
         catchUp401k: DEFAULT_401K_CATCHUP * limIdx,
         superCatchUp401k: DEFAULT_401K_SUPER_CATCHUP * limIdx,
@@ -288,12 +271,12 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       }
     }
 
-    // Spouse salary savings → taxable account (shared portfolio, simplified)
-    if (spouseSalary > 0) {
-      const spouseSavings = spouseSalary * s.totalSavingsRate;
-      contributions.taxable += spouseSavings;
-      balances.taxable += spouseSavings;
-      taxableCostBasis += spouseSavings;
+    // Post-retirement job income: savings go to taxable account
+    if (isRetired && salary > 0) {
+      const postRetSavings = salary * s.totalSavingsRate;
+      contributions.taxable += postRetSavings;
+      balances.taxable += postRetSavings;
+      taxableCostBasis += postRetSavings;
     }
 
     // ── Roth Conversion ──
@@ -312,7 +295,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
           const ssThresh = getSSThresholds(s.filingStatus ?? 'hoh');
 
           // Existing ordinary income (before conversion)
-          const ordinaryExSS = (isRetired ? 0 : salary) + pension + otherIncome;
+          const ordinaryExSS = salary + pension + otherIncome;
           // Estimate SS taxable portion for bracket room calc
           const provisionalIncome = ordinaryExSS + socialSecurity * 0.5;
           let estSSTaxable = 0;
@@ -484,8 +467,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       // ── Iterative tax-aware withdrawal loop ──
       // Withdraw enough to cover spending + taxes on those withdrawals.
       // Tax on traditional withdrawals creates additional cash need; iterate to converge.
-      const incomeFromSources = socialSecurity + pension + otherIncome
-        + spouseSS + spousePension + spouseSalary + partTimeIncome;
+      const incomeFromSources = socialSecurity + pension + otherIncome + salary;
       let totalCashNeed = Math.max(0, spending - incomeFromSources);
 
       if ((totalCashNeed > 0 || rothConversionAmount > 0) && !depleted) {
@@ -536,10 +518,10 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
           const tradW = withdrawals.traditional401k + withdrawals.traditionalIRA;
           const iterPenaltyAmount = calcPenaltyAmount(withdrawals, rothConversionAmount);
           const iterTaxInput: TaxInput = {
-            wages: (spouseSalary > 0 ? spouseSalary * (1 - s.totalSavingsRate) : 0) + partTimeIncome,
+            wages: isRetired ? salary * (1 - s.totalSavingsRate) : 0,
             traditionalWithdrawals: tradW + rothConversionAmount,
-            socialSecurity: socialSecurity + spouseSS,
-            pension: pension + spousePension,
+            socialSecurity,
+            pension,
             capitalGains,
             taxableInterest: 0,
             otherTaxableIncome: otherIncome,
@@ -565,14 +547,12 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
 
     // ── Taxes ──
     const traditionalWithdrawals = withdrawals.traditional401k + withdrawals.traditionalIRA + rothConversionAmount;
-    const combinedSS = socialSecurity + spouseSS;
-    const combinedPension = pension + spousePension;
     const penaltyAmount = isRetired ? calcPenaltyAmount(withdrawals, rothConversionAmount) : 0;
     const taxInput: TaxInput = {
-      wages: isRetired ? partTimeIncome : salary * (1 - s.totalSavingsRate),
+      wages: isRetired ? salary * (1 - s.totalSavingsRate) : salary * (1 - s.totalSavingsRate),
       traditionalWithdrawals,
-      socialSecurity: combinedSS,
-      pension: combinedPension,
+      socialSecurity,
+      pension,
       capitalGains,
       taxableInterest: 0, // simplified
       otherTaxableIncome: otherIncome,
@@ -586,16 +566,8 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
 
     // Adjust wages for pre-tax employee contributions (traditional 401k + HSA reduce taxable wages)
     // Employer match does NOT reduce taxable wages
-    if (!isRetired) {
+    if (!isRetired && salary > 0) {
       taxInput.wages = salary - employeePreTax401k - employeeHSA;
-    }
-    // Add spouse wages (spouse savings go to taxable, not pre-tax accounts)
-    if (spouseSalary > 0) {
-      taxInput.wages += spouseSalary * (1 - s.totalSavingsRate);
-    }
-    // Add part-time income as wages (subject to FICA)
-    if (partTimeIncome > 0) {
-      taxInput.wages += partTimeIncome;
     }
 
     const taxResult = calculateTaxes(taxInput);
@@ -603,8 +575,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     // ── Surplus income reinvestment ──
     // When retirement income exceeds spending + taxes, reinvest surplus into taxable
     if (isRetired) {
-      const retirementIncome = socialSecurity + pension + otherIncome
-        + spouseSS + spousePension + spouseSalary + partTimeIncome;
+      const retirementIncome = socialSecurity + pension + otherIncome + salary;
       const surplus = retirementIncome - spending - taxResult.total;
       if (surplus > 0) {
         balances.taxable += surplus;
@@ -667,9 +638,9 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       totalBalance: totalBal,
       balances: cloneBalances(balances),
       income: {
-        salary: (isRetired ? partTimeIncome : salary) + spouseSalary,
-        socialSecurity: socialSecurity + spouseSS,
-        pension: pension + spousePension,
+        salary,
+        socialSecurity,
+        pension,
         other: otherIncome,
         total: totalIncome,
       },

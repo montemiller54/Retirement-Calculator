@@ -79,6 +79,18 @@ export const WITHDRAWAL_STRATEGY_LABELS: Record<WithdrawalStrategy, string> = {
 // ── Contribution allocation ──
 export type ContributionAllocation = Record<AccountType, number>; // percentages summing to 100
 
+// ── Job ──
+export interface Job {
+  id: string;
+  name: string;
+  monthlyPay: number;       // monthly salary in today's dollars
+  startAge: number;          // age when this job starts
+  endAge: number;            // age when this job ends
+  has401k: boolean;          // does this job offer a 401k?
+  employerMatchRate: number; // e.g., 0.50 (50% match)
+  employerMatchCapPct: number; // e.g., 0.06 (matches up to 6% of salary)
+}
+
 // ── Income source ──
 export interface IncomeSource {
   id: string;
@@ -132,14 +144,6 @@ export interface CashBufferConfig {
 export interface SpouseConfig {
   enabled: boolean;
   currentAge: number;
-  retirementAge: number;       // age spouse stops working
-  currentSalary: number;       // monthly
-  salaryGrowthRate: number;
-  socialSecurityBenefit: number; // monthly at claim age
-  socialSecurityClaimAge: number;
-  pensionAmount: number;       // monthly
-  pensionStartAge: number;
-  pensionCOLA: number;
 }
 
 // ── Roth conversion config ──
@@ -184,15 +188,13 @@ export interface ScenarioInput {
   filingStatus: FilingStatus;
   stateCode: string;              // 2-letter state code (e.g. 'IA')
 
-  // Earnings
-  currentSalary: number;
+  // Jobs & Earnings
+  jobs: Job[];
   salaryGrowthRate: number;      // e.g., 0.03
   totalSavingsRate: number;      // e.g., 0.20
   contributionAllocation: ContributionAllocation;
 
-  // Employer match
-  employerMatchRate: number;     // e.g., 1.0 for 100% match
-  employerMatchCapPct: number;   // e.g., 0.06 for "up to 6% of salary"
+  // Employer match (advanced: Roth split)
   employerRothPct: number;       // 0-100, % of employer match to Roth 401k (rest → Trad 401k)
 
   // Contribution limits
@@ -231,13 +233,6 @@ export interface ScenarioInput {
   // Early withdrawal settings
   ruleof55Eligible: boolean;       // allows penalty-free 401k access at age 55 if separated from service
   rothContributionBasis: number;   // total Roth IRA contributions (penalty-free withdrawal amount)
-
-  // Part-time retirement income
-  partTimeIncome: {
-    enabled: boolean;
-    monthlyAmount: number;         // monthly in today's dollars
-    endAge: number;                // age at which part-time income stops
-  };
 
   // Housing / mortgage
   housing: {

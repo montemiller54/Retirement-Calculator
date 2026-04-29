@@ -202,6 +202,7 @@ describe('One-time expenses', () => {
       endAge: 75,
       baseAnnualSpending: 4000, // monthly → 48k/yr
       spendingInflationRate: 0.03,
+      inflationVolatility: 0,
       socialSecurityBenefit: 0,
       pensionAmount: 0,
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
@@ -281,6 +282,7 @@ describe('Spending inflation compounding', () => {
       endAge: 75,
       baseAnnualSpending: 5000, // monthly → 60k/yr
       spendingInflationRate: 0.03,
+      inflationVolatility: 0,
       socialSecurityBenefit: 0,
       pensionAmount: 0,
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },

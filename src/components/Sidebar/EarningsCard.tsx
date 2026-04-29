@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useScenario } from '../../context/ScenarioContext';
-import { ACCOUNT_LABELS, ACCOUNT_TYPES, type AccountType } from '../../types';
+import { ACCOUNT_LABELS, ACCOUNT_TYPES, type AccountType, type Job } from '../../types';
 import { CurrencyInput } from './CurrencyInput';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
 import { PctSlider } from './shared';
@@ -28,6 +28,9 @@ export function EarningsCard({ validationErrors }: CardProps) {
   const ve = validationErrors;
   const [showDetails, setShowDetails] = useState(false);
   const [showMatchAdvanced, setShowMatchAdvanced] = useState(false);
+  const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
+
+  const jobs = scenario.jobs ?? [];
 
   const allocSum = ACCOUNT_TYPES.reduce(
     (s, a) => s + (scenario.contributionAllocation[a] || 0), 0
@@ -53,36 +56,128 @@ export function EarningsCard({ validationErrors }: CardProps) {
     setField('visibleAccounts', visibleAccounts.filter(a => a !== acct));
   };
 
-  // Auto-adjust: when one field changes, adjust the largest *other* field to keep total at 100%
   const handleAllocChange = (changedAcct: AccountType, newValue: number) => {
     newValue = Math.max(0, Math.min(100, newValue));
     setField(`contributionAllocation.${changedAcct}`, newValue);
   };
 
-  const totalMonthly = scenario.currentSalary + (scenario.spouse?.enabled ? scenario.spouse.currentSalary : 0);
+  const addJob = () => {
+    const newJob: Job = {
+      id: crypto.randomUUID(),
+      name: `Job ${jobs.length + 1}`,
+      monthlyPay: 5000,
+      startAge: scenario.retirementAge,
+      endAge: scenario.retirementAge + 5,
+      has401k: false,
+      employerMatchRate: 0,
+      employerMatchCapPct: 0,
+    };
+    setField('jobs', [...jobs, newJob]);
+    setExpandedJobId(newJob.id);
+  };
+
+  const removeJob = (id: string) => {
+    setField('jobs', jobs.filter(j => j.id !== id));
+    if (expandedJobId === id) setExpandedJobId(null);
+  };
+
+  const updateJob = (id: string, field: keyof Job, value: unknown) => {
+    setField(
+      'jobs',
+      jobs.map(j => (j.id === id ? { ...j, [field]: value } : j)),
+    );
+  };
+
+  // Total current monthly income from active jobs
+  const activeJobs = jobs.filter(j => scenario.currentAge >= j.startAge && scenario.currentAge < j.endAge);
+  const totalMonthly = activeJobs.reduce((sum, j) => sum + j.monthlyPay, 0);
 
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-[10px] text-gray-400 mb-3">Current income and how you save it.</p>
+        <p className="text-[10px] text-gray-400 mb-3">Your jobs, income, and how you save it.</p>
 
-        <div className={`grid ${scenario.spouse?.enabled ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
-          <DollarInput
-            label={scenario.spouse?.enabled ? 'Your Monthly Salary' : 'Monthly Salary'}
-            value={scenario.currentSalary}
-            onChange={v => setField('currentSalary', v)}
-          />
-          {scenario.spouse?.enabled && (
-            <DollarInput
-              label="Spouse Monthly Salary"
-              value={scenario.spouse.currentSalary}
-              onChange={v => setField('spouse.currentSalary', v)}
-            />
-          )}
+        {/* Jobs list */}
+        <div className="space-y-2">
+          {jobs.map(job => {
+            const isActive = scenario.currentAge >= job.startAge && scenario.currentAge < job.endAge;
+            const isExpanded = expandedJobId === job.id;
+            return (
+              <div key={job.id} className={`p-2 rounded border text-xs space-y-1.5 ${isActive ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                <div className="flex items-center gap-1">
+                  <button
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-[10px] w-4"
+                    onClick={() => setExpandedJobId(isExpanded ? null : job.id)}
+                  >
+                    {isExpanded ? '▾' : '▸'}
+                  </button>
+                  <input
+                    className="input-field flex-1 text-xs py-0.5"
+                    value={job.name}
+                    onChange={e => updateJob(job.id, 'name', e.target.value)}
+                  />
+                  {isActive && (
+                    <span className="text-[9px] text-green-600 dark:text-green-400 font-medium px-1">Active</span>
+                  )}
+                  <button className="text-red-400 hover:text-red-600 px-1" onClick={() => removeJob(job.id)}>✕</button>
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  <DollarInput label="$/mo" value={job.monthlyPay} onChange={v => updateJob(job.id, 'monthlyPay', v)} />
+                  <div>
+                    <label className="input-label">Start Age</label>
+                    <input type="number" className={`input-field text-center ${fieldErrorClass(ve, `job.${job.id}.startAge`)}`} value={job.startAge} onChange={e => updateJob(job.id, 'startAge', parseInt(e.target.value) || 0)} />
+                  </div>
+                  <div>
+                    <label className="input-label">End Age</label>
+                    <input type="number" className={`input-field text-center ${fieldErrorClass(ve, `job.${job.id}.startAge`)}`} value={job.endAge} onChange={e => updateJob(job.id, 'endAge', parseInt(e.target.value) || 0)} />
+                  </div>
+                </div>
+                <FieldError errors={ve} field={`job.${job.id}`} />
+
+                {isExpanded && (
+                  <div className="pt-1.5 border-t border-gray-200 dark:border-gray-600 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <label className="text-[11px] text-gray-600 dark:text-gray-400">Has 401(k)?</label>
+                      <input type="checkbox" checked={job.has401k} onChange={e => updateJob(job.id, 'has401k', e.target.checked)} />
+                    </div>
+                    {job.has401k && (
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                          Employer matches {Math.round(job.employerMatchRate * 100)}% of your contributions on the first {(job.employerMatchCapPct * 100).toFixed(1)}% of salary.
+                        </p>
+                        {job.monthlyPay > 0 && job.employerMatchRate > 0 && (
+                          <p className="text-[10px] text-primary-600 dark:text-primary-400 font-medium">
+                            ≈ Employer contributes ${Math.round(job.monthlyPay * 12 * job.employerMatchCapPct * job.employerMatchRate).toLocaleString()}/yr
+                          </p>
+                        )}
+                        <div className="grid grid-cols-2 gap-2">
+                          <PctSlider
+                            label="Match Rate"
+                            value={job.employerMatchRate * 100}
+                            onChange={v => updateJob(job.id, 'employerMatchRate', v / 100)}
+                            min={0} max={200} step={5}
+                          />
+                          <PctSlider
+                            label="Cap (% of salary)"
+                            value={job.employerMatchCapPct * 100}
+                            onChange={v => updateJob(job.id, 'employerMatchCapPct', v / 100)}
+                            min={0} max={15} step={0.5}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
+        <button className="mt-2 text-xs text-primary-600 dark:text-primary-400 hover:underline" onClick={addJob}>
+          + Add Job
+        </button>
         {totalMonthly > 0 && (
           <div className="mt-1 text-[10px] text-gray-400 text-right">
-            ${(totalMonthly * 12).toLocaleString()}/yr combined
+            ${(totalMonthly * 12).toLocaleString()}/yr current income
           </div>
         )}
       </div>
@@ -195,38 +290,13 @@ export function EarningsCard({ validationErrors }: CardProps) {
             )}
           </div>
 
-          {/* Employer match */}
+          {/* Advanced employer match options */}
           <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-            <label className="input-label font-medium">Employer Match
-              <InfoTip text="Many employers match a percentage of what you contribute to your 401(k). This is essentially free money added to your retirement savings." />
-            </label>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 -mt-1">
-              Employer matches {Math.round(scenario.employerMatchRate * 100)}% of your contributions on the first {(scenario.employerMatchCapPct * 100).toFixed(1)}% of salary.
-            </p>
-            {scenario.currentSalary > 0 && scenario.employerMatchRate > 0 && (
-              <p className="text-[10px] text-primary-600 dark:text-primary-400 font-medium -mt-1">
-                ≈ Your employer contributes ${Math.round(scenario.currentSalary * 12 * scenario.employerMatchCapPct * scenario.employerMatchRate).toLocaleString()}/yr
-              </p>
-            )}
-            <div className="grid grid-cols-2 gap-2">
-              <PctSlider
-                label="Match Rate"
-                value={scenario.employerMatchRate * 100}
-                onChange={v => setField('employerMatchRate', v / 100)}
-                min={0} max={200} step={5}
-              />
-              <PctSlider
-                label="Cap (% of salary)"
-                value={scenario.employerMatchCapPct * 100}
-                onChange={v => setField('employerMatchCapPct', v / 100)}
-                min={0} max={15} step={0.5}
-              />
-            </div>
             <button
               className="text-[11px] text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               onClick={() => setShowMatchAdvanced(!showMatchAdvanced)}
             >
-              {showMatchAdvanced ? '▾ Hide advanced' : '▸ Advanced'}
+              {showMatchAdvanced ? '▾ Hide advanced match options' : '▸ Advanced match options'}
             </button>
             {showMatchAdvanced && (
               <PctSlider

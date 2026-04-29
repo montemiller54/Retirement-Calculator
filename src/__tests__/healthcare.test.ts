@@ -94,6 +94,7 @@ describe('Healthcare cost modeling', () => {
     const scenario = makeScenario({
       currentAge: 55, retirementAge: 55, endAge: 66,
       baseAnnualSpending: 3000, spendingInflationRate: 0,
+      inflationVolatility: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       socialSecurityClaimAge: 70,
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },

@@ -80,7 +80,7 @@ describe('Tax gross-up convergence', () => {
       currentAge: 65,
       retirementAge: 65,
       endAge: 90,
-      currentSalary: 0,
+      jobs: [],
       balances: {
         traditional401k: 500000,
         roth401k: 0,
