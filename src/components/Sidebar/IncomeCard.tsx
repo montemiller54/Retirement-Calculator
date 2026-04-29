@@ -48,7 +48,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
-            Social Security
+            {scenario.spouse?.enabled ? 'Your Social Security' : 'Social Security'}
           </label>
           <Toggle
             checked={isAuto}
@@ -102,7 +102,41 @@ export function IncomeCard({ validationErrors }: CardProps) {
         </div>
       </div>
 
-      {/* Your Pension */}
+      {/* Spouse Social Security */}
+      {scenario.spouse?.enabled && (
+        <div className="space-y-1.5 pt-2 border-t border-gray-100 dark:border-gray-700">
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Spouse Social Security</label>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="input-label">Monthly Benefit</label>
+              {isAuto ? (
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
+                  <div className="input-field pl-6 text-right bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 cursor-default">
+                    {Math.round(estimatedSS * 0.5).toLocaleString()}
+                  </div>
+                </div>
+              ) : (
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
+                  <CurrencyInput value={scenario.spouse.socialSecurityBenefit} onChange={v => setField('spouse.socialSecurityBenefit', v)} />
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="input-label">Claim Age</label>
+              <input type="number" className="input-field text-center" value={scenario.spouse.socialSecurityClaimAge} min={62} max={70} onChange={e => setField('spouse.socialSecurityClaimAge', parseInt(e.target.value) || 67)} />
+            </div>
+          </div>
+          {isAuto && (
+            <p className="text-[10px] text-gray-400 italic">
+              Spousal benefit: 50% of your ${estimatedSS.toLocaleString()}/mo benefit
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Pension */}
       <div className="space-y-1.5 pt-2 border-t border-gray-100 dark:border-gray-700">
         <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
           Pension

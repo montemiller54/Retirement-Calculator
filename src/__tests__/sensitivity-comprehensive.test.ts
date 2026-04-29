@@ -148,8 +148,8 @@ describe('Roth Conversions', () => {
 
 describe('Spouse', () => {
   it('enabling spouse changes filing status behavior', () => {
-    const solo = run({ spouse: { enabled: false, currentAge: 33 } });
-    const withSpouse = run({ spouse: { enabled: true, currentAge: 33 } });
+    const solo = run({ spouse: { enabled: false, currentAge: 33, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67 } });
+    const withSpouse = run({ spouse: { enabled: true, currentAge: 33, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67 } });
     // With spouse enabled, the simulation should produce a different outcome
     expect(Math.abs(withSpouse.medianEnding - solo.medianEnding)).toBeGreaterThanOrEqual(0);
   });
@@ -599,8 +599,8 @@ describe('Early Withdrawal Controls', () => {
 
 describe('Spouse Parameters (isolated)', () => {
   it('spouse enabled vs disabled produces valid simulation', () => {
-    const disabled = run({ spouse: { enabled: false, currentAge: 33 } });
-    const enabled = run({ spouse: { enabled: true, currentAge: 33 } });
+    const disabled = run({ spouse: { enabled: false, currentAge: 33, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67 } });
+    const enabled = run({ spouse: { enabled: true, currentAge: 33, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67 } });
     expect(disabled.successRate).toBeGreaterThanOrEqual(0);
     expect(enabled.successRate).toBeGreaterThanOrEqual(0);
   });

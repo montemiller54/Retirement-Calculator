@@ -146,5 +146,7 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
   spouse: {
     enabled: false,
     currentAge: 33,
+    socialSecurityBenefit: 1500,
+    socialSecurityClaimAge: 67,
   },
 };

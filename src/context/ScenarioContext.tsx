@@ -164,7 +164,14 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
         (patched as Record<string, unknown>).spouse = {
           enabled: false,
           currentAge: 33,
+          socialSecurityBenefit: 1500,
+          socialSecurityClaimAge: 67,
         };
+      } else {
+        // Patch spouse SS fields if missing from old data
+        const sp = patched.spouse as unknown as Record<string, unknown>;
+        if (sp.socialSecurityBenefit == null) sp.socialSecurityBenefit = 1500;
+        if (sp.socialSecurityClaimAge == null) sp.socialSecurityClaimAge = 67;
       }
       // New fields migration
       if (patched.ruleof55Eligible == null) {

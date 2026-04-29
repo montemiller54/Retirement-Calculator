@@ -48,9 +48,15 @@ function resolveSSBenefits(s: ScenarioInput): ScenarioInput {
     : 0;
   const ssBenefit = estimateSSBenefit(highestSalary, s.socialSecurityClaimAge, s.currentAge);
 
+  // Spouse SS: use 50% of primary PIA as spousal benefit estimate
+  const spouseBenefit = s.spouse?.enabled
+    ? estimateSSBenefit(0, s.spouse.socialSecurityClaimAge, s.spouse.currentAge) || Math.round(ssBenefit * 0.5)
+    : 0;
+
   return {
     ...s,
     socialSecurityBenefit: ssBenefit,
+    spouse: s.spouse ? { ...s.spouse, socialSecurityBenefit: spouseBenefit } : s.spouse,
   };
 }
 
@@ -66,6 +72,10 @@ function toAnnualScenario(s: ScenarioInput): ScenarioInput {
     baseAnnualSpending: resolved.baseAnnualSpending * 12,
     socialSecurityBenefit: resolved.socialSecurityBenefit * 12,
     pensionAmount: resolved.pensionAmount * 12,
+    spouse: resolved.spouse ? {
+      ...resolved.spouse,
+      socialSecurityBenefit: resolved.spouse.socialSecurityBenefit * 12,
+    } : resolved.spouse,
     otherIncomeSources: resolved.otherIncomeSources.map(src => ({
       ...src,
       annualAmount: src.annualAmount * 12,
@@ -192,6 +202,18 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       ? s.pensionAmount * Math.pow(1 + s.pensionCOLA, pensionYears)
       : 0;
 
+    // ── Spouse Social Security ──
+    let spouseSS = 0;
+    const sp = s.spouse;
+    if (sp?.enabled) {
+      const spouseAge = sp.currentAge + yearsFromNow;
+      const spouseSsClaiming = spouseAge >= sp.socialSecurityClaimAge;
+      const spouseSsYears = spouseSsClaiming ? spouseAge - sp.socialSecurityClaimAge : 0;
+      spouseSS = spouseSsClaiming
+        ? sp.socialSecurityBenefit * Math.pow(1 + s.socialSecurityCOLA, spouseSsYears)
+        : 0;
+    }
+
     let otherIncome = 0;
     for (const src of s.otherIncomeSources) {
       if (age >= src.startAge && age <= src.endAge) {
@@ -199,7 +221,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       }
     }
 
-    const totalIncome = salary + socialSecurity + pension + otherIncome;
+    const totalIncome = salary + socialSecurity + spouseSS + pension + otherIncome;
 
     // ── Contributions (from jobs before retirement age) ──
     const contributions = emptyBalances();
@@ -297,14 +319,15 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
           // Existing ordinary income (before conversion)
           const ordinaryExSS = salary + pension + otherIncome;
           // Estimate SS taxable portion for bracket room calc
-          const provisionalIncome = ordinaryExSS + socialSecurity * 0.5;
+          const totalSS = socialSecurity + spouseSS;
+          const provisionalIncome = ordinaryExSS + totalSS * 0.5;
           let estSSTaxable = 0;
-          if (socialSecurity > 0 && provisionalIncome > ssThresh.low * idx) {
-            estSSTaxable = Math.min(0.85 * socialSecurity,
+          if (totalSS > 0 && provisionalIncome > ssThresh.low * idx) {
+            estSSTaxable = Math.min(0.85 * totalSS,
               provisionalIncome > ssThresh.high * idx
                 ? 0.5 * (ssThresh.high * idx - ssThresh.low * idx) + 0.85 * (provisionalIncome - ssThresh.high * idx)
                 : 0.5 * (provisionalIncome - ssThresh.low * idx));
-            estSSTaxable = Math.max(0, Math.min(estSSTaxable, 0.85 * socialSecurity));
+            estSSTaxable = Math.max(0, Math.min(estSSTaxable, 0.85 * totalSS));
           }
           const existingOrdinary = ordinaryExSS + estSSTaxable;
 
@@ -313,7 +336,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
           let estTradWithdrawal = 0;
           if (isRetired) {
             const estSpending = s.baseAnnualSpending * Math.pow(1 + s.spendingInflationRate, yearsFromNow);
-            const estIncome = socialSecurity + pension + otherIncome;
+            const estIncome = socialSecurity + spouseSS + pension + otherIncome;
             const estCashNeed = Math.max(0, estSpending - estIncome);
             // Non-traditional accounts are tapped first in most strategies
             const nonTradAvail = balances.cashAccount + balances.otherAssets + balances.taxable;
@@ -467,7 +490,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       // ── Iterative tax-aware withdrawal loop ──
       // Withdraw enough to cover spending + taxes on those withdrawals.
       // Tax on traditional withdrawals creates additional cash need; iterate to converge.
-      const incomeFromSources = socialSecurity + pension + otherIncome + salary;
+      const incomeFromSources = socialSecurity + spouseSS + pension + otherIncome + salary;
       let totalCashNeed = Math.max(0, spending - incomeFromSources);
 
       if ((totalCashNeed > 0 || rothConversionAmount > 0) && !depleted) {
@@ -520,7 +543,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
           const iterTaxInput: TaxInput = {
             wages: isRetired ? salary * (1 - s.totalSavingsRate) : 0,
             traditionalWithdrawals: tradW + rothConversionAmount,
-            socialSecurity,
+            socialSecurity: socialSecurity + spouseSS,
             pension,
             capitalGains,
             taxableInterest: 0,
@@ -551,7 +574,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     const taxInput: TaxInput = {
       wages: isRetired ? salary * (1 - s.totalSavingsRate) : salary * (1 - s.totalSavingsRate),
       traditionalWithdrawals,
-      socialSecurity,
+      socialSecurity: socialSecurity + spouseSS,
       pension,
       capitalGains,
       taxableInterest: 0, // simplified
@@ -575,7 +598,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     // ── Surplus income reinvestment ──
     // When retirement income exceeds spending + taxes, reinvest surplus into taxable
     if (isRetired) {
-      const retirementIncome = socialSecurity + pension + otherIncome + salary;
+      const retirementIncome = socialSecurity + spouseSS + pension + otherIncome + salary;
       const surplus = retirementIncome - spending - taxResult.total;
       if (surplus > 0) {
         balances.taxable += surplus;
@@ -639,7 +662,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       balances: cloneBalances(balances),
       income: {
         salary,
-        socialSecurity,
+        socialSecurity: socialSecurity + spouseSS,
         pension,
         other: otherIncome,
         total: totalIncome,

@@ -144,6 +144,8 @@ export interface CashBufferConfig {
 export interface SpouseConfig {
   enabled: boolean;
   currentAge: number;
+  socialSecurityBenefit: number; // monthly at claim age
+  socialSecurityClaimAge: number;
 }
 
 // ── Roth conversion config ──

@@ -29,7 +29,7 @@ describe('Spouse config', () => {
 
     const withSpouseOff = makeScenario({
       ...base,
-      spouse: { enabled: false, currentAge: 33 },
+      spouse: { enabled: false, currentAge: 33, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67 },
     });
     const r1 = runSimulation(withSpouseOff, { numSimulations: 1, seed: 42 });
 
@@ -45,6 +45,8 @@ describe('Spouse config', () => {
     const sp: SpouseConfig = {
       enabled: true,
       currentAge: 63,
+      socialSecurityBenefit: 1500,
+      socialSecurityClaimAge: 67,
     };
 
     const scenario = makeScenario({
@@ -71,6 +73,8 @@ describe('Spouse config', () => {
     const sp: SpouseConfig = {
       enabled: true,
       currentAge: 58,
+      socialSecurityBenefit: 1500,
+      socialSecurityClaimAge: 67,
     };
 
     const scenario = makeScenario({
