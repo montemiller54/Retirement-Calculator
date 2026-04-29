@@ -105,12 +105,6 @@ export function EarningsCard({ validationErrors }: CardProps) {
             return (
               <div key={job.id} className={`p-2 rounded border text-xs space-y-1.5 ${isActive ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
                 <div className="flex items-center gap-1">
-                  <button
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-[10px] w-4"
-                    onClick={() => setExpandedJobId(isExpanded ? null : job.id)}
-                  >
-                    {isExpanded ? '▾' : '▸'}
-                  </button>
                   <input
                     className="input-field flex-1 text-xs py-0.5"
                     value={job.name}
@@ -133,6 +127,13 @@ export function EarningsCard({ validationErrors }: CardProps) {
                   </div>
                 </div>
                 <FieldError errors={ve} field={`job.${job.id}`} />
+
+                <button
+                  className="text-[11px] text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                  onClick={() => setExpandedJobId(isExpanded ? null : job.id)}
+                >
+                  {isExpanded ? '▾ Hide 401(k) & Match' : '▸ 401(k) & Match'}
+                </button>
 
                 {isExpanded && (
                   <div className="pt-1.5 border-t border-gray-200 dark:border-gray-600 space-y-1.5">
