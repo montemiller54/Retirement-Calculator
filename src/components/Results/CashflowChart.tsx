@@ -52,7 +52,7 @@ export function CashflowChart({ data, retirementAge }: CashflowChartProps) {
   return (
     <div className="card">
       <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-        Retirement Income Sources (Expected)
+        Retirement Income Sources (Expected Path)
       </h4>
       <ResponsiveContainer width="100%" height={250}>
         <ComposedChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
