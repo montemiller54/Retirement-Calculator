@@ -52,7 +52,7 @@ export function CashflowChart({ data, retirementAge }: CashflowChartProps) {
   return (
     <div className="card">
       <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-        Retirement Income Sources (Average)
+        Retirement Income Sources (Median)
       </h4>
       <ResponsiveContainer width="100%" height={250}>
         <ComposedChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -79,7 +79,7 @@ export function CashflowChart({ data, retirementAge }: CashflowChartProps) {
           />
         </ComposedChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">Shows where your retirement income comes from each year, averaged across all simulations. The dashed red line is your total spending.</p>
+      <p className="text-[10px] text-gray-400 mt-2 px-1">Shows where your retirement income comes from each year in the median simulation (50th percentile outcome). The dashed red line is your total spending.</p>
     </div>
   );
 }

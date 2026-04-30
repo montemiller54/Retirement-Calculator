@@ -81,7 +81,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
         {isAuto && (
           <p className={`text-[10px] italic ${jobs.length === 0 || highestSalary === 0 ? 'text-amber-500' : 'text-gray-400'}`}>
             {jobs.length === 0 || highestSalary === 0
-              ? 'Warning: auto-estimate uses salary ($0). Switch to manual and enter your actual SS benefit.'
+              ? 'No jobs found — using last saved benefit. Add a job or switch to manual for accuracy.'
               : `Estimated from $${(highestSalary * 12).toLocaleString()}/yr (highest job salary) using SSA formula`}
           </p>
         )}

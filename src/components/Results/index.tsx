@@ -94,7 +94,7 @@ export function ResultsPanel({ result, retirementAge, isRunning, progress, error
       <FanChart data={result.percentileBands} retirementAge={retirementAge} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <CashflowChart data={result.averagePath} retirementAge={retirementAge} />
+        <CashflowChart data={result.medianPath} retirementAge={retirementAge} />
         <TaxChart data={result.medianPath} />
       </div>
 

@@ -42,10 +42,14 @@ function getAllocation(scenario: ScenarioInput, account: AccountType, isRetired:
 function resolveSSBenefits(s: ScenarioInput): ScenarioInput {
   if (s.socialSecurityMode !== 'auto') return s;
 
-  // Use highest-paying job for SS estimation
+  // Use highest-paying job (including past jobs) for SS estimation
   const highestSalary = (s.jobs ?? []).length > 0
     ? Math.max(...(s.jobs ?? []).map(j => j.monthlyPay))
     : 0;
+
+  // If no jobs exist, keep the current SS benefit value rather than zeroing it out
+  if (highestSalary === 0 && s.socialSecurityBenefit > 0) return s;
+
   const ssBenefit = estimateSSBenefit(highestSalary, s.socialSecurityClaimAge, s.currentAge);
 
   // Spouse SS: use 50% of primary PIA as spousal benefit estimate
