@@ -51,13 +51,13 @@ export function AccountDrawdownChart({ data, retirementAge }: AccountDrawdownCha
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
             dataKey="age"
-            tick={{ fontSize: 10, fill: '#374151' }}
+            tick={{ fontSize: 10, fill: '#9ca3af' }}
             minTickGap={20}
             label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fontSize: 11 }}
           />
           <YAxis
             tickFormatter={formatCompact}
-            tick={{ fontSize: 10, fill: '#374151' }}
+            tick={{ fontSize: 10, fill: '#9ca3af' }}
             width={55}
           />
           <Tooltip
