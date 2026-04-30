@@ -323,6 +323,7 @@ export interface SimulationResult {
   endingBalances: number[];
   medianPath: YearResult[];
   averagePath: YearResult[];
+  expectedPath: YearResult[];
   worstDecilePath: YearResult[];
   depletionAges: (number | null)[];
 }

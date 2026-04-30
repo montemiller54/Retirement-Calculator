@@ -852,6 +852,7 @@ function aggregateResults(paths: SimulationPath[], scenario: ScenarioInput): Sim
     endingBalances,
     medianPath,
     averagePath,
+    expectedPath: medianPath, // placeholder, overwritten by runSimulation
     worstDecilePath,
     depletionAges: paths.map(p => p.depletionAge),
   };
@@ -875,5 +876,22 @@ export function runSimulation(
     }
   }
 
-  return aggregateResults(paths, scenario);
+  // Run one deterministic path using mean returns (zero volatility)
+  const deterministicScenario: ScenarioInput = {
+    ...scenario,
+    inflationVolatility: 0,
+    investments: {
+      ...scenario.investments,
+      assetClassReturns: Object.fromEntries(
+        Object.entries(scenario.investments.assetClassReturns).map(
+          ([k, v]) => [k, { mean: v.mean, stdDev: 0 }]
+        )
+      ) as ScenarioInput['investments']['assetClassReturns'],
+    },
+  };
+  const deterministicRng = new PRNG(0);
+  const expectedPath = runSinglePath(deterministicScenario, deterministicRng, choleskyL).years;
+
+  const result = aggregateResults(paths, scenario);
+  return { ...result, expectedPath };
 }
