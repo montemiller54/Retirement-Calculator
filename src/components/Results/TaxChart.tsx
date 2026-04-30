@@ -26,8 +26,8 @@ export function TaxChart({ data }: TaxChartProps) {
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey="age" tick={{ fontSize: 10 }} minTickGap={20} />
-          <YAxis tickFormatter={formatCompact} tick={{ fontSize: 10 }} width={55} />
+          <XAxis dataKey="age" tick={{ fontSize: 10, fill: '#374151' }} minTickGap={20} />
+          <YAxis tickFormatter={formatCompact} tick={{ fontSize: 10, fill: '#374151' }} width={55} />
           <Tooltip formatter={(val: number) => formatCompact(val)} labelFormatter={(label) => `Age ${label}`} contentStyle={{ fontSize: 11 }} />
           <Legend wrapperStyle={{ fontSize: 10 }} />
           <Bar dataKey="federal" stackId="1" fill="#3b82f6" name="Federal" />

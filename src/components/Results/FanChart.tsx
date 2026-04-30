@@ -22,13 +22,13 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
             dataKey="age"
-            tick={{ fontSize: 10 }}
+            tick={{ fontSize: 10, fill: '#374151' }}
             minTickGap={20}
             label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fontSize: 11 }}
           />
           <YAxis
             tickFormatter={formatCompact}
-            tick={{ fontSize: 10 }}
+            tick={{ fontSize: 10, fill: '#374151' }}
             width={55}
           />
           <Tooltip
