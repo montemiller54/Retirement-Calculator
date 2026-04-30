@@ -28,14 +28,14 @@ export function TaxChart({ data }: TaxChartProps) {
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis dataKey="age" tick={{ fontSize: 10 }} minTickGap={20} />
           <YAxis tickFormatter={formatCompact} tick={{ fontSize: 10 }} width={55} />
-          <Tooltip formatter={(val: number) => formatCompact(val)} contentStyle={{ fontSize: 11 }} />
+          <Tooltip formatter={(val: number) => formatCompact(val)} labelFormatter={(label) => `Age ${label}`} contentStyle={{ fontSize: 11 }} />
           <Legend wrapperStyle={{ fontSize: 10 }} />
           <Bar dataKey="federal" stackId="1" fill="#3b82f6" name="Federal" />
           <Bar dataKey="state" stackId="1" fill="#10b981" name="State" />
           <Bar dataKey="fica" stackId="1" fill="#f59e0b" name="SS & Medicare Tax" />
         </BarChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">Estimated tax burden over time from the median (middle) simulation outcome. Includes federal, state, and payroll taxes.</p>
+      <p className="text-[10px] text-gray-400 mt-2 px-1">Estimated tax burden over time assuming average market returns. Includes federal, state, and payroll taxes.</p>
     </div>
   );
 }

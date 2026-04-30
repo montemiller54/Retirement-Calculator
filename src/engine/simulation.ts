@@ -876,10 +876,11 @@ export function runSimulation(
     }
   }
 
-  // Run one deterministic path using mean returns (zero volatility)
+  // Run one deterministic path using mean returns (zero volatility, no guardrails)
   const deterministicScenario: ScenarioInput = {
     ...scenario,
     inflationVolatility: 0,
+    guardrails: { ...scenario.guardrails, enabled: false },
     investments: {
       ...scenario.investments,
       assetClassReturns: Object.fromEntries(
