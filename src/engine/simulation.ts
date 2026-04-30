@@ -223,11 +223,11 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
 
     const totalIncome = salary + socialSecurity + spouseSS + pension + otherIncome;
 
-    // ── Contributions (from jobs before retirement age) ──
+    // ── Contributions (from active jobs) ──
     const contributions = emptyBalances();
     let employeePreTax401k = 0; // for wage tax calculation
     let employeeHSA = 0;
-    if (!isRetired && salary > 0) {
+    if (activeJobs.length > 0 && salary > 0) {
       const totalSavings = salary * s.totalSavingsRate;
 
       // Compute employer match from all jobs that have 401k
@@ -533,7 +533,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
           const tradW = withdrawals.traditional401k + withdrawals.traditionalIRA;
           const iterPenaltyAmount = calcPenaltyAmount(withdrawals, rothConversionAmount);
           const iterTaxInput: TaxInput = {
-            wages: isRetired ? salary : 0,
+            wages: (activeJobs.length > 0 && salary > 0) ? salary - employeePreTax401k - employeeHSA : salary,
             traditionalWithdrawals: tradW + rothConversionAmount,
             socialSecurity: socialSecurity + spouseSS,
             pension,
@@ -564,7 +564,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     const traditionalWithdrawals = withdrawals.traditional401k + withdrawals.traditionalIRA + rothConversionAmount;
     const penaltyAmount = isRetired ? calcPenaltyAmount(withdrawals, rothConversionAmount) : 0;
     const taxInput: TaxInput = {
-      wages: isRetired ? salary : salary * (1 - s.totalSavingsRate),
+      wages: (activeJobs.length > 0 && salary > 0) ? salary * (1 - s.totalSavingsRate) : salary,
       traditionalWithdrawals,
       socialSecurity: socialSecurity + spouseSS,
       pension,
@@ -581,7 +581,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
 
     // Adjust wages for pre-tax employee contributions (traditional 401k + HSA reduce taxable wages)
     // Employer match does NOT reduce taxable wages
-    if (!isRetired && salary > 0) {
+    if (activeJobs.length > 0 && salary > 0) {
       taxInput.wages = salary - employeePreTax401k - employeeHSA;
     }
 
@@ -590,7 +590,8 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     // ── Surplus income reinvestment ──
     // When retirement income exceeds spending + taxes, reinvest surplus into taxable
     if (isRetired) {
-      const retirementIncome = socialSecurity + spouseSS + pension + otherIncome + salary;
+      const netSalary = activeJobs.length > 0 ? salary * (1 - s.totalSavingsRate) : salary;
+      const retirementIncome = socialSecurity + spouseSS + pension + otherIncome + netSalary;
       const surplus = retirementIncome - spending - taxResult.total;
       if (surplus > 0) {
         balances.taxable += surplus;

@@ -133,14 +133,16 @@ describe('Accumulation phase logic', () => {
     }
   });
 
-  it('contributions happen only before retirement', () => {
+  it('contributions happen when jobs are active', () => {
     const result = runSimulation(DEFAULT_SCENARIO, { numSimulations: 1, seed: 42 });
     for (const yr of result.medianPath) {
       const totalContribs = ACCOUNT_TYPES.reduce((s, a) => s + yr.contributions[a], 0);
-      if (yr.age >= DEFAULT_SCENARIO.retirementAge) {
-        expect(totalContribs).toBe(0);
-      } else {
+      // Default job endAge = retirementAge = 65, so contributions happen through age 65
+      const defaultJob = DEFAULT_SCENARIO.jobs[0];
+      if (yr.age >= defaultJob.startAge && yr.age <= defaultJob.endAge) {
         expect(totalContribs).toBeGreaterThan(0);
+      } else {
+        expect(totalContribs).toBe(0);
       }
     }
   });

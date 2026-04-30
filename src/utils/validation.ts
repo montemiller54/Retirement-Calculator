@@ -41,11 +41,21 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
         errors.push({ card: 'earnings', field: `job.${job.id}.monthlyPay`, message: `"${job.name || 'Unnamed'}" monthly pay cannot be negative.` });
       }
     }
+    // Check for overlapping job age ranges
+    for (let i = 0; i < s.jobs.length; i++) {
+      for (let j = i + 1; j < s.jobs.length; j++) {
+        const a = s.jobs[i];
+        const b = s.jobs[j];
+        if (a.startAge <= b.endAge && b.startAge <= a.endAge) {
+          errors.push({ card: 'earnings', field: `job.${b.id}.startAge`, message: `"${a.name || 'Job ' + (i+1)}" (${a.startAge}–${a.endAge}) and "${b.name || 'Job ' + (j+1)}" (${b.startAge}–${b.endAge}) overlap — income will be doubled in those years.` });
+        }
+      }
+    }
   }
 
-  // ── Earnings (skip if already retired) ──
-  const isRetired = s.currentAge >= s.retirementAge;
-  if (!isRetired) {
+  // ── Earnings (check if any jobs are active now or in the future) ──
+  const hasActiveOrFutureJobs = s.jobs && s.jobs.some(j => j.endAge >= s.currentAge);
+  if (hasActiveOrFutureJobs) {
     const allocSum = ACCOUNT_TYPES.reduce((sum, a) => sum + (s.contributionAllocation[a] || 0), 0);
     if (Math.abs(allocSum - 100) > 0.01) {
       errors.push({ card: 'earnings', field: 'contributionAllocation', message: `Savings allocation adds up to ${Math.round(allocSum)}% — it must total exactly 100%.` });

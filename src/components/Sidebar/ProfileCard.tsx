@@ -98,7 +98,7 @@ export function ProfileCard({ validationErrors }: CardProps) {
         />
         {scenario.spouse?.enabled && (
           <div className="mt-3">
-            <div>
+            <div className="w-1/4">
               <label className="input-label">Spouse Age</label>
               <input
                 type="number"
