@@ -593,7 +593,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
 
     // ── Surplus income reinvestment ──
     // When retirement income exceeds spending + taxes, reinvest surplus into taxable
-    if (isRetired) {
+    if (isRetired && !depleted) {
       const netSalary = activeJobs.length > 0 ? salary * (1 - s.totalSavingsRate) : salary;
       const retirementIncome = socialSecurity + spouseSS + pension + otherIncome + netSalary;
       const surplus = retirementIncome - spending - taxResult.total;
@@ -605,21 +605,23 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
 
     // ── Apply returns ──
     let totalReturn = 0;
-    for (const acct of ACCOUNT_TYPES) {
-      if (balances[acct] <= 0) continue;
-      const allocPcts = getAllocation(scenario, acct, isRetired);
-      const ret = blendedReturn(assetReturns, allocPcts);
-      const gain = balances[acct] * ret;
-      balances[acct] += gain;
-      balances[acct] = Math.max(0, balances[acct]);
-      totalReturn += gain;
+    if (!depleted) {
+      for (const acct of ACCOUNT_TYPES) {
+        if (balances[acct] <= 0) continue;
+        const allocPcts = getAllocation(scenario, acct, isRetired);
+        const ret = blendedReturn(assetReturns, allocPcts);
+        const gain = balances[acct] * ret;
+        balances[acct] += gain;
+        balances[acct] = Math.max(0, balances[acct]);
+        totalReturn += gain;
 
-      // Taxable account: gains add to balance but not to cost basis
-      // (cost basis stays the same → unrealized gains grow)
+        // Taxable account: gains add to balance but not to cost basis
+        // (cost basis stays the same → unrealized gains grow)
+      }
     }
 
     // ── Cash buffer refill in up markets ──
-    if (isRetired && s.cashBuffer?.enabled && s.cashBuffer.refillInUpMarkets && portfolioReturnSignal >= 0) {
+    if (isRetired && !depleted && s.cashBuffer?.enabled && s.cashBuffer.refillInUpMarkets && portfolioReturnSignal >= 0) {
       const targetBuffer = s.cashBuffer.yearsOfExpenses * spending;
       const deficit = targetBuffer - balances.cashAccount;
       if (deficit > 0) {
