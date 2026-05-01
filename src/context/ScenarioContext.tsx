@@ -180,6 +180,12 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
       if (patched.rothContributionBasis == null) {
         (patched as Record<string, unknown>).rothContributionBasis = 0;
       }
+      if (!patched.pensionType) {
+        (patched as Record<string, unknown>).pensionType = 'annuity';
+      }
+      if (!patched.pensionLumpSumAccount) {
+        (patched as Record<string, unknown>).pensionLumpSumAccount = 'traditionalIRA';
+      }
       if (!patched.jobs) {
         // Migrate from old currentSalary format
         const raw = patched as unknown as Record<string, unknown>;

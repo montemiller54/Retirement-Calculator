@@ -75,6 +75,8 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
   pensionAmount: 0,
   pensionStartAge: 65,
   pensionCOLA: 0.0,
+  pensionType: 'annuity',
+  pensionLumpSumAccount: 'traditionalIRA',
   otherIncomeSources: [],
 
   // Investments

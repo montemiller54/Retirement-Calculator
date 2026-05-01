@@ -75,7 +75,7 @@ function toAnnualScenario(s: ScenarioInput): ScenarioInput {
     jobs: (resolved.jobs ?? []).map(j => ({ ...j, monthlyPay: j.monthlyPay * 12 })),
     baseAnnualSpending: resolved.baseAnnualSpending * 12,
     socialSecurityBenefit: resolved.socialSecurityBenefit * 12,
-    pensionAmount: resolved.pensionAmount * 12,
+    pensionAmount: resolved.pensionType === 'lumpSum' ? resolved.pensionAmount : resolved.pensionAmount * 12,
     spouse: resolved.spouse ? {
       ...resolved.spouse,
       socialSecurityBenefit: resolved.spouse.socialSecurityBenefit * 12,
@@ -200,11 +200,29 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       socialSecurity -= ssEarningsTestReduction;
     }
 
-    const pensionActive = isRetired && age >= s.pensionStartAge && s.pensionAmount > 0;
-    const pensionYears = pensionActive ? age - s.pensionStartAge : 0;
-    const pension = pensionActive
-      ? s.pensionAmount * Math.pow(1 + s.pensionCOLA, pensionYears)
-      : 0;
+    // ── Pension ──
+    let pension = 0;
+    let pensionLumpSumTaxable = 0;
+    if (s.pensionType === 'lumpSum') {
+      // Lump sum: deposit into chosen account at pension start age
+      if (age === s.pensionStartAge && s.pensionAmount > 0) {
+        const acct = s.pensionLumpSumAccount ?? 'traditionalIRA';
+        balances[acct] += s.pensionAmount;
+        if (acct === 'taxable') {
+          taxableCostBasis += s.pensionAmount;
+          // Cash-out is taxed as ordinary income
+          pensionLumpSumTaxable = s.pensionAmount;
+        }
+        // IRA rollover: no immediate tax event
+      }
+    } else {
+      // Annuity: annual pension income
+      const pensionActive = isRetired && age >= s.pensionStartAge && s.pensionAmount > 0;
+      const pensionYears = pensionActive ? age - s.pensionStartAge : 0;
+      pension = pensionActive
+        ? s.pensionAmount * Math.pow(1 + s.pensionCOLA, pensionYears)
+        : 0;
+    }
 
     // ── Spouse Social Security ──
     let spouseSS = 0;
@@ -540,7 +558,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
             wages: (activeJobs.length > 0 && salary > 0) ? salary - employeePreTax401k - employeeHSA : salary,
             traditionalWithdrawals: tradW + rothConversionAmount,
             socialSecurity: socialSecurity + spouseSS,
-            pension,
+            pension: pension + pensionLumpSumTaxable,
             capitalGains,
             taxableInterest: 0,
             otherTaxableIncome: otherIncome,
@@ -571,7 +589,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
       wages: (activeJobs.length > 0 && salary > 0) ? salary * (1 - s.totalSavingsRate) : salary,
       traditionalWithdrawals,
       socialSecurity: socialSecurity + spouseSS,
-      pension,
+      pension: pension + pensionLumpSumTaxable,
       capitalGains,
       taxableInterest: 0, // simplified
       otherTaxableIncome: otherIncome,

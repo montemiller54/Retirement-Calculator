@@ -138,36 +138,76 @@ export function IncomeCard({ validationErrors }: CardProps) {
 
       {/* Pension */}
       <div className="space-y-1.5 pt-2 border-t border-gray-100 dark:border-gray-700">
-        <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
-          Pension
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+            Pension
+          </label>
+          <div className="flex items-center gap-1">
+            <button
+              className={`text-[10px] px-2 py-0.5 rounded-l border ${scenario.pensionType !== 'lumpSum' ? 'bg-primary-100 dark:bg-primary-900 border-primary-400 text-primary-700 dark:text-primary-300 font-semibold' : 'border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'}`}
+              onClick={() => setField('pensionType', 'annuity')}
+            >
+              Annuity
+            </button>
+            <button
+              className={`text-[10px] px-2 py-0.5 rounded-r border border-l-0 ${scenario.pensionType === 'lumpSum' ? 'bg-primary-100 dark:bg-primary-900 border-primary-400 text-primary-700 dark:text-primary-300 font-semibold' : 'border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'}`}
+              onClick={() => setField('pensionType', 'lumpSum')}
+            >
+              Lump Sum
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="input-label">Monthly Amount</label>
+            <label className="input-label">{scenario.pensionType === 'lumpSum' ? 'Total Amount' : 'Monthly Amount'}</label>
             <div className="relative">
               <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
               <CurrencyInput value={scenario.pensionAmount} onChange={v => setField('pensionAmount', v)} />
             </div>
           </div>
           <div>
-            <label className="input-label">Start Age</label>
+            <label className="input-label">{scenario.pensionType === 'lumpSum' ? 'Payout Age' : 'Start Age'}</label>
             <input type="number" className={`input-field text-center ${fieldErrorClass(ve, 'pensionStartAge')}`} value={scenario.pensionStartAge} onChange={e => setField('pensionStartAge', parseInt(e.target.value) || 65)} />
             <FieldError errors={ve} field="pensionStartAge" />
           </div>
         </div>
-        <div className="flex items-center justify-between">
-          <label className="input-label mb-0">Yearly Increase</label>
-          <div className="flex items-center gap-1">
-            <input
-              type="range" className="w-20" min={0} max={5} step={0.1}
-              value={scenario.pensionCOLA * 100}
-              onChange={e => setField('pensionCOLA', parseFloat(e.target.value) / 100)}
-            />
-            <span className="text-xs font-semibold text-primary-600 dark:text-primary-400 w-10 text-right">
-              {(scenario.pensionCOLA * 100).toFixed(1)}%
-            </span>
+        {scenario.pensionType === 'lumpSum' ? (
+          <div className="flex items-center justify-between">
+            <label className="input-label mb-0">Deposit Into</label>
+            <select
+              className="input-field w-auto text-xs"
+              value={scenario.pensionLumpSumAccount ?? 'traditionalIRA'}
+              onChange={e => setField('pensionLumpSumAccount', e.target.value as 'traditionalIRA' | 'taxable')}
+            >
+              <option value="traditionalIRA">Traditional IRA (rollover)</option>
+              <option value="taxable">Taxable (cash out)</option>
+            </select>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <label className="input-label mb-0">Yearly Increase</label>
+            <div className="flex items-center gap-1">
+              <input
+                type="range" className="w-20" min={0} max={5} step={0.1}
+                value={scenario.pensionCOLA * 100}
+                onChange={e => setField('pensionCOLA', parseFloat(e.target.value) / 100)}
+              />
+              <span className="text-xs font-semibold text-primary-600 dark:text-primary-400 w-10 text-right">
+                {(scenario.pensionCOLA * 100).toFixed(1)}%
+              </span>
+            </div>
+          </div>
+        )}
+        {scenario.pensionType === 'lumpSum' && scenario.pensionLumpSumAccount === 'taxable' && scenario.pensionAmount > 0 && (
+          <p className="text-[10px] text-amber-500 italic">
+            Cash-out is taxed as ordinary income in the payout year.
+          </p>
+        )}
+        {scenario.pensionType === 'lumpSum' && scenario.pensionLumpSumAccount === 'traditionalIRA' && scenario.pensionAmount > 0 && (
+          <p className="text-[10px] text-gray-400 italic">
+            Rolled into Traditional IRA — tax-deferred until withdrawal.
+          </p>
+        )}
       </div>
 
       {/* Other Income */}

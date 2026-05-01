@@ -224,6 +224,8 @@ export interface ScenarioInput {
   pensionAmount: number;
   pensionStartAge: number;
   pensionCOLA: number;
+  pensionType: 'annuity' | 'lumpSum';
+  pensionLumpSumAccount: 'traditionalIRA' | 'taxable';
   otherIncomeSources: IncomeSource[];
 
   // Investments
