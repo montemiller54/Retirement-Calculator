@@ -649,10 +649,13 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     const totalBal = sumBalances(balances);
     if (!isRetired) highWaterMark = totalBal;
 
-    // Check depletion
-    if (isRetired && totalBal <= 0 && !depleted) {
+    // Check depletion — also treat near-zero balances as depleted
+    // (guardrails can keep balance barely positive indefinitely)
+    if (isRetired && totalBal < 100 && !depleted) {
       depleted = true;
       depletionAge = age;
+      // Zero out remaining balances
+      for (const acct of ACCOUNT_TYPES) balances[acct] = 0;
     }
 
     years.push({
