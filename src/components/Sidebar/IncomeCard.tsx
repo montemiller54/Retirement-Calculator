@@ -142,15 +142,15 @@ export function IncomeCard({ validationErrors }: CardProps) {
           <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
             Pension
           </label>
-          <div className="flex items-center gap-1">
+          <div className="flex rounded overflow-hidden border border-gray-300 dark:border-gray-600">
             <button
-              className={`text-[10px] px-2 py-0.5 rounded-l border ${scenario.pensionType !== 'lumpSum' ? 'bg-primary-100 dark:bg-primary-900 border-primary-400 text-primary-700 dark:text-primary-300 font-semibold' : 'border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'}`}
+              className={`text-[10px] px-2.5 py-0.5 ${scenario.pensionType !== 'lumpSum' ? 'bg-primary-600 text-white font-semibold' : 'bg-transparent text-gray-500 dark:text-gray-400'}`}
               onClick={() => setField('pensionType', 'annuity')}
             >
               Annuity
             </button>
             <button
-              className={`text-[10px] px-2 py-0.5 rounded-r border border-l-0 ${scenario.pensionType === 'lumpSum' ? 'bg-primary-100 dark:bg-primary-900 border-primary-400 text-primary-700 dark:text-primary-300 font-semibold' : 'border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'}`}
+              className={`text-[10px] px-2.5 py-0.5 ${scenario.pensionType === 'lumpSum' ? 'bg-primary-600 text-white font-semibold' : 'bg-transparent text-gray-500 dark:text-gray-400'}`}
               onClick={() => setField('pensionType', 'lumpSum')}
             >
               Lump Sum
