@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
 import type { PercentileBand } from '../../types';
@@ -18,7 +18,7 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
         Portfolio Value Over Time (Range of Outcomes)
       </h4>
       <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+        <ComposedChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" />
           <XAxis
             dataKey="age"
@@ -43,6 +43,7 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
             strokeDasharray="5 5"
             label={{ value: 'Retire', position: 'top', fontSize: 10, fill: '#ef4444' }}
           />
+          {/* Outer band: p75-p90 */}
           <Area
             type="monotone"
             dataKey="p75"
@@ -51,16 +52,7 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
             fillOpacity={0.4}
             name="Best 25%"
           />
-          {/* Median line */}
-          <Area
-            type="monotone"
-            dataKey="p50"
-            stroke="#2563eb"
-            strokeWidth={2}
-            fill="#60a5fa"
-            fillOpacity={0.3}
-            name="Typical"
-          />
+          {/* Mid band: p25-p75 */}
           <Area
             type="monotone"
             dataKey="p25"
@@ -69,18 +61,29 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
             fillOpacity={0.6}
             name="Worst 25%"
           />
+          {/* Bottom band: p10 with shading below */}
           <Area
             type="monotone"
             dataKey="p10"
-            stroke="#f87171"
-            strokeWidth={1}
-            strokeDasharray="3 3"
-            fill="none"
+            stroke="#1e40af"
+            strokeWidth={1.5}
+            fill="#1e3a5f"
+            fillOpacity={0.5}
             name="Worst 10%"
           />
-        </AreaChart>
+          {/* Median as dashed line only */}
+          <Line
+            type="monotone"
+            dataKey="p50"
+            stroke="#60a5fa"
+            strokeWidth={2}
+            strokeDasharray="6 3"
+            dot={false}
+            name="Typical (Median)"
+          />
+        </ComposedChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">The dark blue line shows the most likely outcome. The shaded areas show the range of possibilities across {data.length > 0 ? 'thousands of' : ''} simulated market scenarios.</p>
+      <p className="text-[10px] text-gray-400 mt-2 px-1">The dashed blue line shows the median outcome. The dark shaded area shows the worst 10% of simulations. Lighter bands show the range of possibilities.</p>
     </div>
   );
 }
