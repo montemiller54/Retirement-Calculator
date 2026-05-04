@@ -11,6 +11,14 @@ interface FanChartProps {
   retirementAge: number;
 }
 
+const TOOLTIP_ORDER = ['p75', 'p50', 'p25', 'p10'];
+const TOOLTIP_LABELS: Record<string, string> = {
+  p75: 'Best 25%',
+  p50: 'Typical (Median)',
+  p25: 'Worst 25%',
+  p10: 'Worst 10%',
+};
+
 export function FanChart({ data, retirementAge }: FanChartProps) {
   return (
     <div className="card">
@@ -22,17 +30,21 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
           <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" />
           <XAxis
             dataKey="age"
-            tick={{ fontSize: 10, fill: '#d1d5db', stroke: 'none' }}
+            tick={{ fontSize: 10, fill: '#888', stroke: 'none' }}
             minTickGap={20}
-            label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fontSize: 11, fill: '#d1d5db' }}
+            label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fontSize: 11, fill: '#888' }}
           />
           <YAxis
             tickFormatter={formatCompact}
-            tick={{ fontSize: 10, fill: '#d1d5db', stroke: 'none' }}
+            tick={{ fontSize: 10, fill: '#888', stroke: 'none' }}
             width={55}
           />
           <Tooltip
-            formatter={(val: number) => formatCompact(val)}
+            formatter={(val: number, name: string) => [formatCompact(val), TOOLTIP_LABELS[name] ?? name]}
+            itemSorter={(item) => {
+              const idx = TOOLTIP_ORDER.indexOf(item.dataKey as string);
+              return idx >= 0 ? idx : 99;
+            }}
             labelFormatter={(label) => `Age ${label}`}
             contentStyle={{ fontSize: 11 }}
             itemStyle={{ color: '#374151' }}
@@ -43,47 +55,41 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
             strokeDasharray="5 5"
             label={{ value: 'Retire', position: 'top', fontSize: 10, fill: '#ef4444' }}
           />
-          {/* Outer band: p75-p90 */}
+          {/* p75 band — light blue-green */}
           <Area
             type="monotone"
             dataKey="p75"
             stroke="none"
             fill="#93c5fd"
             fillOpacity={0.4}
-            name="Best 25%"
+            name="p75"
           />
-          {/* Mid band: p25-p75 */}
+          {/* p25 band — medium blue */}
           <Area
             type="monotone"
             dataKey="p25"
             stroke="none"
-            fill="#dbeafe"
+            fill="#bfdbfe"
             fillOpacity={0.6}
-            name="Worst 25%"
+            name="p25"
           />
-          {/* Bottom band: p10 with shading below */}
+          {/* p10 band — dark warm shading */}
           <Area
             type="monotone"
             dataKey="p10"
-            stroke="#1e40af"
-            strokeWidth={1.5}
-            fill="#1e3a5f"
-            fillOpacity={0.5}
-            name="Worst 10%"
+            stroke="none"
+            fill="#7c3aed"
+            fillOpacity={0.35}
+            name="p10"
           />
-          {/* Median as dashed line only */}
-          <Line
-            type="monotone"
-            dataKey="p50"
-            stroke="#60a5fa"
-            strokeWidth={2}
-            strokeDasharray="6 3"
-            dot={false}
-            name="Typical (Median)"
-          />
+          {/* Lines for all percentiles */}
+          <Line type="monotone" dataKey="p75" stroke="#3b82f6" strokeWidth={1} dot={false} name="p75" legendType="none" />
+          <Line type="monotone" dataKey="p50" stroke="#2563eb" strokeWidth={2} strokeDasharray="6 3" dot={false} name="p50" />
+          <Line type="monotone" dataKey="p25" stroke="#60a5fa" strokeWidth={1} dot={false} name="p25" legendType="none" />
+          <Line type="monotone" dataKey="p10" stroke="#7c3aed" strokeWidth={1.5} dot={false} name="p10" legendType="none" />
         </ComposedChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">The dashed blue line shows the median outcome. The dark shaded area shows the worst 10% of simulations. Lighter bands show the range of possibilities.</p>
+      <p className="text-[10px] text-gray-400 mt-2 px-1">The dashed blue line shows the median outcome. The purple shaded area shows the worst 10% of simulations. Lighter bands show the range of possibilities.</p>
     </div>
   );
 }
