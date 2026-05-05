@@ -84,7 +84,7 @@ export function FanChart({ data, retirementAge }: FanChartProps) {
           />
           {/* Lines for all percentiles */}
           <Line type="monotone" dataKey="p75" stroke="#3b82f6" strokeWidth={1} dot={false} name="p75" legendType="none" />
-          <Line type="monotone" dataKey="p50" stroke="#2563eb" strokeWidth={2} strokeDasharray="6 3" dot={false} name="p50" />
+          <Line type="monotone" dataKey="p50" stroke="#fbbf24" strokeWidth={2} strokeDasharray="6 3" dot={false} name="p50" />
           <Line type="monotone" dataKey="p25" stroke="#60a5fa" strokeWidth={1} dot={false} name="p25" legendType="none" />
           <Line type="monotone" dataKey="p10" stroke="#7c3aed" strokeWidth={1.5} dot={false} name="p10" legendType="none" />
         </ComposedChart>
