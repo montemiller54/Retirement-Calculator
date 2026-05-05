@@ -81,6 +81,7 @@ function AppInner() {
             <ResultsPanel
               result={result}
               retirementAge={scenario.retirementAge}
+              currentAge={scenario.currentAge}
               isRunning={isRunning}
               progress={progress}
               error={error}

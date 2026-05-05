@@ -16,12 +16,15 @@ export function useSimulation(): UseSimulationReturn {
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const workerRef = useRef<Worker | null>(null);
+  const retriesRef = useRef(0);
+  const MAX_RETRIES = 2;
 
   const cancel = useCallback(() => {
     if (workerRef.current) {
       workerRef.current.terminate();
       workerRef.current = null;
     }
+    retriesRef.current = 0;
     setIsRunning(false);
     setProgress(0);
   }, []);
@@ -32,54 +35,63 @@ export function useSimulation(): UseSimulationReturn {
     setResult(null);
     setProgress(0);
     setIsRunning(true);
+    retriesRef.current = 0;
 
-    const worker = new Worker(
-      new URL('../engine/simulation.worker.ts', import.meta.url),
-      { type: 'module' },
-    );
-    workerRef.current = worker;
+    const startWorker = () => {
+      const worker = new Worker(
+        new URL('../engine/simulation.worker.ts', import.meta.url),
+        { type: 'module' },
+      );
+      workerRef.current = worker;
 
-    worker.onmessage = (e: MessageEvent<WorkerMessage>) => {
-      const msg = e.data;
-      switch (msg.type) {
-        case 'progress':
-          setProgress(Math.round((msg.completed / msg.total) * 100));
-          break;
-        case 'complete':
-          setResult(msg.result);
+      worker.onmessage = (e: MessageEvent<WorkerMessage>) => {
+        const msg = e.data;
+        switch (msg.type) {
+          case 'progress':
+            setProgress(Math.round((msg.completed / msg.total) * 100));
+            break;
+          case 'complete':
+            setResult(msg.result);
+            setIsRunning(false);
+            setProgress(100);
+            worker.terminate();
+            workerRef.current = null;
+            break;
+          case 'error':
+            setError(msg.message);
+            setIsRunning(false);
+            worker.terminate();
+            workerRef.current = null;
+            break;
+        }
+      };
+
+      worker.onerror = (e) => {
+        console.error('[Worker onerror]', e);
+        worker.terminate();
+        workerRef.current = null;
+
+        if (retriesRef.current < MAX_RETRIES) {
+          retriesRef.current += 1;
+          console.warn(`[Worker] Retrying... attempt ${retriesRef.current}/${MAX_RETRIES}`);
+          setTimeout(startWorker, 500);
+        } else {
+          setError('Simulation failed to start. Please reload the page and try again.');
           setIsRunning(false);
-          setProgress(100);
-          worker.terminate();
-          workerRef.current = null;
-          break;
-        case 'error':
-          setError(msg.message);
-          setIsRunning(false);
-          worker.terminate();
-          workerRef.current = null;
-          break;
-      }
+        }
+      };
+
+      worker.postMessage({
+        type: 'run',
+        scenario,
+        params: {
+          numSimulations: params?.numSimulations ?? 5000,
+          seed: params?.seed,
+        },
+      });
     };
 
-    worker.onerror = (e) => {
-      console.error('[Worker onerror]', e);
-      console.error('[Worker onerror] message:', e.message);
-      console.error('[Worker onerror] filename:', e.filename);
-      console.error('[Worker onerror] lineno:', e.lineno);
-      setError(e.message || 'Worker error');
-      setIsRunning(false);
-      worker.terminate();
-      workerRef.current = null;
-    };
-
-    worker.postMessage({
-      type: 'run',
-      scenario,
-      params: {
-        numSimulations: params?.numSimulations ?? 5000,
-        seed: params?.seed,
-      },
-    });
+    startWorker();
   }, [cancel]);
 
   useEffect(() => {

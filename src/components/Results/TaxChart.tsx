@@ -8,9 +8,11 @@ import { formatCompact } from '../../utils/format';
 
 interface TaxChartProps {
   data: YearResult[];
+  currentAge: number;
 }
 
-export function TaxChart({ data }: TaxChartProps) {
+export function TaxChart({ data, currentAge }: TaxChartProps) {
+  const birthYear = new Date().getFullYear() - currentAge;
   const chartData = data.map(d => ({
     age: d.age,
     federal: Math.round(d.taxes.federal),
@@ -28,7 +30,7 @@ export function TaxChart({ data }: TaxChartProps) {
           <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" />
           <XAxis dataKey="age" tick={{ fontSize: 10, fill: '#888', stroke: 'none' }} minTickGap={20} />
           <YAxis tickFormatter={formatCompact} tick={{ fontSize: 10, fill: '#888', stroke: 'none' }} width={55} />
-          <Tooltip formatter={(val: number) => formatCompact(val)} labelFormatter={(label) => `Age ${label}`} contentStyle={{ fontSize: 11 }} />
+          <Tooltip formatter={(val: number) => formatCompact(val)} labelFormatter={(label) => `Age ${label}  · Year ${birthYear + Number(label)}`} contentStyle={{ fontSize: 11 }} labelStyle={{ color: '#000' }} />
           <Legend wrapperStyle={{ fontSize: 10 }} />
           <Bar dataKey="federal" stackId="1" fill="#3b82f6" name="Federal" />
           <Bar dataKey="state" stackId="1" fill="#10b981" name="State" />

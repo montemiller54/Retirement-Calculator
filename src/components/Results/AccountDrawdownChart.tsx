@@ -10,6 +10,7 @@ import { formatCompact } from '../../utils/format';
 interface AccountDrawdownChartProps {
   data: YearResult[];
   retirementAge: number;
+  currentAge: number;
 }
 
 const ACCOUNT_COLORS: Record<string, string> = {
@@ -23,7 +24,8 @@ const ACCOUNT_COLORS: Record<string, string> = {
   otherAssets: '#a3a3a3',
 };
 
-export function AccountDrawdownChart({ data, retirementAge }: AccountDrawdownChartProps) {
+export function AccountDrawdownChart({ data, retirementAge, currentAge }: AccountDrawdownChartProps) {
+  const birthYear = new Date().getFullYear() - currentAge;
   const chartData = data.map(d => ({
     age: d.age,
     traditional401k: d.balances.traditional401k,
@@ -62,8 +64,9 @@ export function AccountDrawdownChart({ data, retirementAge }: AccountDrawdownCha
           />
           <Tooltip
             formatter={(val: number, name: string) => [formatCompact(val), ACCOUNT_LABELS[name as keyof typeof ACCOUNT_LABELS] ?? name]}
-            labelFormatter={(label) => `Age ${label}`}
+            labelFormatter={(label) => `Age ${label}  · Year ${birthYear + Number(label)}`}
             contentStyle={{ fontSize: 11 }}
+            labelStyle={{ color: '#000' }}
           />
           <Legend
             wrapperStyle={{ fontSize: 10 }}

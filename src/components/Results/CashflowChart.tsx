@@ -9,6 +9,7 @@ import { formatCompact } from '../../utils/format';
 interface CashflowChartProps {
   data: YearResult[];
   retirementAge: number;
+  currentAge: number;
 }
 
 const SERIES = [
@@ -25,7 +26,8 @@ const SERIES = [
   { key: 'otherAssets', name: 'Other Assets', color: '#a3a3a3' },
 ] as const;
 
-export function CashflowChart({ data, retirementAge }: CashflowChartProps) {
+export function CashflowChart({ data, retirementAge, currentAge }: CashflowChartProps) {
+  const birthYear = new Date().getFullYear() - currentAge;
   const chartData = data
     .filter(d => d.age >= retirementAge)
     .map(d => ({
@@ -61,8 +63,9 @@ export function CashflowChart({ data, retirementAge }: CashflowChartProps) {
           <YAxis tickFormatter={formatCompact} tick={{ fontSize: 10, fill: '#888', stroke: 'none' }} width={55} />
           <Tooltip
             formatter={(val: number, name: string) => [formatCompact(val), name]}
-            labelFormatter={(label) => `Age ${label}`}
+            labelFormatter={(label) => `Age ${label}  ·  Year ${birthYear + Number(label)}`}
             contentStyle={{ fontSize: 11 }}
+            labelStyle={{ color: '#000' }}
           />
           <Legend wrapperStyle={{ fontSize: 10 }} />
           {visibleSeries.map(s => (

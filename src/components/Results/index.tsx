@@ -12,13 +12,14 @@ import { WorstCaseSummary } from './WorstCaseSummary';
 interface ResultsPanelProps {
   result: SimulationResult | null;
   retirementAge: number;
+  currentAge: number;
   isRunning: boolean;
   progress: number;
   error: string | null;
   validationErrors: ValidationError[];
 }
 
-export function ResultsPanel({ result, retirementAge, isRunning, progress, error, validationErrors }: ResultsPanelProps) {
+export function ResultsPanel({ result, retirementAge, currentAge, isRunning, progress, error, validationErrors }: ResultsPanelProps) {
   if (validationErrors.length > 0) {
     return (
       <div className="flex items-center justify-center h-full p-8">
@@ -91,14 +92,14 @@ export function ResultsPanel({ result, retirementAge, isRunning, progress, error
         <WorstCaseSummary depletionAges={result.depletionAges} successRate={result.successRate} />
       </div>
 
-      <FanChart data={result.percentileBands} retirementAge={retirementAge} />
+      <FanChart data={result.percentileBands} retirementAge={retirementAge} currentAge={currentAge} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <CashflowChart data={result.expectedPath} retirementAge={retirementAge} />
-        <TaxChart data={result.expectedPath} />
+        <CashflowChart data={result.expectedPath} retirementAge={retirementAge} currentAge={currentAge} />
+        <TaxChart data={result.expectedPath} currentAge={currentAge} />
       </div>
 
-      <AccountDrawdownChart data={result.averagePath} retirementAge={retirementAge} />
+      <AccountDrawdownChart data={result.averagePath} retirementAge={retirementAge} currentAge={currentAge} />
 
       <TrajectoryTable data={result.medianPath} />
     </div>
