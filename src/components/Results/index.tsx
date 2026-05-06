@@ -1,16 +1,17 @@
 import React from 'react';
-import type { SimulationResult } from '../../types';
+import type { SimulationResult, ScenarioInput } from '../../types';
 import type { ValidationError } from '../../utils/validation';
 import { SuccessGauge } from './SuccessGauge';
 import { FanChart } from './FanChart';
 import { AccountDrawdownChart } from './AccountDrawdownChart';
 import { CashflowChart } from './CashflowChart';
 import { TaxChart } from './TaxChart';
-import { TrajectoryTable } from './TrajectoryTable';
+import { SafeSpendingSection } from './SafeSpendingSection';
 import { WorstCaseSummary } from './WorstCaseSummary';
 
 interface ResultsPanelProps {
   result: SimulationResult | null;
+  scenario: ScenarioInput;
   retirementAge: number;
   currentAge: number;
   isRunning: boolean;
@@ -19,7 +20,7 @@ interface ResultsPanelProps {
   validationErrors: ValidationError[];
 }
 
-export function ResultsPanel({ result, retirementAge, currentAge, isRunning, progress, error, validationErrors }: ResultsPanelProps) {
+export function ResultsPanel({ result, scenario, retirementAge, currentAge, isRunning, progress, error, validationErrors }: ResultsPanelProps) {
   if (validationErrors.length > 0) {
     return (
       <div className="flex items-center justify-center h-full p-8">
@@ -101,7 +102,7 @@ export function ResultsPanel({ result, retirementAge, currentAge, isRunning, pro
 
       <AccountDrawdownChart data={result.averagePath} retirementAge={retirementAge} currentAge={currentAge} />
 
-      <TrajectoryTable data={result.medianPath} />
+      <SafeSpendingSection scenario={scenario} />
     </div>
   );
 }

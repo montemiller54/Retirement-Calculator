@@ -331,12 +331,6 @@ export interface SimulationResult {
 }
 
 // ── Worker messages ──
-export interface WorkerRequest {
-  type: 'run';
-  scenario: ScenarioInput;
-  params: SimulationParams;
-}
-
 export interface WorkerProgress {
   type: 'progress';
   completed: number;
@@ -353,7 +347,31 @@ export interface WorkerError {
   message: string;
 }
 
-export type WorkerMessage = WorkerProgress | WorkerComplete | WorkerError;
+// ── Safe spending result ──
+export interface SafeSpendingResult {
+  monthlySpending: number;      // monthly safe spending in today's dollars
+  annualSpending: number;       // annual safe spending in today's dollars
+  targetSuccessRate: number;    // the target the user chose (e.g. 0.90)
+  achievedSuccessRate: number;  // actual rate from final 5k-sim run
+}
+
+// ── Safe spending worker messages ──
+export interface WorkerSafeSpendingRequest {
+  type: 'findSafeSpending';
+  scenario: ScenarioInput;
+  targetSuccessRate: number;
+}
+
+export interface WorkerSafeSpendingComplete {
+  type: 'safeSpendingComplete';
+  result: SafeSpendingResult;
+}
+
+export type WorkerRequest =
+  | { type: 'run'; scenario: ScenarioInput; params: SimulationParams }
+  | WorkerSafeSpendingRequest;
+
+export type WorkerMessage = WorkerProgress | WorkerComplete | WorkerError | WorkerSafeSpendingComplete;
 
 // ── Scenario storage ──
 export interface SavedScenario {

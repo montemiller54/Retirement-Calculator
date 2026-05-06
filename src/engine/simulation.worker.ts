@@ -1,15 +1,24 @@
 import type { WorkerRequest, WorkerMessage } from '../types';
-import { runSimulation } from './simulation';
+import { runSimulation, findSafeSpending } from './simulation';
 
 self.onmessage = (e: MessageEvent<WorkerRequest>) => {
-  const { scenario, params } = e.data;
+  const req = e.data;
   try {
-    const result = runSimulation(scenario, params, (completed, total) => {
-      const msg: WorkerMessage = { type: 'progress', completed, total };
+    if (req.type === 'findSafeSpending') {
+      const result = findSafeSpending(req.scenario, req.targetSuccessRate, (completed, total) => {
+        const msg: WorkerMessage = { type: 'progress', completed, total };
+        self.postMessage(msg);
+      });
+      const msg: WorkerMessage = { type: 'safeSpendingComplete', result };
       self.postMessage(msg);
-    });
-    const msg: WorkerMessage = { type: 'complete', result };
-    self.postMessage(msg);
+    } else {
+      const result = runSimulation(req.scenario, req.params, (completed, total) => {
+        const msg: WorkerMessage = { type: 'progress', completed, total };
+        self.postMessage(msg);
+      });
+      const msg: WorkerMessage = { type: 'complete', result };
+      self.postMessage(msg);
+    }
   } catch (err) {
     const msg: WorkerMessage = {
       type: 'error',

@@ -2,6 +2,7 @@ import type {
   ScenarioInput, SimulationPath, YearResult,
   AccountBalances, AccountType, AssetClass,
   SimulationResult, PercentileBand, SimulationParams,
+  SafeSpendingResult,
 } from '../types';
 import { ASSET_CLASSES, ACCOUNT_TYPES } from '../types';
 import { PRNG, cholesky, generateCorrelatedReturns, blendedReturn } from './math';
@@ -918,4 +919,93 @@ export function runSimulation(
 
   const result = aggregateResults(paths, scenario);
   return { ...result, expectedPath };
+}
+
+// ── Safe spending solver ──
+// Binary-search over monthly spending to find the level that achieves the target success rate.
+// Guardrails are disabled so the result represents a fixed-spending safe level.
+// Uses 1,000 simulations for search iterations and 5,000 for the final answer.
+export function findSafeSpending(
+  scenario: ScenarioInput,
+  targetSuccessRate: number,
+  onProgress?: (completed: number, total: number) => void,
+): SafeSpendingResult {
+  const SEARCH_SIMS = 1000;
+  const FINAL_SIMS = 5000;
+  const MAX_ITER = 20;
+  const TOLERANCE = 25; // $25/month convergence tolerance
+
+  // Disable guardrails for the search — we want a fixed-spending answer
+  const baseScenario: ScenarioInput = {
+    ...scenario,
+    guardrails: { ...scenario.guardrails, enabled: false },
+  };
+
+  // Helper: run a quick simulation at a given monthly spending and return success rate
+  const getSuccessRate = (monthlySpending: number, numSims: number): number => {
+    const testScenario: ScenarioInput = {
+      ...baseScenario,
+      baseAnnualSpending: monthlySpending, // stored as monthly, toAnnualScenario multiplies by 12
+    };
+    const seed = 42; // fixed seed for consistency across iterations
+    const rng = new PRNG(seed);
+    const choleskyL = cholesky(DEFAULT_CORRELATION_MATRIX);
+    let successes = 0;
+    for (let i = 0; i < numSims; i++) {
+      const path = runSinglePath(testScenario, rng, choleskyL);
+      if (path.success) successes++;
+    }
+    return successes / numSims;
+  };
+
+  // Estimate total steps for progress reporting
+  const totalSteps = MAX_ITER + 1; // search iterations + final run
+  let currentStep = 0;
+
+  // Set search bounds (monthly amounts in today's dollars)
+  let low = 0;
+  let high = scenario.baseAnnualSpending * 5; // 5x current spending as upper bound
+  // If current spending is 0 or very small, use a reasonable upper bound
+  if (high < 1000) high = 20000;
+
+  // Ensure the upper bound actually fails (success rate < target)
+  let highRate = getSuccessRate(high, SEARCH_SIMS);
+  currentStep++;
+  if (onProgress) onProgress(currentStep, totalSteps);
+  while (highRate >= targetSuccessRate && high < 100000) {
+    high *= 2;
+    highRate = getSuccessRate(high, SEARCH_SIMS);
+    currentStep++;
+    if (onProgress) onProgress(Math.min(currentStep, totalSteps - 1), totalSteps);
+  }
+
+  // Binary search
+  for (let iter = 0; iter < MAX_ITER; iter++) {
+    const mid = Math.round((low + high) / 2);
+    if (high - low < TOLERANCE) break;
+
+    const rate = getSuccessRate(mid, SEARCH_SIMS);
+    currentStep++;
+    if (onProgress) onProgress(Math.min(currentStep, totalSteps - 1), totalSteps);
+
+    if (rate >= targetSuccessRate) {
+      low = mid; // can spend more
+    } else {
+      high = mid; // need to spend less
+    }
+  }
+
+  // Use the lower bound (conservative — guaranteed to meet target)
+  const safeMonthly = low;
+
+  // Final run at full 5,000 simulations for accurate success rate
+  const finalRate = getSuccessRate(safeMonthly, FINAL_SIMS);
+  if (onProgress) onProgress(totalSteps, totalSteps);
+
+  return {
+    monthlySpending: safeMonthly,
+    annualSpending: safeMonthly * 12,
+    targetSuccessRate,
+    achievedSuccessRate: finalRate,
+  };
 }

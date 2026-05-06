@@ -80,6 +80,7 @@ function AppInner() {
           {tab === 'results' ? (
             <ResultsPanel
               result={result}
+              scenario={scenario}
               retirementAge={scenario.retirementAge}
               currentAge={scenario.currentAge}
               isRunning={isRunning}
