@@ -12,14 +12,13 @@ interface SafeSpendingDisplayProps {
 }
 
 const TARGET_OPTIONS = [
-  { label: '80%', value: 0.80 },
-  { label: '85%', value: 0.85 },
-  { label: '90%', value: 0.90 },
-  { label: '95%', value: 0.95 },
+  { label: 'Moderate', pct: '70%', value: 0.70 },
+  { label: 'Conservative', pct: '80%', value: 0.80 },
+  { label: 'Very Conservative', pct: '90%', value: 0.90 },
 ];
 
 export function SafeSpendingSection({ scenario }: SafeSpendingSectionProps) {
-  const [targetRate, setTargetRate] = useState(0.90);
+  const [targetRate, setTargetRate] = useState(0.80);
   const { result, progress, isRunning, error, run } = useSafeSpending();
 
   const handleCalculate = () => {
@@ -28,19 +27,25 @@ export function SafeSpendingSection({ scenario }: SafeSpendingSectionProps) {
 
   return (
     <div className="card">
-      <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-3">
+      <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
         Safe Spending Calculator
       </h4>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
+        The maximum you could spend each month, in today's dollars, with the selected confidence
+        level that your money lasts your entire retirement. This accounts for all income sources
+        (Social Security, pension, etc.), portfolio growth, taxes, and healthcare — with spending
+        held fixed (growing with inflation) and no guardrail adjustments.
+      </p>
 
       <div className="flex items-center gap-3 mb-3">
         <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-          Target success rate:
+          Confidence:
         </label>
         <div className="flex rounded-md overflow-hidden border border-gray-300 dark:border-gray-600">
           {TARGET_OPTIONS.map((opt) => (
             <button
               key={opt.value}
-              className={`px-3 py-1 text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                 targetRate === opt.value
                   ? 'bg-primary-600 text-white'
                   : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -48,12 +53,13 @@ export function SafeSpendingSection({ scenario }: SafeSpendingSectionProps) {
               onClick={() => setTargetRate(opt.value)}
               disabled={isRunning}
             >
-              {opt.label}
+              <span>{opt.label}</span>
+              <span className="ml-1 opacity-70">({opt.pct})</span>
             </button>
           ))}
         </div>
         <button
-          className="btn-primary text-xs px-3 py-1"
+          className="btn-primary text-xs px-3 py-1.5"
           onClick={handleCalculate}
           disabled={isRunning}
         >
@@ -81,9 +87,8 @@ export function SafeSpendingSection({ scenario }: SafeSpendingSectionProps) {
       )}
 
       {!result && !isRunning && !error && (
-        <p className="text-xs text-gray-400 dark:text-gray-500">
-          Click Calculate to find the maximum monthly spending that achieves your target success rate,
-          taking all income sources and portfolio growth into account.
+        <p className="text-[11px] text-gray-400 dark:text-gray-500 italic">
+          Select a confidence level and click Calculate.
         </p>
       )}
     </div>
@@ -105,13 +110,10 @@ function SafeSpendingDisplay({ result }: SafeSpendingDisplayProps) {
       </div>
       <div className="text-xs text-gray-500 dark:text-gray-400 pt-1">
         <div>
-          Target: {Math.round(result.targetSuccessRate * 100)}% success
-        </div>
-        <div>
-          Achieved: {Math.round(result.achievedSuccessRate * 100)}% success
+          Confidence: {Math.round(result.achievedSuccessRate * 100)}% of simulations sustained this spending
         </div>
         <div className="text-[10px] text-gray-400 mt-1">
-          Based on 5,000 simulations · no guardrails
+          Based on 5,000 simulations · fixed spending (no guardrails)
         </div>
       </div>
     </div>
