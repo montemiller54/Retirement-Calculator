@@ -68,7 +68,7 @@ export function Sidebar({ validationErrors, onRun, isRunning, progress }: Sideba
             );
           })}
         </div>
-        <div className="px-2 pb-2 mt-auto">
+        <div className="px-2 pb-2 mt-auto pt-4">
           <button
             className="btn-primary w-full text-xs"
             onClick={onRun}
