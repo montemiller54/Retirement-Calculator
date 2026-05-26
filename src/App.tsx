@@ -51,13 +51,6 @@ function AppInner() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            className="btn-primary"
-            onClick={handleRun}
-            disabled={isRunning || validationErrors.length > 0}
-          >
-            {isRunning ? `Running ${progress}%` : 'Run Simulation'}
-          </button>
-          <button
             className="text-sm p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={toggleDark}
             title="Toggle theme"
@@ -73,6 +66,15 @@ function AppInner() {
         <aside className="w-[520px] xl:w-[580px] shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
           <ScenarioManager />
           <Sidebar validationErrors={validationErrors} />
+          <div className="shrink-0 p-3 border-t border-gray-200 dark:border-gray-700">
+            <button
+              className="btn-primary w-full"
+              onClick={handleRun}
+              disabled={isRunning || validationErrors.length > 0}
+            >
+              {isRunning ? `Running ${progress}%` : 'Run Simulation'}
+            </button>
+          </div>
         </aside>
 
         {/* Main area */}
