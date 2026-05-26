@@ -20,9 +20,12 @@ const ALL_SECTIONS = [
 
 interface SidebarProps {
   validationErrors: ValidationError[];
+  onRun: () => void;
+  isRunning: boolean;
+  progress: number;
 }
 
-export function Sidebar({ validationErrors }: SidebarProps) {
+export function Sidebar({ validationErrors, onRun, isRunning, progress }: SidebarProps) {
   const { scenario } = useScenario();
   const [activeSection, setActiveSection] = useState<string>('profile');
   const isRetired = scenario.currentAge >= scenario.retirementAge;
@@ -64,6 +67,15 @@ export function Sidebar({ validationErrors }: SidebarProps) {
               </button>
             );
           })}
+        </div>
+        <div className="px-2 pb-2 mt-auto">
+          <button
+            className="btn-primary w-full text-xs"
+            onClick={onRun}
+            disabled={isRunning || validationErrors.length > 0}
+          >
+            {isRunning ? `Running ${progress}%` : 'Run Simulation'}
+          </button>
         </div>
       </nav>
 
