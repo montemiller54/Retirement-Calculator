@@ -70,7 +70,7 @@ export function Sidebar({ validationErrors, onRun, isRunning, progress }: Sideba
         </div>
         <div className="px-2 pb-2 mt-auto pt-4">
           <button
-            className="btn-primary w-full text-xs"
+            className="inline-flex items-center justify-center rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed w-full"
             onClick={onRun}
             disabled={isRunning || validationErrors.length > 0}
           >
