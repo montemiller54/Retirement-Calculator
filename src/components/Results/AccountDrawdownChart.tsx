@@ -46,7 +46,7 @@ export function AccountDrawdownChart({ data, retirementAge, currentAge }: Accoun
   return (
     <div className="card">
       <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-        Account Balances Over Time (Average Across All Simulations)
+        Account Balances Over Time (Typical Outcome)
       </h4>
       <ResponsiveContainer width="100%" height={300}>
         <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>

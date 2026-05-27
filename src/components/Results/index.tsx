@@ -100,7 +100,7 @@ export function ResultsPanel({ result, scenario, retirementAge, currentAge, isRu
         <TaxChart data={result.expectedPath} currentAge={currentAge} />
       </div>
 
-      <AccountDrawdownChart data={result.averagePath} retirementAge={retirementAge} currentAge={currentAge} />
+      <AccountDrawdownChart data={result.medianPath} retirementAge={retirementAge} currentAge={currentAge} />
 
       <SafeSpendingSection scenario={scenario} />
     </div>
