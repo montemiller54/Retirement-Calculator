@@ -42,6 +42,10 @@
   input[type='range'] {
     accent-color: #2563eb;
   }
+
+  input[type='checkbox'] {
+    accent-color: #2563eb;
+  }
 }
 
 @layer components {
