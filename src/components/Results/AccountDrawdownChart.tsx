@@ -92,7 +92,7 @@ export function AccountDrawdownChart({ data, retirementAge, currentAge }: Accoun
           ))}
         </AreaChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">How your account balances change over time, averaged across all simulations. Different colors represent different account types.</p>
+      <p className="text-[10px] text-gray-400 mt-2 px-1">How your account balances change over time in a typical outcome. Different colors represent different account types.</p>
     </div>
   );
 }

@@ -746,10 +746,75 @@ function aggregateResults(paths: SimulationPath[], scenario: ScenarioInput): Sim
   // Ending balances
   const endingBalances = paths.map(p => p.endingBalance).sort((a, b) => a - b);
 
-  // Median path
-  const medianIdx = Math.floor(n / 2);
+  // Median path (smoothed: average of paths between p45 and p55)
   const sortedByEnding = [...paths].sort((a, b) => a.endingBalance - b.endingBalance);
-  const medianPath = sortedByEnding[medianIdx].years;
+  const p45Idx = Math.floor(n * 0.45);
+  const p55Idx = Math.floor(n * 0.55);
+  const medianBandPaths = sortedByEnding.slice(p45Idx, p55Idx + 1);
+  const medianBandCount = medianBandPaths.length;
+  const medianPath: YearResult[] = [];
+  for (let yi = 0; yi < numYears; yi++) {
+    const base = medianBandPaths[0].years[yi];
+    const avg: YearResult = {
+      ...base,
+      totalBalance: 0,
+      income: { salary: 0, socialSecurity: 0, pension: 0, other: 0, total: 0 },
+      spending: 0,
+      taxes: { federal: 0, state: 0, capitalGains: 0, fica: 0, total: 0 },
+      investmentReturn: 0,
+      rmdAmount: 0,
+      rothConversionAmount: 0,
+      balances: emptyBalances(),
+      contributions: emptyBalances(),
+      withdrawals: emptyBalances(),
+      depleted: false,
+    };
+    for (const p of medianBandPaths) {
+      const yr = p.years[yi];
+      avg.totalBalance += yr.totalBalance;
+      avg.spending += yr.spending;
+      avg.investmentReturn += yr.investmentReturn;
+      avg.rmdAmount += yr.rmdAmount;
+      avg.rothConversionAmount += yr.rothConversionAmount;
+      avg.income.salary += yr.income.salary;
+      avg.income.socialSecurity += yr.income.socialSecurity;
+      avg.income.pension += yr.income.pension;
+      avg.income.other += yr.income.other;
+      avg.income.total += yr.income.total;
+      avg.taxes.federal += yr.taxes.federal;
+      avg.taxes.state += yr.taxes.state;
+      avg.taxes.capitalGains += yr.taxes.capitalGains;
+      avg.taxes.fica += yr.taxes.fica;
+      avg.taxes.total += yr.taxes.total;
+      for (const acct of ACCOUNT_TYPES) {
+        avg.balances[acct] += yr.balances[acct];
+        avg.contributions[acct] += yr.contributions[acct];
+        avg.withdrawals[acct] += yr.withdrawals[acct];
+      }
+    }
+    avg.totalBalance /= medianBandCount;
+    avg.spending /= medianBandCount;
+    avg.investmentReturn /= medianBandCount;
+    avg.rmdAmount /= medianBandCount;
+    avg.rothConversionAmount /= medianBandCount;
+    avg.income.salary /= medianBandCount;
+    avg.income.socialSecurity /= medianBandCount;
+    avg.income.pension /= medianBandCount;
+    avg.income.other /= medianBandCount;
+    avg.income.total /= medianBandCount;
+    avg.taxes.federal /= medianBandCount;
+    avg.taxes.state /= medianBandCount;
+    avg.taxes.capitalGains /= medianBandCount;
+    avg.taxes.fica /= medianBandCount;
+    avg.taxes.total /= medianBandCount;
+    for (const acct of ACCOUNT_TYPES) {
+      avg.balances[acct] /= medianBandCount;
+      avg.contributions[acct] /= medianBandCount;
+      avg.withdrawals[acct] /= medianBandCount;
+    }
+    avg.depleted = avg.totalBalance <= 0;
+    medianPath.push(avg);
+  }
 
   // Worst decile path (average of bottom 10%)
   const worstCount = Math.max(1, Math.floor(n * 0.10));
