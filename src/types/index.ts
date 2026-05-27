@@ -89,6 +89,7 @@ export interface Job {
   has401k: boolean;          // does this job offer a 401k?
   employerMatchRate: number; // e.g., 0.50 (50% match)
   employerMatchCapPct: number; // e.g., 0.06 (matches up to 6% of salary)
+  employerRothPct: number;   // 0-100, % of employer match → Roth 401k (rest → Trad 401k)
 }
 
 // ── Income source ──
@@ -195,9 +196,6 @@ export interface ScenarioInput {
   salaryGrowthRate: number;      // e.g., 0.03
   totalSavingsRate: number;      // e.g., 0.20
   contributionAllocation: ContributionAllocation;
-
-  // Employer match (advanced: Roth split)
-  employerRothPct: number;       // 0-100, % of employer match to Roth 401k (rest → Trad 401k)
 
   // Contribution limits
   enable401kCatchUp: boolean;

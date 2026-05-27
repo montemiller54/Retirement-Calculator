@@ -118,6 +118,7 @@ function migrateScenario(s: ScenarioInput): ScenarioInput {
         has401k: true,
         employerMatchRate: oldMatchRate,
         employerMatchCapPct: oldMatchCap,
+        employerRothPct: 0,
       },
     ];
   }
@@ -126,6 +127,17 @@ function migrateScenario(s: ScenarioInput): ScenarioInput {
   delete raw.employerMatchRate;
   delete raw.employerMatchCapPct;
   delete raw.partTimeIncome;
+
+  // Migrate global employerRothPct → per-job field
+  if (s.jobs) {
+    const globalRothPct = (raw.employerRothPct as number) ?? 0;
+    for (const job of s.jobs as unknown as Record<string, unknown>[]) {
+      if (job.employerRothPct == null) {
+        job.employerRothPct = globalRothPct;
+      }
+    }
+  }
+  delete raw.employerRothPct;
 
   // Patch visibleAccounts — derive from non-zero balances/allocations for old scenarios
   if (!s.visibleAccounts) {

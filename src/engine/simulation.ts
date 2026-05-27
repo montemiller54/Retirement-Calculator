@@ -255,15 +255,19 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
 
       // Compute employer match from all jobs that have 401k
       let totalEmployerMatch = 0;
+      let totalRothMatch = 0;
       for (const job of activeJobs) {
         if (job.has401k && job.employerMatchRate > 0 && job.employerMatchCapPct > 0) {
           const jobSalary = job.monthlyPay * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
           const desired401k = totalSavings *
             ((s.contributionAllocation.traditional401k + s.contributionAllocation.roth401k) / 100);
           const matchableAmount = Math.min(desired401k, jobSalary * job.employerMatchCapPct);
-          totalEmployerMatch += matchableAmount * job.employerMatchRate;
+          const jobMatch = matchableAmount * job.employerMatchRate;
+          totalRothMatch += jobMatch * ((job.employerRothPct ?? 0) / 100);
+          totalEmployerMatch += jobMatch;
         }
       }
+      const weightedRothPct = totalEmployerMatch > 0 ? (totalRothMatch / totalEmployerMatch) * 100 : 0;
 
       // Inflate contribution limits by the same rate as tax brackets (IRS CPI indexing)
       const limIdx = Math.pow(1 + (s.taxBracketInflationRate ?? 0), yearsFromNow);
@@ -287,7 +291,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
         enable401kCatchUp: s.enable401kCatchUp,
         enableIRACatchUp: s.enableIRACatchUp,
         employerMatch: totalEmployerMatch,
-        employerRothPct: s.employerRothPct,
+        employerRothPct: weightedRothPct,
         catchUp401k: DEFAULT_401K_CATCHUP * limIdx,
         superCatchUp401k: DEFAULT_401K_SUPER_CATCHUP * limIdx,
         catchUpIRA: DEFAULT_IRA_CATCHUP * limIdx,

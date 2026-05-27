@@ -53,8 +53,8 @@ describe('HIGH IMPACT: Profile / Time Horizon', () => {
 
 describe('HIGH IMPACT: Earnings & Contributions', () => {
   it('#4 higher salary → higher success rate', () => {
-    const low = run({ jobs: [{ id: 'test', name: 'Test Job', monthlyPay: 5000, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 0, employerMatchCapPct: 0 }] });
-    const high = run({ jobs: [{ id: 'test', name: 'Test Job', monthlyPay: 15000, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 0, employerMatchCapPct: 0 }] });
+    const low = run({ jobs: [{ id: 'test', name: 'Test Job', monthlyPay: 5000, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }] });
+    const high = run({ jobs: [{ id: 'test', name: 'Test Job', monthlyPay: 15000, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }] });
     expect(high.successRate).toBeGreaterThan(low.successRate);
   });
 
@@ -65,8 +65,8 @@ describe('HIGH IMPACT: Earnings & Contributions', () => {
   });
 
   it('#8 employer match → higher success rate', () => {
-    const noMatch = run({ jobs: [{ id: 'test', name: 'Test Job', monthlyPay: DEFAULT_SCENARIO.jobs[0].monthlyPay, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 0, employerMatchCapPct: 0 }] });
-    const withMatch = run({ jobs: [{ id: 'test', name: 'Test Job', monthlyPay: DEFAULT_SCENARIO.jobs[0].monthlyPay, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 1.0, employerMatchCapPct: 0.06 }] });
+    const noMatch = run({ jobs: [{ id: 'test', name: 'Test Job', monthlyPay: DEFAULT_SCENARIO.jobs[0].monthlyPay, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }] });
+    const withMatch = run({ jobs: [{ id: 'test', name: 'Test Job', monthlyPay: DEFAULT_SCENARIO.jobs[0].monthlyPay, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 1.0, employerMatchCapPct: 0.06, employerRothPct: 0 }] });
     expect(withMatch.successRate).toBeGreaterThanOrEqual(noMatch.successRate);
     expect(withMatch.medianEnding).toBeGreaterThan(noMatch.medianEnding);
   });
@@ -256,8 +256,8 @@ describe('MEDIUM IMPACT: Earnings', () => {
   });
 
   it('#9 higher employer match cap → higher median ending', () => {
-    const lowCap = run({ jobs: [{ id: 'test', name: 'Test Job', monthlyPay: DEFAULT_SCENARIO.jobs[0].monthlyPay, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 1.0, employerMatchCapPct: 0.03 }] });
-    const highCap = run({ jobs: [{ id: 'test', name: 'Test Job', monthlyPay: DEFAULT_SCENARIO.jobs[0].monthlyPay, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 1.0, employerMatchCapPct: 0.10 }] });
+    const lowCap = run({ jobs: [{ id: 'test', name: 'Test Job', monthlyPay: DEFAULT_SCENARIO.jobs[0].monthlyPay, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 1.0, employerMatchCapPct: 0.03, employerRothPct: 0 }] });
+    const highCap = run({ jobs: [{ id: 'test', name: 'Test Job', monthlyPay: DEFAULT_SCENARIO.jobs[0].monthlyPay, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 1.0, employerMatchCapPct: 0.10, employerRothPct: 0 }] });
     expect(highCap.medianEnding).toBeGreaterThan(lowCap.medianEnding);
   });
 });
@@ -267,7 +267,7 @@ describe('MEDIUM IMPACT: Contribution Limits', () => {
     // Use high savings with Roth 401k allocation where higher limit is unambiguously better
     // (Roth = tax-free growth, no RMDs — more Roth is always better than taxable)
     const base: Partial<ScenarioInput> = {
-      jobs: [{ id: 'test', name: 'Test Job', monthlyPay: 15000, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 0, employerMatchCapPct: 0 }],
+      jobs: [{ id: 'test', name: 'Test Job', monthlyPay: 15000, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }],
       totalSavingsRate: 0.25,
       taxBracketInflationRate: 0, // freeze limits so the test isolates limit effects
       contributionAllocation: {

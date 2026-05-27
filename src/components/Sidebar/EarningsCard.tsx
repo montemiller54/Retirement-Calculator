@@ -27,7 +27,6 @@ export function EarningsCard({ validationErrors }: CardProps) {
   const { scenario, setField } = useScenario();
   const ve = validationErrors;
   const [showDetails, setShowDetails] = useState(false);
-  const [showMatchAdvanced, setShowMatchAdvanced] = useState(false);
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
 
   const jobs = scenario.jobs ?? [];
@@ -71,6 +70,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
       has401k: false,
       employerMatchRate: 0,
       employerMatchCapPct: 0,
+      employerRothPct: 0,
     };
     setField('jobs', [...jobs, newJob]);
     setExpandedJobId(newJob.id);
@@ -101,7 +101,6 @@ export function EarningsCard({ validationErrors }: CardProps) {
         <div className="space-y-2">
           {jobs.map(job => {
             const isActive = scenario.currentAge >= job.startAge && scenario.currentAge <= job.endAge;
-            const isExpanded = expandedJobId === job.id;
             return (
               <div key={job.id} className={`p-2 rounded border text-xs space-y-1.5 ${isActive ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
                 <div className="flex items-center gap-1">
@@ -128,47 +127,60 @@ export function EarningsCard({ validationErrors }: CardProps) {
                 </div>
                 <FieldError errors={ve} field={`job.${job.id}`} />
 
-                <button
-                  className="text-[11px] text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-                  onClick={() => setExpandedJobId(isExpanded ? null : job.id)}
-                >
-                  {isExpanded ? '▾ Hide 401(k) & Match' : '▸ 401(k) & Match'}
-                </button>
-
-                {isExpanded && (
-                  <div className="pt-1.5 border-t border-gray-200 dark:border-gray-600 space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <label className="text-[11px] text-gray-600 dark:text-gray-400">Has 401(k)?</label>
-                      <input type="checkbox" checked={job.has401k} onChange={e => updateJob(job.id, 'has401k', e.target.checked)} />
-                    </div>
-                    {job.has401k && (
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-gray-500 dark:text-gray-400">
-                          Employer matches {Math.round(job.employerMatchRate * 100)}% of your contributions on the first {(job.employerMatchCapPct * 100).toFixed(1)}% of salary.
-                        </p>
-                        {job.monthlyPay > 0 && job.employerMatchRate > 0 && (
-                          <p className="text-[10px] text-primary-600 dark:text-primary-400 font-medium">
-                            ≈ Employer contributes ${Math.round(job.monthlyPay * 12 * job.employerMatchCapPct * job.employerMatchRate).toLocaleString()}/yr
-                          </p>
-                        )}
-                        <div className="grid grid-cols-2 gap-2">
-                          <PctSlider
-                            label="Match Rate"
-                            value={job.employerMatchRate * 100}
-                            onChange={v => updateJob(job.id, 'employerMatchRate', v / 100)}
-                            min={0} max={200} step={5}
-                          />
-                          <PctSlider
-                            label="Cap (% of salary)"
-                            value={job.employerMatchCapPct * 100}
-                            onChange={v => updateJob(job.id, 'employerMatchCapPct', v / 100)}
-                            min={0} max={15} step={0.5}
-                          />
-                        </div>
-                      </div>
+                {/* 401(k) — always visible */}
+                <div className="pt-1.5 border-t border-gray-200 dark:border-gray-600 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <label className="text-[11px] font-medium text-gray-700 dark:text-gray-300">401(k)</label>
+                    <input type="checkbox" checked={job.has401k} onChange={e => updateJob(job.id, 'has401k', e.target.checked)} />
+                    {job.has401k && job.employerMatchRate > 0 && job.employerMatchCapPct > 0 && (
+                      <span className="text-[10px] text-green-600 dark:text-green-400 font-medium ml-auto">
+                        ✓ {Math.round(job.employerMatchRate * 100)}% match on {(job.employerMatchCapPct * 100).toFixed(1)}%
+                      </span>
                     )}
                   </div>
-                )}
+                  {job.has401k && (
+                    <div className="space-y-1">
+                      <div className="grid grid-cols-2 gap-2">
+                        <PctSlider
+                          label="Match Rate"
+                          value={job.employerMatchRate * 100}
+                          onChange={v => updateJob(job.id, 'employerMatchRate', v / 100)}
+                          min={0} max={200} step={5}
+                        />
+                        <PctSlider
+                          label="Cap (% of salary)"
+                          value={job.employerMatchCapPct * 100}
+                          onChange={v => updateJob(job.id, 'employerMatchCapPct', v / 100)}
+                          min={0} max={15} step={0.5}
+                        />
+                      </div>
+                      {job.monthlyPay > 0 && job.employerMatchRate > 0 && job.employerMatchCapPct > 0 && (
+                        <p className="text-[10px] text-primary-600 dark:text-primary-400 font-medium">
+                          ≈ Employer contributes ${Math.round(job.monthlyPay * 12 * job.employerMatchCapPct * job.employerMatchRate).toLocaleString()}/yr
+                        </p>
+                      )}
+                      <button
+                        className="text-[10px] text-gray-400 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                        onClick={() => setExpandedJobId(expandedJobId === job.id ? null : job.id)}
+                      >
+                        {expandedJobId === job.id ? '▾ Hide Roth match option' : '▸ Roth match option'}
+                      </button>
+                      {expandedJobId === job.id && (
+                        <div className="pl-2">
+                          <PctSlider
+                            label="Match → Roth 401(k)"
+                            value={job.employerRothPct ?? 0}
+                            onChange={v => updateJob(job.id, 'employerRothPct', Math.round(v))}
+                            min={0} max={100} step={10}
+                          />
+                          <p className="text-[9px] text-gray-400 dark:text-gray-500 mt-0.5">
+                            SECURE 2.0: % of employer match deposited to Roth 401(k). Most plans use 0%.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -208,7 +220,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
         }`}
         onClick={() => setShowDetails(!showDetails)}
       >
-        <span>Allocations & Matches</span>
+        <span>Contribution Allocation</span>
         <svg
           className={`w-4 h-4 transition-transform duration-200 ${showDetails ? 'rotate-180' : ''} ${showDetails ? 'text-primary-500' : 'text-gray-400'}`}
           fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
@@ -288,24 +300,6 @@ export function EarningsCard({ validationErrors }: CardProps) {
                   ))}
                 </select>
               </div>
-            )}
-          </div>
-
-          {/* Advanced employer match options */}
-          <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-            <button
-              className="text-[11px] text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-              onClick={() => setShowMatchAdvanced(!showMatchAdvanced)}
-            >
-              {showMatchAdvanced ? '▾ Hide advanced match options' : '▸ Advanced match options'}
-            </button>
-            {showMatchAdvanced && (
-              <PctSlider
-                label="Match → Roth 401(k)"
-                value={scenario.employerRothPct}
-                onChange={v => setField('employerRothPct', Math.round(v))}
-                min={0} max={100} step={10}
-              />
             )}
           </div>
         </div>

@@ -23,6 +23,7 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
       has401k: true,
       employerMatchRate: 0,
       employerMatchCapPct: 0,
+      employerRothPct: 0,
     },
   ],
   salaryGrowthRate: 0.03,
@@ -37,9 +38,6 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
     cashAccount: 0,
     otherAssets: 0,
   },
-
-  // Employer match (advanced: Roth split)
-  employerRothPct: 0,          // 100% of match goes to Traditional 401k by default
 
   // Contribution limits
   enable401kCatchUp: false,
