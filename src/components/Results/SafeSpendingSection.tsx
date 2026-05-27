@@ -34,8 +34,15 @@ export function SafeSpendingSection({ scenario }: SafeSpendingSectionProps) {
         The maximum you could spend each month, in today's dollars, with the selected confidence
         level that your money lasts your entire retirement. This accounts for all income sources
         (Social Security, pension, etc.), portfolio growth, taxes, and healthcare — with spending
-        held fixed (growing with inflation) and no guardrail adjustments.
+        held fixed (growing with inflation) and no adjustments.
       </p>
+      {scenario.guardrails?.enabled && (
+        <p className="text-xs text-amber-600 dark:text-amber-400 mb-3">
+          Note: Your simulation above uses Spending Safety Rules, which automatically reduce
+          spending in downturns — boosting its success rate. This calculator assumes fixed
+          spending with no adjustments, so its success rate will be lower for the same spending level.
+        </p>
+      )}
 
       <div className="flex items-center gap-3 mb-3">
         <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
