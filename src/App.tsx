@@ -8,7 +8,7 @@ import { useSimulation } from './hooks/useSimulation';
 import { useTheme } from './hooks/useTheme';
 import { validateScenario, type ValidationError } from './utils/validation';
 
-type Tab = 'results' | 'assumptions';
+type Tab = 'results' | 'methodology';
 
 function AppInner() {
   const { scenario } = useScenario();
@@ -42,10 +42,10 @@ function AppInner() {
               Results
             </button>
             <button
-              className={`text-xs px-2 py-1 rounded ${tab === 'assumptions' ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => setTab('assumptions')}
+              className={`text-xs px-2 py-1 rounded ${tab === 'methodology' ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setTab('methodology')}
             >
-              Assumptions
+              Methodology
             </button>
           </div>
         </div>
