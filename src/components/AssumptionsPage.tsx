@@ -22,12 +22,12 @@ export function AssumptionsPage() {
         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4">
           <li>Returns use a <strong>Markov regime-switching Gaussian mixture model</strong> with two regimes: Bull (mean +15.9%, vol 15%) and Bear (mean −18%, vol 20%), calibrated to S&P 500 annual returns from 1926–2025.</li>
           <li>Each simulated year, the market regime (bull or bear) is determined by a Markov chain. If the prior year was a bear market, there is a 55% chance the next year is also a bear market, producing realistic multi-year bear streaks averaging ~2.2 years (matching historical patterns like 1929–32, 1973–74, 2000–02, 2007–09).</li>
-          <li>The "Crash Frequency" slider controls the long-run percentage of bear-market years: slider 1 = 5% (optimistic), default 5.5 = 18% (historical average), slider 10 = 30% (pessimistic).</li>
+          <li>The "Bear Market Frequency" slider controls the long-run percentage of bear-market years: slider 1 = 5% (rare), default 5.5 = 18% (historical average), slider 10 = 30% (very frequent).</li>
           <li>At the default setting, crash frequencies match historical data: a −20% year occurs roughly every 11 years, −30% every 20 years, −40% every 41 years, and −50% every 101 years.</li>
           <li>Unlike simple fat-tail models, this approach cannot produce impossible single-year crashes (e.g., &gt;−100%). A −80% single year is virtually impossible (~1 in 5,000 years).</li>
-          <li>Regime switching applies only to stocks and crypto. Bonds and cash always use a standard Gaussian distribution.</li>
+          <li>Regime switching applies only to stocks and crypto mean/vol. Bonds and cash use a standard Gaussian distribution, but bonds receive a mild mean boost in bear years (6.5% vs normal 4%) reflecting central bank rate cuts and flight-to-quality dynamics.</li>
           <li>Default returns: Stocks 10%/16% vol, Bonds 4%/6% vol, Cash 2.5%/1% vol, Crypto 15%/50% vol (all nominal).</li>
-          <li>Cross-asset correlations use Cholesky decomposition of a fixed correlation matrix (e.g., stocks-bonds: −0.10, stocks-crypto: 0.30).</li>
+          <li>Cross-asset correlations are <strong>regime-dependent</strong>: in bull markets, stock-bond correlation is −0.10; in bear markets it strengthens to −0.35 (flight to quality). Stock-crypto correlation tightens from 0.30 to 0.50 in bear markets (risk-off selling). Correlations are applied via Cholesky decomposition.</li>
           <li>Returns are applied annually (not monthly). No intra-year rebalancing.</li>
           <li>Inflation varies year-to-year with a built-in 1.5% standard deviation around the configured spending inflation rate, modeling real-world inflation uncertainty.</li>
         </ul>

@@ -24,12 +24,15 @@ function stdDevToVariability(sd: number): number {
   return Math.round(Math.min(10, Math.max(1, raw)) * 2) / 2;
 }
 
-// ── Crash frequency scale: 1–10 (0.5 steps) → bear-year probability ──
+// ── Bear market frequency scale: 1–10 (0.5 steps) → bear-year probability ──
 // Slider value is stored directly as crashFrequency (1-10).
-// 1 → 5% bear years (optimistic), 5.5 → 18% (historical), 10 → 30% (pessimistic)
-function crashFreqLabel(cf: number): string {
-  const pct = 5 + (cf - 1) * (25 / 9);
-  return `${pct.toFixed(0)}%`;
+// 1 → 5% bear years, 5.5 → 18% (historical), 10 → 30%
+function bearFreqLabel(cf: number): string {
+  if (cf <= 2) return 'Rare';
+  if (cf <= 4) return 'Uncommon';
+  if (cf <= 6.5) return 'Historical';
+  if (cf <= 8.5) return 'Frequent';
+  return 'Very Frequent';
 }
 
 export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
@@ -418,9 +421,9 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
             })}
           </div>
           <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-            <label className="input-label mb-1">Crash Frequency</label>
+            <label className="input-label mb-1">Bear Market Frequency</label>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-gray-400">Low</span>
+              <span className="text-[10px] text-gray-400">Rare</span>
               <input
                 type="range"
                 className={`flex-1 ${fieldErrorClass(ve, 'investments.crashFrequency')}`}
@@ -428,11 +431,11 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                 value={inv.crashFrequency}
                 onChange={e => setField('investments.crashFrequency', parseFloat(e.target.value))}
               />
-              <span className="text-[10px] text-gray-400">High</span>
-              <span className="text-[10px] text-gray-500 w-8 text-right">{crashFreqLabel(inv.crashFrequency)}</span>
+              <span className="text-[10px] text-gray-400">Frequent</span>
+              <span className="text-[10px] text-gray-500 w-16 text-right">{bearFreqLabel(inv.crashFrequency)}</span>
             </div>
             <p className="text-[10px] text-gray-400 mt-0.5">
-              Percentage of years that are bear markets ({crashFreqLabel(inv.crashFrequency)} at current setting). Bear markets cluster into multi-year streaks (~2 yr avg).
+              How often bear markets occur. &lsquo;Historical&rsquo; matches the last ~100 years of data. Bear markets cluster into multi-year streaks.
             </p>
           </div>
           <FieldError errors={ve} field="investments.crashFrequency" />

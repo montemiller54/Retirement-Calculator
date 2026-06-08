@@ -7,9 +7,9 @@ import type {
 } from '../types';
 
 // Default expected returns and volatility per asset class
-// Note: Stocks & crypto use Student-t(df=6) fat tails, which inflates effective
-// volatility by √(df/(df-2)) ≈ 1.22×. Input stdDev is calibrated so that
-// effective vol matches historical observations (~19.5% for stocks, ~61% for crypto).
+// Default expected returns and volatility per asset class (nominal).
+// Stocks & crypto use regime-switching (bull/bear) for mean/vol;
+// bonds & cash always use these base values (except bear bond mean boost).
 export const DEFAULT_ASSET_RETURNS: Record<AssetClass, AssetClassAssumption> = {
   stocks: { mean: 0.10,  stdDev: 0.16 },
   bonds:  { mean: 0.04,  stdDev: 0.06 },
@@ -17,13 +17,22 @@ export const DEFAULT_ASSET_RETURNS: Record<AssetClass, AssetClassAssumption> = {
   crypto: { mean: 0.15,  stdDev: 0.50 },
 };
 
-// Correlation matrix (Stocks, Bonds, Cash, Crypto)
+// Bull-regime correlation matrix (Stocks, Bonds, Cash, Crypto)
 // Order matches ASSET_CLASSES array
 export const DEFAULT_CORRELATION_MATRIX: number[][] = [
   [1.00, -0.10, 0.00, 0.30],  // Stocks
   [-0.10, 1.00, 0.20, -0.10], // Bonds
   [0.00,  0.20, 1.00, 0.00],  // Cash
   [0.30, -0.10, 0.00, 1.00],  // Crypto
+];
+
+// Bear-regime correlation matrix: stronger negative stock-bond correlation
+// (flight to quality) and tighter stock-crypto correlation (risk-off selling).
+export const BEAR_CORRELATION_MATRIX: number[][] = [
+  [1.00, -0.35, 0.00, 0.50],  // Stocks
+  [-0.35, 1.00, 0.20, -0.15], // Bonds
+  [0.00,  0.20, 1.00, 0.00],  // Cash
+  [0.50, -0.15, 0.00, 1.00],  // Crypto
 ];
 
 // Risk profile presets (single allocation applied to all accounts)
@@ -84,3 +93,7 @@ export const DEFAULT_CRASH_FREQUENCY = 5.5; // slider midpoint → ~18% bear yea
 export const BULL_REGIME = { mean: 0.159, vol: 0.15 };
 export const BEAR_REGIME = { mean: -0.18,  vol: 0.20 };
 export const BEAR_PERSISTENCE = 0.55; // P(stay in bear | currently bear)
+
+// Bonds get a mild mean boost in bear years (central bank rate cuts + flight to quality).
+// Historical avg bond return during stock bear years: ~5-7%. Normal: ~4%.
+export const BEAR_BOND_MEAN = 0.065;

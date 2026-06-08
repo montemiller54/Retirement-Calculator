@@ -6,7 +6,7 @@ import type {
 } from '../types';
 import { ASSET_CLASSES, ACCOUNT_TYPES } from '../types';
 import { PRNG, cholesky, generateCorrelatedReturns, blendedReturn, crashFrequencyToSteadyState } from './math';
-import { DEFAULT_CORRELATION_MATRIX, DEFAULT_ASSET_RETURNS, BEAR_PERSISTENCE } from '../constants/asset-classes';
+import { DEFAULT_CORRELATION_MATRIX, BEAR_CORRELATION_MATRIX, DEFAULT_ASSET_RETURNS, BEAR_PERSISTENCE, BEAR_BOND_MEAN } from '../constants/asset-classes';
 import { allocateContributions } from './contributions';
 import { executeWithdrawals } from './withdrawals';
 import { estimateSSBenefit, getFullRetirementAgeMonths } from '../utils/social-security';
@@ -102,7 +102,7 @@ function toAnnualScenario(s: ScenarioInput): ScenarioInput {
 }
 
 // ── Run a single simulation path ──
-function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]): SimulationPath {
+function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number[][], bearCholeskyL: number[][]): SimulationPath {
   const s = toAnnualScenario(scenario);
   const years: YearResult[] = [];
   const balances = cloneBalances(s.balances);
@@ -110,6 +110,11 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
 
   const means = ASSET_CLASSES.map(ac => (s.investments.assetClassReturns[ac] ?? DEFAULT_ASSET_RETURNS[ac]).mean);
   const stdDevs = ASSET_CLASSES.map(ac => (s.investments.assetClassReturns[ac] ?? DEFAULT_ASSET_RETURNS[ac]).stdDev);
+
+  // Bear-year bond mean boost (flight to quality + rate cuts)
+  const bearMeans = [...means];
+  const bondIdx = ASSET_CLASSES.indexOf('bonds');
+  if (bondIdx >= 0) bearMeans[bondIdx] = BEAR_BOND_MEAN;
 
   // Stocks & crypto use regime-switching (bull/bear); bonds & cash stay Gaussian
   const regimeMask = ASSET_CLASSES.map(ac => ac === 'stocks' || ac === 'crypto');
@@ -146,7 +151,9 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
         ? rng.next() < BEAR_PERSISTENCE
         : rng.next() < enterBear;
     }
-    const assetReturns = generateCorrelatedReturns(rng, choleskyL, means, stdDevs, inBearRegime, regimeMask);
+    const choleskyL = inBearRegime ? bearCholeskyL : bullCholeskyL;
+    const yearMeans = inBearRegime ? bearMeans : means;
+    const assetReturns = generateCorrelatedReturns(rng, choleskyL, yearMeans, stdDevs, inBearRegime, regimeMask);
 
     // Compute portfolio-weighted return signal for cash buffer decisions
     let portfolioReturnSignal = 0;
@@ -969,11 +976,12 @@ export function runSimulation(
 ): SimulationResult {
   const seed = params.seed ?? Date.now();
   const rng = new PRNG(seed);
-  const choleskyL = cholesky(DEFAULT_CORRELATION_MATRIX);
+  const bullCholeskyL = cholesky(DEFAULT_CORRELATION_MATRIX);
+  const bearCholeskyL = cholesky(BEAR_CORRELATION_MATRIX);
 
   const paths: SimulationPath[] = [];
   for (let i = 0; i < params.numSimulations; i++) {
-    paths.push(runSinglePath(scenario, rng, choleskyL));
+    paths.push(runSinglePath(scenario, rng, bullCholeskyL, bearCholeskyL));
     if (onProgress && (i % 50 === 0 || i === params.numSimulations - 1)) {
       onProgress(i + 1, params.numSimulations);
     }
@@ -994,7 +1002,7 @@ export function runSimulation(
     },
   };
   const deterministicRng = new PRNG(0);
-  const expectedPath = runSinglePath(deterministicScenario, deterministicRng, choleskyL).years;
+  const expectedPath = runSinglePath(deterministicScenario, deterministicRng, bullCholeskyL, bearCholeskyL).years;
 
   const result = aggregateResults(paths, scenario);
   return { ...result, expectedPath };
@@ -1028,10 +1036,11 @@ export function findSafeSpending(
     };
     const seed = 42; // fixed seed for consistency across iterations
     const rng = new PRNG(seed);
-    const choleskyL = cholesky(DEFAULT_CORRELATION_MATRIX);
+    const bullCholeskyL = cholesky(DEFAULT_CORRELATION_MATRIX);
+    const bearCholeskyL = cholesky(BEAR_CORRELATION_MATRIX);
     let successes = 0;
     for (let i = 0; i < numSims; i++) {
-      const path = runSinglePath(testScenario, rng, choleskyL);
+      const path = runSinglePath(testScenario, rng, bullCholeskyL, bearCholeskyL);
       if (path.success) successes++;
     }
     return successes / numSims;

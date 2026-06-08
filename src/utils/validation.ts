@@ -91,7 +91,7 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
   }
 
   if (s.investments.crashFrequency != null && (s.investments.crashFrequency < 1 || s.investments.crashFrequency > 10)) {
-    errors.push({ card: 'portfolio', field: 'investments.crashFrequency', message: 'Crash Frequency must be between 1 (low) and 10 (high).' });
+    errors.push({ card: 'portfolio', field: 'investments.crashFrequency', message: 'Bear Market Frequency must be between 1 (rare) and 10 (frequent).' });
   }
 
   // ── Spending & Healthcare ──
