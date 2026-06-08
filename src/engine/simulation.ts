@@ -5,8 +5,8 @@ import type {
   SafeSpendingResult,
 } from '../types';
 import { ASSET_CLASSES, ACCOUNT_TYPES } from '../types';
-import { PRNG, cholesky, generateCorrelatedReturns, blendedReturn } from './math';
-import { DEFAULT_CORRELATION_MATRIX, DEFAULT_ASSET_RETURNS } from '../constants/asset-classes';
+import { PRNG, cholesky, generateCorrelatedReturns, blendedReturn, crashFrequencyToSteadyState } from './math';
+import { DEFAULT_CORRELATION_MATRIX, DEFAULT_ASSET_RETURNS, BEAR_PERSISTENCE } from '../constants/asset-classes';
 import { allocateContributions } from './contributions';
 import { executeWithdrawals } from './withdrawals';
 import { estimateSSBenefit, getFullRetirementAgeMonths } from '../utils/social-security';
@@ -110,10 +110,14 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
 
   const means = ASSET_CLASSES.map(ac => (s.investments.assetClassReturns[ac] ?? DEFAULT_ASSET_RETURNS[ac]).mean);
   const stdDevs = ASSET_CLASSES.map(ac => (s.investments.assetClassReturns[ac] ?? DEFAULT_ASSET_RETURNS[ac]).stdDev);
-  const df = s.investments.fatTailDf;
 
-  // Stocks & crypto get Student-t fat tails; bonds & cash stay Gaussian
-  const fatTailMask = ASSET_CLASSES.map(ac => ac === 'stocks' || ac === 'crypto');
+  // Stocks & crypto use regime-switching (bull/bear); bonds & cash stay Gaussian
+  const regimeMask = ASSET_CLASSES.map(ac => ac === 'stocks' || ac === 'crypto');
+
+  // Markov regime state: bear probability from crash frequency slider
+  const bearSteadyState = crashFrequencyToSteadyState(s.investments.crashFrequency);
+  const enterBear = bearSteadyState * (1 - BEAR_PERSISTENCE) / (1 - bearSteadyState);
+  let inBearRegime = rng.next() < bearSteadyState; // start from steady-state
 
   let depleted = false;
   let depletionAge: number | null = null;
@@ -136,7 +140,13 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, choleskyL: number[][]
     const yearsFromNow = age - s.currentAge;
 
     // ── Generate returns for this year ──
-    const assetReturns = generateCorrelatedReturns(rng, choleskyL, means, stdDevs, df, fatTailMask);
+    // Markov regime transition: bear markets cluster realistically
+    if (yearsFromNow > 0) {
+      inBearRegime = inBearRegime
+        ? rng.next() < BEAR_PERSISTENCE
+        : rng.next() < enterBear;
+    }
+    const assetReturns = generateCorrelatedReturns(rng, choleskyL, means, stdDevs, inBearRegime, regimeMask);
 
     // Compute portfolio-weighted return signal for cash buffer decisions
     let portfolioReturnSignal = 0;

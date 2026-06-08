@@ -1,6 +1,6 @@
 import type { SavedScenario, ScenarioInput, AccountType } from '../types';
 import { ASSET_CLASSES, ACCOUNT_TYPES } from '../types';
-import { DEFAULT_ASSET_RETURNS, makeUniformAllocations, RISK_PROFILES } from '../constants/asset-classes';
+import { DEFAULT_ASSET_RETURNS, makeUniformAllocations, RISK_PROFILES, DEFAULT_CRASH_FREQUENCY } from '../constants/asset-classes';
 import { DEFAULT_SCENARIO } from '../constants/defaults';
 
 const STORAGE_KEY = 'retirement-planner-scenarios';
@@ -181,6 +181,23 @@ function migrateScenario(s: ScenarioInput): ScenarioInput {
         ret.bonds = ret.usBonds ?? ret.bonds;
         delete ret.usBonds;
       }
+    }
+  }
+
+  // Migrate fatTailDf → crashFrequency (regime-switching model)
+  if (s.investments) {
+    const inv = s.investments as unknown as Record<string, unknown>;
+    if ('fatTailDf' in inv && !('crashFrequency' in inv)) {
+      // Map old df (3-30) to approximate crash frequency slider (1-10)
+      // Old slider: 1→df=30 (rare), 5.5→df=6 (default), 10→df=3 (extreme)
+      // Reverse: cf = 1 + (30 - df) * (9 / 27)
+      const df = inv.fatTailDf as number;
+      const oldSlider = Math.max(1, Math.min(10, 1 + (30 - df) * (9 / 27)));
+      inv.crashFrequency = Math.round(oldSlider * 2) / 2; // snap to 0.5
+      delete inv.fatTailDf;
+    }
+    if (inv.crashFrequency == null) {
+      inv.crashFrequency = DEFAULT_CRASH_FREQUENCY;
     }
   }
 

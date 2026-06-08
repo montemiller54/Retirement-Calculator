@@ -24,14 +24,12 @@ function stdDevToVariability(sd: number): number {
   return Math.round(Math.min(10, Math.max(1, raw)) * 2) / 2;
 }
 
-// ── Crash frequency scale: 1–10 (0.5 steps) ↔ df (3–30) ──
-// Linear inversion: 1→30, 10→3
-function crashFreqToDf(cf: number): number {
-  return Math.round(30 - (cf - 1) * (27 / 9));
-}
-function dfToCrashFreq(df: number): number {
-  const raw = 1 + (30 - df) * (9 / 27);
-  return Math.round(raw * 2) / 2; // snap to 0.5
+// ── Crash frequency scale: 1–10 (0.5 steps) → bear-year probability ──
+// Slider value is stored directly as crashFrequency (1-10).
+// 1 → 5% bear years (optimistic), 5.5 → 18% (historical), 10 → 30% (pessimistic)
+function crashFreqLabel(cf: number): string {
+  const pct = 5 + (cf - 1) * (25 / 9);
+  return `${pct.toFixed(0)}%`;
 }
 
 export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
@@ -425,19 +423,19 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
               <span className="text-[10px] text-gray-400">Low</span>
               <input
                 type="range"
-                className={`flex-1 ${fieldErrorClass(ve, 'investments.fatTailDf')}`}
+                className={`flex-1 ${fieldErrorClass(ve, 'investments.crashFrequency')}`}
                 min={1} max={10} step={0.5}
-                value={dfToCrashFreq(inv.fatTailDf)}
-                onChange={e => setField('investments.fatTailDf', crashFreqToDf(parseFloat(e.target.value)))}
+                value={inv.crashFrequency}
+                onChange={e => setField('investments.crashFrequency', parseFloat(e.target.value))}
               />
               <span className="text-[10px] text-gray-400">High</span>
-              <span className="text-[10px] text-gray-500 w-6 text-right">{dfToCrashFreq(inv.fatTailDf).toFixed(1)}</span>
+              <span className="text-[10px] text-gray-500 w-8 text-right">{crashFreqLabel(inv.crashFrequency)}</span>
             </div>
             <p className="text-[10px] text-gray-400 mt-0.5">
-              How often extreme market crashes occur in simulations.
+              Percentage of years that are bear markets ({crashFreqLabel(inv.crashFrequency)} at current setting). Bear markets cluster into multi-year streaks (~2 yr avg).
             </p>
           </div>
-          <FieldError errors={ve} field="investments.fatTailDf" />
+          <FieldError errors={ve} field="investments.crashFrequency" />
         </div>
       )}
     </div>

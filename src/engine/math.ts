@@ -43,23 +43,6 @@ export class PRNG {
     while (u1 === 0) u1 = this.next();
     return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
   }
-
-  /** Chi-squared(df) using sum of squared normals */
-  nextChiSquared(df: number): number {
-    let sum = 0;
-    for (let i = 0; i < df; i++) {
-      const z = this.nextGaussian();
-      sum += z * z;
-    }
-    return sum;
-  }
-
-  /** Student-t(df) = Z * sqrt(df / chi2(df)) */
-  nextStudentT(df: number): number {
-    const z = this.nextGaussian();
-    const chi2 = this.nextChiSquared(df);
-    return z * Math.sqrt(df / chi2);
-  }
 }
 
 // ── Cholesky decomposition ──
@@ -85,18 +68,38 @@ export function cholesky(matrix: number[][]): number[][] {
   return L;
 }
 
-// ── Generate correlated returns with per-asset distribution control ──
-// Correlated normals via Cholesky; optionally scaled to Student-t per asset.
-// fatTailMask[i] = true → Student-t(df), false → Gaussian. Default: all Student-t.
+// ── Generate correlated returns with regime-switching ──
+// Uses Cholesky-correlated Gaussians. In bear years, assets in the regimeMask
+// have their mean/vol replaced with bear-regime values, producing realistic
+// crashes without impossible >-100% returns.
+import { BULL_REGIME, BEAR_REGIME } from '../constants/asset-classes';
+
 export function generateCorrelatedReturns(
   rng: PRNG,
   choleskyL: number[][],
   means: number[],
   stdDevs: number[],
-  df: number,
-  fatTailMask?: boolean[],
+  isBearYear: boolean,
+  regimeMask?: boolean[],
 ): number[] {
   const n = choleskyL.length;
+
+  // Determine effective means and stdDevs for this year's regime
+  const effMeans = new Array(n);
+  const effStdDevs = new Array(n);
+  for (let i = 0; i < n; i++) {
+    const useRegime = isBearYear && (!regimeMask || regimeMask[i]);
+    if (useRegime) {
+      effMeans[i] = BEAR_REGIME.mean;
+      effStdDevs[i] = BEAR_REGIME.vol;
+    } else if (!isBearYear && (!regimeMask || regimeMask[i])) {
+      effMeans[i] = BULL_REGIME.mean;
+      effStdDevs[i] = BULL_REGIME.vol;
+    } else {
+      effMeans[i] = means[i];
+      effStdDevs[i] = stdDevs[i];
+    }
+  }
 
   // Generate independent standard normal draws
   const z = new Array(n);
@@ -112,24 +115,17 @@ export function generateCorrelatedReturns(
     correlated[i] = sum;
   }
 
-  // Chi-squared scaling for Student-t assets (skip if all Gaussian)
-  const anyFatTail = !fatTailMask || fatTailMask.some(v => v);
-  let scale = 1;
-  if (anyFatTail) {
-    const chi2 = rng.nextChiSquared(df);
-    scale = Math.sqrt(df / chi2);
-  }
-
   const returns = new Array(n);
   for (let i = 0; i < n; i++) {
-    // Student-t draw: lower df → fatter tails AND higher realized volatility.
-    // We intentionally do NOT adjust for Student-t's higher variance (df/(df-2))
-    // so that lower df produces genuinely riskier return paths.
-    // Bonds/cash use Gaussian (scale=1) for academically accurate modeling.
-    const assetScale = (!fatTailMask || fatTailMask[i]) ? scale : 1;
-    returns[i] = means[i] + stdDevs[i] * correlated[i] * assetScale;
+    returns[i] = Math.max(-1, effMeans[i] + effStdDevs[i] * correlated[i]);
   }
   return returns;
+}
+
+// ── Crash frequency slider → steady-state bear probability ──
+// Slider 1 → 5% bear years (optimistic), 5.5 → 18% (historical), 10 → 30% (pessimistic)
+export function crashFrequencyToSteadyState(cf: number): number {
+  return 0.05 + (cf - 1) * (0.25 / 9);
 }
 
 // ── Blended return for an account ──

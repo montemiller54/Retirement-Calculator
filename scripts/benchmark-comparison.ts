@@ -9,7 +9,7 @@
 
 import { runSimulation } from '../src/engine/simulation';
 import { DEFAULT_SCENARIO } from '../src/constants/defaults';
-import { makeUniformAllocations, DEFAULT_ASSET_RETURNS, DEFAULT_FAT_TAIL_DF } from '../src/constants/asset-classes';
+import { makeUniformAllocations, DEFAULT_ASSET_RETURNS, DEFAULT_CRASH_FREQUENCY } from '../src/constants/asset-classes';
 import type { ScenarioInput, AssetAllocation } from '../src/types';
 
 // ── Helper ────────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ const benchmarks: Benchmark[] = [
         preRetirement: makeUniformAllocations(alloc(75, 25)),
         postRetirement: makeUniformAllocations(alloc(75, 25)),
         assetClassReturns: { ...DEFAULT_ASSET_RETURNS },
-        fatTailDf: DEFAULT_FAT_TAIL_DF,
+        crashFrequency: DEFAULT_CRASH_FREQUENCY,
       },
     }),
   },
@@ -115,7 +115,7 @@ const benchmarks: Benchmark[] = [
         preRetirement: makeUniformAllocations(alloc(50, 50)),
         postRetirement: makeUniformAllocations(alloc(50, 50)),
         assetClassReturns: { ...DEFAULT_ASSET_RETURNS },
-        fatTailDf: DEFAULT_FAT_TAIL_DF,
+        crashFrequency: DEFAULT_CRASH_FREQUENCY,
       },
     }),
   },
@@ -148,7 +148,7 @@ const benchmarks: Benchmark[] = [
         preRetirement: makeUniformAllocations(alloc(60, 40)),
         postRetirement: makeUniformAllocations(alloc(60, 40)),
         assetClassReturns: { ...DEFAULT_ASSET_RETURNS },
-        fatTailDf: DEFAULT_FAT_TAIL_DF,
+        crashFrequency: DEFAULT_CRASH_FREQUENCY,
       },
     }),
   },
@@ -181,7 +181,7 @@ const benchmarks: Benchmark[] = [
         preRetirement: makeUniformAllocations(alloc(60, 40)),
         postRetirement: makeUniformAllocations(alloc(60, 40)),
         assetClassReturns: { ...DEFAULT_ASSET_RETURNS },
-        fatTailDf: DEFAULT_FAT_TAIL_DF,
+        crashFrequency: DEFAULT_CRASH_FREQUENCY,
       },
     }),
   },
@@ -216,7 +216,7 @@ const benchmarks: Benchmark[] = [
         preRetirement: makeUniformAllocations(alloc(60, 40)),
         postRetirement: makeUniformAllocations(alloc(60, 40)),
         assetClassReturns: { ...DEFAULT_ASSET_RETURNS },
-        fatTailDf: DEFAULT_FAT_TAIL_DF,
+        crashFrequency: DEFAULT_CRASH_FREQUENCY,
       },
     }),
   },
@@ -251,19 +251,19 @@ const benchmarks: Benchmark[] = [
         preRetirement: makeUniformAllocations(alloc(80, 20)),
         postRetirement: makeUniformAllocations(alloc(80, 20)),
         assetClassReturns: { ...DEFAULT_ASSET_RETURNS },
-        fatTailDf: DEFAULT_FAT_TAIL_DF,
+        crashFrequency: DEFAULT_CRASH_FREQUENCY,
       },
     }),
   },
 
-  // ── 7. Normal distribution comparison (df=100 ≈ Gaussian) ──
-  // Same as #1 but with near-normal tails — should have HIGHER success
-  // because fat tails create more catastrophic downside scenarios
+  // ── 7. Low crash frequency comparison ──
+  // Same as #1 but with minimal bear markets — should have HIGHER success
+  // because fewer bear market years produce fewer catastrophic scenarios
   {
-    name: '4% Rule – Normal tails',
-    description: 'Same as #1 but df=100 (near-Gaussian). Should be higher than fat-tail version.',
-    source: 'Textbook Monte Carlo (no fat tails) ≈ 90-97%',
-    expectedRange: [87, 99],
+    name: '4% Rule – Low crashes',
+    description: 'Same as #1 but crashFrequency=1 (5% bear years). Should be higher than default.',
+    source: 'Textbook Monte Carlo (minimal crashes) ≈ 90-99%',
+    expectedRange: [87, 100],
     scenario: scenario({
       currentAge: 65, retirementAge: 65, endAge: 95,
       filingStatus: 'single',
@@ -285,7 +285,7 @@ const benchmarks: Benchmark[] = [
         preRetirement: makeUniformAllocations(alloc(75, 25)),
         postRetirement: makeUniformAllocations(alloc(75, 25)),
         assetClassReturns: { ...DEFAULT_ASSET_RETURNS },
-        fatTailDf: 100,
+        crashFrequency: 1,
       },
     }),
   },
@@ -294,7 +294,7 @@ const benchmarks: Benchmark[] = [
 // ── Feature Comparison ───────────────────────────────────────────────
 const features = [
   { feature: 'Simulation method', ours: 'Monte Carlo (10,000 paths)', fireCalc: 'Historical rolling periods', cFIREsim: 'Historical rolling periods', fidelity: 'Monte Carlo', pviz: 'Monte Carlo' },
-  { feature: 'Return distribution', ours: 'Student-t (df=6) fat tails', fireCalc: 'Historical actual', cFIREsim: 'Historical actual', fidelity: 'Proprietary (normal)', pviz: 'Normal or historical' },
+  { feature: 'Return distribution', ours: 'Markov regime-switching Gaussian mixture', fireCalc: 'Historical actual', cFIREsim: 'Historical actual', fidelity: 'Proprietary (normal)', pviz: 'Normal or historical' },
   { feature: 'Asset classes', ours: '5 (US/Intl stocks, bonds, cash, crypto)', fireCalc: '2 (stocks, bonds)', cFIREsim: '3-4', fidelity: 'Multiple', pviz: 'Multiple' },
   { feature: 'Correlation modeling', ours: 'Cholesky decomposition', fireCalc: 'Implicit (historical)', cFIREsim: 'Implicit (historical)', fidelity: 'Yes', pviz: 'Yes' },
   { feature: 'Tax modeling', ours: 'Federal + state, bracket inflation', fireCalc: 'No', cFIREsim: 'Basic', fidelity: 'Yes', pviz: 'No' },

@@ -1,5 +1,5 @@
 import type { ScenarioInput } from '../types';
-import { RISK_PROFILES, makeUniformAllocations, DEFAULT_ASSET_RETURNS, DEFAULT_FAT_TAIL_DF } from './asset-classes';
+import { RISK_PROFILES, makeUniformAllocations, DEFAULT_ASSET_RETURNS, DEFAULT_CRASH_FREQUENCY } from './asset-classes';
 import { DEFAULT_401K_LIMIT, DEFAULT_IRA_LIMIT } from './contribution-limits';
 
 export const DEFAULT_SCENARIO: ScenarioInput = {
@@ -84,7 +84,7 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
     preRetirement: makeUniformAllocations(RISK_PROFILES.balanced),
     postRetirement: makeUniformAllocations(RISK_PROFILES.conservative),
     assetClassReturns: { ...DEFAULT_ASSET_RETURNS },
-    fatTailDf: DEFAULT_FAT_TAIL_DF,
+    crashFrequency: DEFAULT_CRASH_FREQUENCY,
   },
 
   // Withdrawal

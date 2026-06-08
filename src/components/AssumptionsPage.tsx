@@ -20,8 +20,12 @@ export function AssumptionsPage() {
       <section className="space-y-2">
         <h3 className="font-semibold text-sm">Investment Returns</h3>
         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4">
-          <li>Stocks and crypto use a statistical model that accounts for rare market crashes being more likely than a simple bell curve suggests. Bonds and cash use a standard bell curve.</li>
-          <li>The crash model increases effective volatility to about 1.22× the displayed Variability (technically: vol × √(df/(df−2)) at df = 6). Default values are calibrated so effective volatility matches historical observations (~19.5% for stocks, ~61% for crypto).</li>
+          <li>Returns use a <strong>Markov regime-switching Gaussian mixture model</strong> with two regimes: Bull (mean +15.9%, vol 15%) and Bear (mean −18%, vol 20%), calibrated to S&P 500 annual returns from 1926–2025.</li>
+          <li>Each simulated year, the market regime (bull or bear) is determined by a Markov chain. If the prior year was a bear market, there is a 55% chance the next year is also a bear market, producing realistic multi-year bear streaks averaging ~2.2 years (matching historical patterns like 1929–32, 1973–74, 2000–02, 2007–09).</li>
+          <li>The "Crash Frequency" slider controls the long-run percentage of bear-market years: slider 1 = 5% (optimistic), default 5.5 = 18% (historical average), slider 10 = 30% (pessimistic).</li>
+          <li>At the default setting, crash frequencies match historical data: a −20% year occurs roughly every 11 years, −30% every 20 years, −40% every 41 years, and −50% every 101 years.</li>
+          <li>Unlike simple fat-tail models, this approach cannot produce impossible single-year crashes (e.g., &gt;−100%). A −80% single year is virtually impossible (~1 in 5,000 years).</li>
+          <li>Regime switching applies only to stocks and crypto. Bonds and cash always use a standard Gaussian distribution.</li>
           <li>Default returns: Stocks 10%/16% vol, Bonds 4%/6% vol, Cash 2.5%/1% vol, Crypto 15%/50% vol (all nominal).</li>
           <li>Cross-asset correlations use Cholesky decomposition of a fixed correlation matrix (e.g., stocks-bonds: −0.10, stocks-crypto: 0.30).</li>
           <li>Returns are applied annually (not monthly). No intra-year rebalancing.</li>

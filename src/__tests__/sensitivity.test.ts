@@ -150,28 +150,18 @@ describe('HIGH IMPACT: Investment Assumptions', () => {
     expect(highReturns.successRate).toBeGreaterThan(lowReturns.successRate);
   });
 
-  it('#33 higher volatility → lower success rate', () => {
-    const lowVol = run({
+  it('#33 higher crash frequency → lower success rate', () => {
+    const lowCrash = run({
       investments: withInvestments({
-        assetClassReturns: {
-          stocks: { mean: 0.10, stdDev: 0.10 },
-          bonds: { mean: 0.04, stdDev: 0.03 },
-          cash: { mean: 0.025, stdDev: 0.005 },
-          crypto: { mean: 0.15, stdDev: 0.60 },
-        },
+        crashFrequency: 2,
       }),
     });
-    const highVol = run({
+    const highCrash = run({
       investments: withInvestments({
-        assetClassReturns: {
-          stocks: { mean: 0.10, stdDev: 0.30 },
-          bonds: { mean: 0.04, stdDev: 0.12 },
-          cash: { mean: 0.025, stdDev: 0.03 },
-          crypto: { mean: 0.15, stdDev: 0.60 },
-        },
+        crashFrequency: 9,
       }),
     });
-    expect(lowVol.successRate).toBeGreaterThan(highVol.successRate);
+    expect(lowCrash.successRate).toBeGreaterThan(highCrash.successRate);
   });
 });
 

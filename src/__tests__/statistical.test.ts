@@ -79,35 +79,6 @@ describe('Gaussian properties (Box-Muller)', () => {
   });
 });
 
-describe('Student-t distribution', () => {
-  it('Student-t(6) has heavier tails than normal', () => {
-    const rng = new PRNG(333);
-    const N = 50000;
-    let tBeyondThree = 0, nBeyondThree = 0;
-    for (let i = 0; i < N; i++) {
-      if (Math.abs(rng.nextStudentT(6)) > 3) tBeyondThree++;
-      if (Math.abs(rng.nextGaussian()) > 3) nBeyondThree++;
-    }
-    // Student-t(6) should have more extreme values than normal
-    expect(tBeyondThree).toBeGreaterThan(nBeyondThree);
-  });
-
-  it('Student-t(6) variance ≈ df/(df-2) = 1.5', () => {
-    const rng = new PRNG(444);
-    const N = 50000;
-    let sum = 0, sumSq = 0;
-    for (let i = 0; i < N; i++) {
-      const t = rng.nextStudentT(6);
-      sum += t;
-      sumSq += t * t;
-    }
-    const mean = sum / N;
-    const variance = sumSq / N - mean * mean;
-    expect(mean).toBeCloseTo(0, 0);           // within 0.5
-    expect(variance).toBeCloseTo(1.5, 0);     // within 0.5
-  });
-});
-
 describe('Cholesky decomposition', () => {
   it('L × Lᵀ reconstructs the original matrix', () => {
     const M = DEFAULT_CORRELATION_MATRIX;
@@ -149,13 +120,13 @@ describe('Correlated returns', () => {
     const L = cholesky(DEFAULT_CORRELATION_MATRIX);
     const means = [0.10, 0.04, 0.025, 0.15];
     const stdDevs = [0.18, 0.06, 0.01, 0.60];
-    const df = 6;
     const N = 10000;
+    const mask = [true, false, false, true];
 
     const stocks: number[] = [];
     const bonds: number[] = [];
     for (let i = 0; i < N; i++) {
-      const r = generateCorrelatedReturns(rng, L, means, stdDevs, df);
+      const r = generateCorrelatedReturns(rng, L, means, stdDevs, false, mask);
       stocks.push(r[0]);
       bonds.push(r[1]);
     }
@@ -175,119 +146,116 @@ describe('Correlated returns', () => {
     expect(corr).toBeLessThan(0.10);
   });
 
-  it('mean returns are approximately correct', () => {
+  it('bull regime mean returns are approximately correct', () => {
     const rng = new PRNG(777);
     const L = cholesky(DEFAULT_CORRELATION_MATRIX);
     const means = [0.10, 0.04, 0.025, 0.15];
     const stdDevs = [0.18, 0.06, 0.01, 0.60];
-    const df = 6;
     const N = 20000;
+    const mask = [true, false, false, true];
 
+    // In bull regime, stocks/crypto use BULL_REGIME mean, bonds/cash use their own
     const sums = [0, 0, 0, 0];
     for (let i = 0; i < N; i++) {
-      const r = generateCorrelatedReturns(rng, L, means, stdDevs, df);
+      const r = generateCorrelatedReturns(rng, L, means, stdDevs, false, mask);
       for (let j = 0; j < 4; j++) sums[j] += r[j];
     }
-    for (let j = 0; j < 4; j++) {
-      const sampleMean = sums[j] / N;
-      expect(sampleMean).toBeCloseTo(means[j], 1); // within 0.05
-    }
+    // Bonds and cash should match their input means
+    expect(sums[1] / N).toBeCloseTo(means[1], 1); // bonds
+    expect(sums[2] / N).toBeCloseTo(means[2], 1); // cash
   });
 });
 
-describe('Fat tail df sensitivity', () => {
-  // These tests would have caught the tStdAdj normalization bug:
-  // they verify that df actually affects the output distribution.
+describe('Regime-switching sensitivity', () => {
+  // These tests verify that the bull/bear regime-switching model
+  // produces different distributions and affects simulation outcomes.
 
-  it('lower df produces higher sample volatility in generateCorrelatedReturns', () => {
+  it('bear regime produces higher sample volatility and lower mean than bull', () => {
     const L = cholesky(DEFAULT_CORRELATION_MATRIX);
     const means = [0.10, 0.04, 0.025, 0.15];
     const stdDevs = [0.18, 0.06, 0.01, 0.60];
     const N = 10000;
+    const mask = [true, false, false, true]; // stocks+crypto regime, bonds+cash Gaussian
 
-    function sampleVariance(df: number): number {
-      const rng = new PRNG(42); // same seed for fairness
+    function sampleStats(isBear: boolean): { mean: number; variance: number } {
+      const rng = new PRNG(42);
       let sum = 0, sumSq = 0;
       for (let i = 0; i < N; i++) {
-        const r = generateCorrelatedReturns(rng, L, means, stdDevs, df);
-        const stocksReturn = r[0]; // Stocks
+        const r = generateCorrelatedReturns(rng, L, means, stdDevs, isBear, mask);
+        const stocksReturn = r[0];
         sum += stocksReturn;
         sumSq += stocksReturn * stocksReturn;
       }
       const mean = sum / N;
-      return sumSq / N - mean * mean;
+      return { mean, variance: sumSq / N - mean * mean };
     }
 
-    const varDf4 = sampleVariance(4);
-    const varDf100 = sampleVariance(100);
+    const bull = sampleStats(false);
+    const bear = sampleStats(true);
 
-    // df=4 should produce measurably higher variance than df=100
-    expect(varDf4).toBeGreaterThan(varDf100 * 1.15); // at least 15% more variance
+    // Bear regime should have lower mean and higher variance for stocks
+    expect(bear.mean).toBeLessThan(bull.mean);
+    expect(bear.variance).toBeGreaterThan(bull.variance);
   });
 
-  it('lower df produces more extreme tail events', () => {
+  it('bear regime produces more extreme tail events', () => {
     const L = cholesky(DEFAULT_CORRELATION_MATRIX);
     const means = [0.10, 0.04, 0.025, 0.15];
     const stdDevs = [0.18, 0.06, 0.01, 0.60];
     const N = 20000;
+    const mask = [true, false, false, true];
 
-    function countExtremes(df: number): number {
+    function countExtremes(isBear: boolean): number {
       const rng = new PRNG(42);
       let count = 0;
       for (let i = 0; i < N; i++) {
-        const r = generateCorrelatedReturns(rng, L, means, stdDevs, df);
-        // Count "crash" events: Stocks return < -30%
+        const r = generateCorrelatedReturns(rng, L, means, stdDevs, isBear, mask);
         if (r[0] < -0.30) count++;
       }
       return count;
     }
 
-    const extremesDf4 = countExtremes(4);
-    const extremesDf100 = countExtremes(100);
+    const extremesBear = countExtremes(true);
+    const extremesBull = countExtremes(false);
 
-    // df=4 should have substantially more extreme events
-    expect(extremesDf4).toBeGreaterThan(extremesDf100 * 2);
+    // Bear regime should have substantially more crash events
+    expect(extremesBear).toBeGreaterThan(extremesBull * 2);
   });
 
-  it('simulation success rate is meaningfully lower with df=4 vs df=100', () => {
-    // End-to-end: does df actually impact the final success rate?
-    const scenarioLowDf = {
+  it('simulation success rate is meaningfully lower with high crash frequency', () => {
+    const scenarioHighCrash = {
       ...DEFAULT_SCENARIO,
       socialSecurityMode: 'manual' as const,
-      investments: { ...DEFAULT_SCENARIO.investments, fatTailDf: 4 },
+      investments: { ...DEFAULT_SCENARIO.investments, crashFrequency: 9 },
     };
-    const scenarioHighDf = {
+    const scenarioLowCrash = {
       ...DEFAULT_SCENARIO,
       socialSecurityMode: 'manual' as const,
-      investments: { ...DEFAULT_SCENARIO.investments, fatTailDf: 100 },
+      investments: { ...DEFAULT_SCENARIO.investments, crashFrequency: 1 },
     };
 
-    const resultLow = runSimulation(scenarioLowDf, { numSimulations: 500, seed: 42 });
-    const resultHigh = runSimulation(scenarioHighDf, { numSimulations: 500, seed: 42 });
+    const resultHigh = runSimulation(scenarioHighCrash, { numSimulations: 500, seed: 42 });
+    const resultLow = runSimulation(scenarioLowCrash, { numSimulations: 500, seed: 42 });
 
-    // Low df should produce a noticeably lower (or at least different) success rate
-    // A 2+ percentage point difference confirms df is having an effect
-    const diff = resultHigh.successRate - resultLow.successRate;
+    // High crash frequency should produce a lower success rate
+    const diff = resultLow.successRate - resultHigh.successRate;
     expect(diff).toBeGreaterThan(0.02); // at least 2pp difference
   });
 });
 
-describe('Per-asset fat tail mask', () => {
-  it('bonds variance is lower with fatTailMask=[true,false,false,true] vs all true', () => {
+describe('Per-asset regime mask', () => {
+  it('bonds variance is unaffected by bear regime when masked out', () => {
     const L = cholesky(DEFAULT_CORRELATION_MATRIX);
     const means = [0.10, 0.04, 0.025, 0.15];
     const stdDevs = [0.18, 0.06, 0.01, 0.60];
-    const df = 6;
     const N = 10000;
-    const mask = [true, false, false, true]; // stocks+crypto fat, bonds+cash Gaussian
+    const mask = [true, false, false, true]; // stocks+crypto regime, bonds+cash always Gaussian
 
-    function bondsVariance(useMask: boolean): number {
+    function bondsVariance(isBear: boolean): number {
       const rng = new PRNG(42);
       let sum = 0, sumSq = 0;
       for (let i = 0; i < N; i++) {
-        const r = useMask
-          ? generateCorrelatedReturns(rng, L, means, stdDevs, df, mask)
-          : generateCorrelatedReturns(rng, L, means, stdDevs, df);
+        const r = generateCorrelatedReturns(rng, L, means, stdDevs, isBear, mask);
         sum += r[1]; // bonds index
         sumSq += r[1] * r[1];
       }
@@ -295,28 +263,27 @@ describe('Per-asset fat tail mask', () => {
       return sumSq / N - mean * mean;
     }
 
-    const varWithMask = bondsVariance(true);
-    const varWithoutMask = bondsVariance(false);
+    const varBull = bondsVariance(false);
+    const varBear = bondsVariance(true);
 
-    // With mask, bonds are Gaussian → lower variance than Student-t bonds
-    expect(varWithMask).toBeLessThan(varWithoutMask);
+    // Bonds are masked out from regime switching — variance should be similar
+    const ratio = varBull / varBear;
+    expect(ratio).toBeGreaterThan(0.8);
+    expect(ratio).toBeLessThan(1.2);
   });
 
-  it('stocks variance is unaffected by masking bonds/cash to Gaussian', () => {
+  it('stocks variance changes with regime when masked in', () => {
     const L = cholesky(DEFAULT_CORRELATION_MATRIX);
     const means = [0.10, 0.04, 0.025, 0.15];
     const stdDevs = [0.18, 0.06, 0.01, 0.60];
-    const df = 6;
     const N = 10000;
     const mask = [true, false, false, true];
 
-    function stocksVariance(useMask: boolean): number {
+    function stocksVariance(isBear: boolean): number {
       const rng = new PRNG(42);
       let sum = 0, sumSq = 0;
       for (let i = 0; i < N; i++) {
-        const r = useMask
-          ? generateCorrelatedReturns(rng, L, means, stdDevs, df, mask)
-          : generateCorrelatedReturns(rng, L, means, stdDevs, df);
+        const r = generateCorrelatedReturns(rng, L, means, stdDevs, isBear, mask);
         sum += r[0]; // stocks index
         sumSq += r[0] * r[0];
       }
@@ -324,33 +291,34 @@ describe('Per-asset fat tail mask', () => {
       return sumSq / N - mean * mean;
     }
 
-    const varWithMask = stocksVariance(true);
-    const varWithoutMask = stocksVariance(false);
+    const varBull = stocksVariance(false);
+    const varBear = stocksVariance(true);
 
-    // Both use same seed and same chi2 draw → stocks get same Student-t scaling
-    // Variance should be very similar (same PRNG path since chi2 always drawn)
-    const ratio = varWithMask / varWithoutMask;
-    expect(ratio).toBeGreaterThan(0.8);
-    expect(ratio).toBeLessThan(1.2);
+    // Bear regime should have higher variance for stocks
+    expect(varBear).toBeGreaterThan(varBull);
   });
 
-  it('all-false mask produces Gaussian returns (lower tails than Student-t)', () => {
+  it('all-false mask means regime has no effect on returns', () => {
     const L = cholesky([[1, 0], [0, 1]]);
     const means = [0.10, 0.04];
     const stdDevs = [0.18, 0.06];
-    const df = 4; // very heavy tails when enabled
-    const N = 20000;
+    const N = 10000;
     const allFalse = [false, false];
 
-    const rng = new PRNG(42);
-    let extremes = 0;
-    for (let i = 0; i < N; i++) {
-      const r = generateCorrelatedReturns(rng, L, means, stdDevs, df, allFalse);
-      if (Math.abs(r[0] - means[0]) > 3 * stdDevs[0]) extremes++;
+    function sampleMean(isBear: boolean): number {
+      const rng = new PRNG(42);
+      let sum = 0;
+      for (let i = 0; i < N; i++) {
+        const r = generateCorrelatedReturns(rng, L, means, stdDevs, isBear, allFalse);
+        sum += r[0];
+      }
+      return sum / N;
     }
 
-    // Gaussian: ~0.27% beyond 3σ ≈ 54 of 20000
-    // Student-t(4): much more. With mask=allFalse we should see Gaussian-like count.
-    expect(extremes).toBeLessThan(150); // well under the Student-t count
+    const meanBull = sampleMean(false);
+    const meanBear = sampleMean(true);
+
+    // With all-false mask, regime should not affect returns
+    expect(Math.abs(meanBull - meanBear)).toBeLessThan(0.01);
   });
 });

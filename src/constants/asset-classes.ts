@@ -74,4 +74,13 @@ export function makeUniformAllocations(alloc: AssetAllocation): AccountAllocatio
   };
 }
 
-export const DEFAULT_FAT_TAIL_DF = 6;
+export const DEFAULT_CRASH_FREQUENCY = 5.5; // slider midpoint → ~18% bear years (historical average)
+
+// ── Markov regime-switching parameters ──
+// Calibrated to S&P 500 annual returns 1926-2025.
+// Bull regime: ~82% of years historically.  Bear regime: ~18%.
+// Bear persistence P(bear|bear) = 0.55 → avg bear streak ~2.2 years,
+// matching historical bear market duration (1929-32, 1973-74, 2000-02, 2007-09).
+export const BULL_REGIME = { mean: 0.159, vol: 0.15 };
+export const BEAR_REGIME = { mean: -0.18,  vol: 0.20 };
+export const BEAR_PERSISTENCE = 0.55; // P(stay in bear | currently bear)

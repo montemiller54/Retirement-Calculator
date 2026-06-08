@@ -35,18 +35,17 @@ describe('PRNG', () => {
     expect(variance).toBeCloseTo(1, 0);
   });
 
-  it('nextStudentT has heavier tails than normal', () => {
+  it('nextGaussian produces values beyond 3 sigma occasionally', () => {
     const rng = new PRNG(77);
     const N = 10000;
     let extremeCount = 0;
     for (let i = 0; i < N; i++) {
-      const v = rng.nextStudentT(6);
+      const v = rng.nextGaussian();
       if (Math.abs(v) > 3) extremeCount++;
     }
-    // Student-t(6) should have more extreme values than normal
     // Normal expects ~0.27% beyond 3 sigma = ~27
-    // Student-t(6) should have more
-    expect(extremeCount).toBeGreaterThan(20);
+    expect(extremeCount).toBeGreaterThan(10);
+    expect(extremeCount).toBeLessThan(80);
   });
 });
 
@@ -116,7 +115,7 @@ describe('generateCorrelatedReturns', () => {
     const rng = new PRNG(42);
     const corr = [[1, 0.5], [0.5, 1]];
     const L = cholesky(corr);
-    const returns = generateCorrelatedReturns(rng, L, [0.10, 0.08], [0.18, 0.20], 6);
+    const returns = generateCorrelatedReturns(rng, L, [0.10, 0.08], [0.18, 0.20], false);
     expect(returns).toHaveLength(2);
     expect(typeof returns[0]).toBe('number');
     expect(typeof returns[1]).toBe('number');

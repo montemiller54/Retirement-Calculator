@@ -90,8 +90,8 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
     }
   }
 
-  if (s.investments.fatTailDf != null && (s.investments.fatTailDf < 3 || s.investments.fatTailDf > 30)) {
-    errors.push({ card: 'portfolio', field: 'investments.fatTailDf', message: 'Market Volatility must be between 3 (extreme) and 30 (low).' });
+  if (s.investments.crashFrequency != null && (s.investments.crashFrequency < 1 || s.investments.crashFrequency > 10)) {
+    errors.push({ card: 'portfolio', field: 'investments.crashFrequency', message: 'Crash Frequency must be between 1 (low) and 10 (high).' });
   }
 
   // ── Spending & Healthcare ──

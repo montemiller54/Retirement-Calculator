@@ -174,7 +174,7 @@ export interface InvestmentAssumptions {
   preRetirement: AccountAllocations;
   postRetirement: AccountAllocations;
   assetClassReturns: Record<AssetClass, AssetClassAssumption>;
-  fatTailDf: number; // degrees of freedom for Student-t
+  crashFrequency: number; // slider 1-10: controls bear-year probability (5%-30%)
 }
 
 // ── Account balances ──
