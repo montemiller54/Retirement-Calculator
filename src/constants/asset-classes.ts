@@ -91,9 +91,18 @@ export const DEFAULT_CRASH_FREQUENCY = 5.5; // slider midpoint → ~18% bear yea
 // Bear persistence P(bear|bear) = 0.55 → avg bear streak ~2.2 years,
 // matching historical bear market duration (1929-32, 1973-74, 2000-02, 2007-09).
 export const BULL_REGIME = { mean: 0.159, vol: 0.15 };
-export const BEAR_REGIME = { mean: -0.18,  vol: 0.20 };
+export const BEAR_REGIME = { mean: -0.14,  vol: 0.20 };
 export const BEAR_PERSISTENCE = 0.55; // P(stay in bear | currently bear)
 
 // Bonds get a mild mean boost in bear years (central bank rate cuts + flight to quality).
 // Historical avg bond return during stock bear years: ~5-7%. Normal: ~4%.
 export const BEAR_BOND_MEAN = 0.065;
+
+// Post-bear recovery: the first 1-2 bull years after exiting a bear regime get
+// an elevated mean, reflecting historical snapbacks (1933 +50%, 1954 +53%,
+// 1975 +37%, 2003 +29%, 2009 +26%). Magnitude scales with bear duration:
+// longer/deeper bears produce stronger bounces. The boost applies on top of
+// the standard bull-regime mean.
+export const POST_BEAR_RECOVERY_YEAR1_MEAN = 0.30; // mean for first bull year after bear
+export const POST_BEAR_RECOVERY_YEAR2_MEAN = 0.22; // mean for second bull year after a 2+ year bear
+

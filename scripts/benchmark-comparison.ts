@@ -319,7 +319,7 @@ const features = [
 console.log('═══════════════════════════════════════════════════════════════');
 console.log('  RETIREMENT PLANNER – BENCHMARK COMPARISON');
 console.log('  10,000 Monte Carlo simulations per scenario');
-console.log('  Student-t(df=6) fat-tail returns (except where noted)');
+  console.log('  Markov regime-switching returns with post-bear recovery');
 console.log('═══════════════════════════════════════════════════════════════\n');
 
 console.log('─── PART 1: FEATURE COMPARISON ─────────────────────────────\n');

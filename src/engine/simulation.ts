@@ -6,7 +6,7 @@ import type {
 } from '../types';
 import { ASSET_CLASSES, ACCOUNT_TYPES } from '../types';
 import { PRNG, cholesky, generateCorrelatedReturns, blendedReturn, crashFrequencyToSteadyState } from './math';
-import { DEFAULT_CORRELATION_MATRIX, BEAR_CORRELATION_MATRIX, DEFAULT_ASSET_RETURNS, BEAR_PERSISTENCE, BEAR_BOND_MEAN } from '../constants/asset-classes';
+import { DEFAULT_CORRELATION_MATRIX, BEAR_CORRELATION_MATRIX, DEFAULT_ASSET_RETURNS, BEAR_PERSISTENCE, BEAR_BOND_MEAN, POST_BEAR_RECOVERY_YEAR1_MEAN, POST_BEAR_RECOVERY_YEAR2_MEAN } from '../constants/asset-classes';
 import { allocateContributions } from './contributions';
 import { executeWithdrawals } from './withdrawals';
 import { estimateSSBenefit, getFullRetirementAgeMonths } from '../utils/social-security';
@@ -123,6 +123,9 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
   const bearSteadyState = crashFrequencyToSteadyState(s.investments.crashFrequency);
   const enterBear = bearSteadyState * (1 - BEAR_PERSISTENCE) / (1 - bearSteadyState);
   let inBearRegime = rng.next() < bearSteadyState; // start from steady-state
+  let bearDuration = inBearRegime ? 1 : 0; // consecutive bear years
+  let recoveryYearsRemaining = 0; // post-bear recovery countdown
+  let lastBearDuration = 0; // length of the most recent bear (for boost sizing)
 
   let depleted = false;
   let depletionAge: number | null = null;
@@ -147,13 +150,36 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     // ── Generate returns for this year ──
     // Markov regime transition: bear markets cluster realistically
     if (yearsFromNow > 0) {
+      const wasBear = inBearRegime;
       inBearRegime = inBearRegime
         ? rng.next() < BEAR_PERSISTENCE
         : rng.next() < enterBear;
+      if (wasBear && !inBearRegime) {
+        // Bear → Bull transition: start recovery window (1-2 years)
+        lastBearDuration = bearDuration;
+        recoveryYearsRemaining = bearDuration >= 2 ? 2 : 1;
+        bearDuration = 0;
+      } else if (inBearRegime) {
+        bearDuration++;
+        recoveryYearsRemaining = 0; // cancel recovery if we re-enter bear
+      } else if (recoveryYearsRemaining > 0) {
+        recoveryYearsRemaining--;
+      }
     }
     const choleskyL = inBearRegime ? bearCholeskyL : bullCholeskyL;
     const yearMeans = inBearRegime ? bearMeans : means;
-    const assetReturns = generateCorrelatedReturns(rng, choleskyL, yearMeans, stdDevs, inBearRegime, regimeMask);
+    let recoveryBoost: number | undefined;
+    if (!inBearRegime && recoveryYearsRemaining > 0) {
+      // Post-bear recovery: elevated mean for stocks/crypto.
+      // Bigger bear → bigger bounce (scaled by lastBearDuration).
+      const isFirstRecoveryYear = (lastBearDuration >= 2 && recoveryYearsRemaining === 2) ||
+                                  (lastBearDuration === 1 && recoveryYearsRemaining === 1);
+      const baseMean = isFirstRecoveryYear ? POST_BEAR_RECOVERY_YEAR1_MEAN : POST_BEAR_RECOVERY_YEAR2_MEAN;
+      // Scale: 1-year bear gets ~70% of full boost; 3+ year bear gets 100%
+      const scale = Math.min(1, 0.5 + 0.25 * lastBearDuration);
+      recoveryBoost = baseMean * scale;
+    }
+    const assetReturns = generateCorrelatedReturns(rng, choleskyL, yearMeans, stdDevs, inBearRegime, regimeMask, recoveryBoost);
 
     // Compute portfolio-weighted return signal for cash buffer decisions
     let portfolioReturnSignal = 0;

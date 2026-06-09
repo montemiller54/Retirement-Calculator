@@ -81,6 +81,7 @@ export function generateCorrelatedReturns(
   stdDevs: number[],
   isBearYear: boolean,
   regimeMask?: boolean[],
+  recoveryBoostMean?: number,
 ): number[] {
   const n = choleskyL.length;
 
@@ -93,7 +94,8 @@ export function generateCorrelatedReturns(
       effMeans[i] = BEAR_REGIME.mean;
       effStdDevs[i] = BEAR_REGIME.vol;
     } else if (!isBearYear && (!regimeMask || regimeMask[i])) {
-      effMeans[i] = BULL_REGIME.mean;
+      // Post-bear recovery overrides the standard bull mean for this year only
+      effMeans[i] = recoveryBoostMean ?? BULL_REGIME.mean;
       effStdDevs[i] = BULL_REGIME.vol;
     } else {
       effMeans[i] = means[i];

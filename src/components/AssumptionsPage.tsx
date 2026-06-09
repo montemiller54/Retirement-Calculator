@@ -70,7 +70,7 @@ export function AssumptionsPage() {
               </tr>
               <tr>
                 <td className="pr-4 py-0.5">Bear (~18% of years)</td>
-                <td className="text-right pr-4">−18.0%</td>
+                <td className="text-right pr-4">−14.0%</td>
                 <td className="text-right pr-4">20%</td>
                 <td className="text-right pr-4">6.5%</td>
                 <td className="text-right">−0.35</td>
@@ -80,6 +80,7 @@ export function AssumptionsPage() {
         </div>
         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4 mt-2">
           <li><strong>Markov transitions</strong>: if the prior year was a bear market, there is a 55% chance the next year is also a bear market, producing realistic multi-year bear streaks averaging ~2.2 years (matching 1929–32, 1973–74, 2000–02, 2007–09).</li>
+          <li><strong>Post-bear recovery</strong>: the first 1–2 bull years after a bear regime exit get an elevated mean (~22–30%), reflecting historical snapbacks (1933 +50%, 1954 +53%, 1975 +37%, 2003 +29%, 2009 +26%). The boost scales with bear duration — longer bears produce stronger bounces.</li>
           <li>The <strong>"Bear Market Frequency" slider</strong> controls the long-run percentage of bear-market years: slider 1 = 5% (rare), default 5.5 = 18% (historical average), slider 10 = 30% (very frequent).</li>
           <li>At the default setting, crash frequencies match historical data: a −20% year occurs roughly every 11 years, −30% every 20 years, −40% every 42 years, and −50% every 104 years.</li>
           <li>Returns are clamped at −100% (an asset cannot lose more than its full value).</li>
