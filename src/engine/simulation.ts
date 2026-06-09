@@ -1054,25 +1054,31 @@ export function findSafeSpending(
     guardrails: { ...scenario.guardrails, enabled: false },
   };
 
-  // Use a random seed (like the main simulation) but keep it fixed across all
-  // search iterations so binary search comparisons are internally consistent.
-  const searchSeed = Date.now();
+  // Use multiple seeds and average results to eliminate seed-specific bias.
+  // Each call runs the same set of seeds for consistent binary search comparisons.
+  const baseSeed = Date.now();
+  const NUM_SEEDS = 5;
   const bullCholeskyL = cholesky(DEFAULT_CORRELATION_MATRIX);
   const bearCholeskyL = cholesky(BEAR_CORRELATION_MATRIX);
 
-  // Helper: run a quick simulation at a given monthly spending and return success rate
+  // Helper: run simulation across multiple seeds and return averaged success rate
   const getSuccessRate = (monthlySpending: number, numSims: number): number => {
     const testScenario: ScenarioInput = {
       ...baseScenario,
       baseAnnualSpending: monthlySpending, // stored as monthly, toAnnualScenario multiplies by 12
     };
-    const rng = new PRNG(searchSeed);
-    let successes = 0;
-    for (let i = 0; i < numSims; i++) {
-      const path = runSinglePath(testScenario, rng, bullCholeskyL, bearCholeskyL);
-      if (path.success) successes++;
+    const simsPerSeed = Math.ceil(numSims / NUM_SEEDS);
+    let totalSuccesses = 0;
+    let totalRuns = 0;
+    for (let s = 0; s < NUM_SEEDS; s++) {
+      const rng = new PRNG(baseSeed + s * 7919); // spread seeds with a prime offset
+      for (let i = 0; i < simsPerSeed; i++) {
+        const path = runSinglePath(testScenario, rng, bullCholeskyL, bearCholeskyL);
+        if (path.success) totalSuccesses++;
+        totalRuns++;
+      }
     }
-    return successes / numSims;
+    return totalSuccesses / totalRuns;
   };
 
   // Estimate total steps for progress reporting
