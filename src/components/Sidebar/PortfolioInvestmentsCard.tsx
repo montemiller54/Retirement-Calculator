@@ -447,39 +447,22 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
           </div>
           <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
             <label className="input-label mb-1">Bear Market Frequency</label>
-            {/* Gradient bar with caret indicator */}
-            <div className="relative mx-1 mb-1">
-              <div
-                className="h-2 rounded-full"
-                style={{ background: 'linear-gradient(to right, #3b82f6, #f59e0b 50%, #ef4444)' }}
-              />
-              {/* Moving caret */}
-              <div
-                className="absolute -bottom-1 transition-[left] duration-75"
-                style={{ left: `${((inv.crashFrequency - 1) / 9) * 100}%`, transform: 'translateX(-50%)' }}
-              >
-                <div
-                  className="w-0 h-0"
-                  style={{
-                    borderLeft: '5px solid transparent',
-                    borderRight: '5px solid transparent',
-                    borderBottom: `6px solid ${bearFreqColor(inv.crashFrequency)}`,
-                  }}
-                />
-              </div>
+            {/* Zone labels above slider */}
+            <div className="flex justify-between px-1 mb-1">
+              <span className="text-[10px] text-blue-400">Infrequent</span>
+              <span className="text-[10px] text-amber-400">Average</span>
+              <span className="text-[10px] text-red-400">Frequent</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] text-blue-400">Calm</span>
-              <input
-                type="range"
-                className={`flex-1 ${fieldErrorClass(ve, 'investments.crashFrequency')}`}
-                min={1} max={10} step={0.5}
-                value={inv.crashFrequency}
-                onChange={e => setField('investments.crashFrequency', parseFloat(e.target.value))}
-              />
-              <span className="text-[10px] text-red-400">Stormy</span>
-            </div>
-            <div className="flex justify-between items-center mt-0.5 mx-1">
+            {/* Gradient-track slider with color-matched thumb */}
+            <input
+              type="range"
+              className={`bear-freq-slider w-full ${fieldErrorClass(ve, 'investments.crashFrequency')}`}
+              min={1} max={10} step={0.5}
+              value={inv.crashFrequency}
+              onChange={e => setField('investments.crashFrequency', parseFloat(e.target.value))}
+              style={{ '--thumb-color': bearFreqColor(inv.crashFrequency) } as React.CSSProperties}
+            />
+            <div className="flex justify-between items-center mt-1 px-1">
               <span
                 className="text-[11px] font-medium"
                 style={{ color: bearFreqColor(inv.crashFrequency) }}
