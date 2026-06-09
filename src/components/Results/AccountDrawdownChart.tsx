@@ -46,7 +46,7 @@ export function AccountDrawdownChart({ data, retirementAge, currentAge }: Accoun
   return (
     <div className="card">
       <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-        Account Balances Over Time (Typical Outcome)
+        Account Balances Over Time (Simulated)
       </h4>
       <ResponsiveContainer width="100%" height={300}>
         <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -92,7 +92,7 @@ export function AccountDrawdownChart({ data, retirementAge, currentAge }: Accoun
           ))}
         </AreaChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">How your account balances change over time in a typical outcome. Different colors represent different account types.</p>
+      <p className="text-[10px] text-gray-400 mt-2 px-1">A representative path from 5,000 simulations — includes market volatility and guardrail spending adjustments. Different colors represent different account types.</p>
     </div>
   );
 }

@@ -25,7 +25,7 @@ export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
   return (
     <div className="card">
       <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-        Portfolio Value Over Time (Range of Outcomes)
+        Portfolio Value Over Time (Simulated)
       </h4>
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -95,7 +95,7 @@ export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
           <Line type="monotone" dataKey="p10" stroke="#7c3aed" strokeWidth={1.5} dot={false} name="p10" legendType="none" />
         </ComposedChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">The dashed gold line shows the median outcome. The purple shaded area shows the worst 10% of simulations. Lighter bands show the range of possibilities.</p>
+      <p className="text-[10px] text-gray-400 mt-2 px-1">Range of outcomes across 5,000 simulations. The dashed gold line shows the median at each age. The purple shaded area shows the worst 10%. Lighter bands show the wider range of possibilities.</p>
     </div>
   );
 }

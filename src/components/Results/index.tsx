@@ -93,14 +93,18 @@ export function ResultsPanel({ result, scenario, retirementAge, currentAge, isRu
         <WorstCaseSummary depletionAges={result.depletionAges} successRate={result.successRate} />
       </div>
 
+      <div className="text-[11px] text-gray-500 dark:text-gray-400 px-1">
+        Charts labeled <span className="font-medium">Simulated</span> come from 5,000 Monte Carlo runs with real market volatility. Charts labeled <span className="font-medium">Average</span> use a smooth average-return projection.
+      </div>
+
+      <AccountDrawdownChart data={result.medianPath} retirementAge={retirementAge} currentAge={currentAge} />
+
       <FanChart data={result.percentileBands} retirementAge={retirementAge} currentAge={currentAge} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <CashflowChart data={result.expectedPath} retirementAge={retirementAge} currentAge={currentAge} />
         <TaxChart data={result.expectedPath} currentAge={currentAge} />
       </div>
-
-      <AccountDrawdownChart data={result.medianPath} retirementAge={retirementAge} currentAge={currentAge} />
 
       <SafeSpendingSection scenario={scenario} />
     </div>

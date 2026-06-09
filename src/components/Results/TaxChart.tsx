@@ -23,7 +23,7 @@ export function TaxChart({ data, currentAge }: TaxChartProps) {
   return (
     <div className="card">
       <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-        Taxes Over Time (Typical Outcome)
+        Taxes Over Time (Average)
       </h4>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -37,7 +37,7 @@ export function TaxChart({ data, currentAge }: TaxChartProps) {
           <Bar dataKey="fica" stackId="1" fill="#f59e0b" name="SS & Medicare Tax" />
         </BarChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">Estimated tax burden over time assuming average market returns. Includes federal, state, and payroll taxes.</p>
+      <p className="text-[10px] text-gray-400 mt-2 px-1">Smooth projection using average market returns. Includes federal, state, and payroll taxes.</p>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useScenario } from '../../context/ScenarioContext';
 import { FILING_STATUS_LABELS, type FilingStatus } from '../../types';
 import { STATE_TAX_DATA, STATE_CODES } from '../../constants/state-tax';
@@ -6,9 +6,54 @@ import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
 import { Toggle } from './shared';
 import { InfoTip } from './InfoTip';
 
+interface Toast {
+  message: string;
+  undoJobs: { id: string; name: string; oldEndAge: number }[];
+}
+
 export function ProfileCard({ validationErrors }: CardProps) {
   const { scenario, setField } = useScenario();
   const ve = validationErrors;
+  const [toast, setToast] = useState<Toast | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  // Clear toast timer on unmount
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
+
+  const handleRetirementAgeChange = (newAge: number) => {
+    const oldAge = scenario.retirementAge;
+    setField('retirementAge', newAge);
+
+    // Auto-sync: update jobs whose endAge matched the old retirement age
+    const jobsToSync = scenario.jobs.filter(j => j.endAge === oldAge);
+    if (jobsToSync.length > 0) {
+      const undoInfo = jobsToSync.map(j => ({ id: j.id, name: j.name, oldEndAge: j.endAge }));
+      const updatedJobs = scenario.jobs.map(j =>
+        j.endAge === oldAge ? { ...j, endAge: newAge } : j,
+      );
+      setField('jobs', updatedJobs);
+
+      // Show toast
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      const names = jobsToSync.map(j => j.name).join(', ');
+      setToast({
+        message: `Updated ${names} end age to ${newAge}`,
+        undoJobs: undoInfo,
+      });
+      toastTimer.current = setTimeout(() => setToast(null), 6000);
+    }
+  };
+
+  const handleUndo = () => {
+    if (!toast) return;
+    const updatedJobs = scenario.jobs.map(j => {
+      const undo = toast.undoJobs.find(u => u.id === j.id);
+      return undo ? { ...j, endAge: undo.oldEndAge } : j;
+    });
+    setField('jobs', updatedJobs);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(null);
+  };
 
   return (
     <div className="space-y-4">
@@ -36,7 +81,7 @@ export function ProfileCard({ validationErrors }: CardProps) {
               value={scenario.retirementAge}
               min={18}
               max={99}
-              onChange={e => setField('retirementAge', parseInt(e.target.value) || 65)}
+              onChange={e => handleRetirementAgeChange(parseInt(e.target.value) || 65)}
             />
             <FieldError errors={ve} field="retirementAge" />
             {scenario.currentAge >= scenario.retirementAge && (
@@ -113,6 +158,19 @@ export function ProfileCard({ validationErrors }: CardProps) {
           </div>
         )}
       </div>
+
+      {/* Toast notification for auto-synced job end age */}
+      {toast && (
+        <div className="mt-2 flex items-center justify-between gap-2 rounded-md bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 px-3 py-1.5 text-xs text-blue-700 dark:text-blue-300 animate-in fade-in">
+          <span>{toast.message}</span>
+          <button
+            className="font-medium underline hover:text-blue-900 dark:hover:text-blue-100 shrink-0"
+            onClick={handleUndo}
+          >
+            Undo
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -18,9 +18,9 @@ import { ACCOUNT_TYPES } from '../types';
 const SIMS = 300;
 const SEED = 42;
 
-function run(overrides: Partial<ScenarioInput>): { successRate: number; medianEnding: number } {
+function run(overrides: Partial<ScenarioInput>, numSims = SIMS): { successRate: number; medianEnding: number } {
   const scenario: ScenarioInput = { ...DEFAULT_SCENARIO, socialSecurityMode: 'manual', ...overrides };
-  const result = runSimulation(scenario, { numSimulations: SIMS, seed: SEED });
+  const result = runSimulation(scenario, { numSimulations: numSims, seed: SEED });
   const sorted = [...result.endingBalances].sort((a, b) => a - b);
   return {
     successRate: result.successRate,
@@ -38,16 +38,35 @@ function withInvestments(overrides: Partial<ScenarioInput['investments']>): Scen
 // ═══════════════════════════════════════════════════════════════════
 
 describe('HIGH IMPACT: Profile / Time Horizon', () => {
-  it('#2 higher retirementAge → higher success rate', () => {
-    const early = run({ retirementAge: 60 });
-    const late = run({ retirementAge: 70 });
-    expect(late.successRate).toBeGreaterThan(early.successRate);
+  it('#2 higher retirementAge → monotonically higher success rate (50–70 in 5yr steps)', () => {
+    const ages = [50, 55, 60, 65, 70].filter(a => a >= DEFAULT_SCENARIO.currentAge);
+    const results = ages.map(retirementAge => ({
+      age: retirementAge,
+      ...run({
+        retirementAge,
+        jobs: [{ ...DEFAULT_SCENARIO.jobs[0], endAge: retirementAge }],
+      }, 1000),
+    }));
+    for (let i = 1; i < results.length; i++) {
+      expect(
+        results[i].successRate,
+        `retire@${results[i].age} (${(results[i].successRate * 100).toFixed(1)}%) should be >= retire@${results[i - 1].age} (${(results[i - 1].successRate * 100).toFixed(1)}%)`,
+      ).toBeGreaterThanOrEqual(results[i - 1].successRate);
+    }
   });
 
-  it('#3 higher endAge → lower success rate', () => {
-    const short = run({ endAge: 85 });
-    const long = run({ endAge: 100 });
-    expect(short.successRate).toBeGreaterThanOrEqual(long.successRate);
+  it('#3 higher endAge → monotonically lower success rate (75–100 in 5yr steps)', () => {
+    const ages = [75, 80, 85, 90, 95, 100];
+    const results = ages.map(endAge => ({
+      age: endAge,
+      ...run({ endAge }, 1000),
+    }));
+    for (let i = 1; i < results.length; i++) {
+      expect(
+        results[i - 1].successRate,
+        `end@${results[i - 1].age} (${(results[i - 1].successRate * 100).toFixed(1)}%) should be >= end@${results[i].age} (${(results[i].successRate * 100).toFixed(1)}%)`,
+      ).toBeGreaterThanOrEqual(results[i].successRate);
+    }
   });
 });
 
