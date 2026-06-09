@@ -1043,7 +1043,7 @@ export function findSafeSpending(
   targetSuccessRate: number,
   onProgress?: (completed: number, total: number) => void,
 ): SafeSpendingResult {
-  const SEARCH_SIMS = 1000;
+  const SEARCH_SIMS = 2000;
   const FINAL_SIMS = 5000;
   const MAX_ITER = 20;
   const TOLERANCE = 25; // $25/month convergence tolerance
@@ -1054,16 +1054,19 @@ export function findSafeSpending(
     guardrails: { ...scenario.guardrails, enabled: false },
   };
 
+  // Use a random seed (like the main simulation) but keep it fixed across all
+  // search iterations so binary search comparisons are internally consistent.
+  const searchSeed = Date.now();
+  const bullCholeskyL = cholesky(DEFAULT_CORRELATION_MATRIX);
+  const bearCholeskyL = cholesky(BEAR_CORRELATION_MATRIX);
+
   // Helper: run a quick simulation at a given monthly spending and return success rate
   const getSuccessRate = (monthlySpending: number, numSims: number): number => {
     const testScenario: ScenarioInput = {
       ...baseScenario,
       baseAnnualSpending: monthlySpending, // stored as monthly, toAnnualScenario multiplies by 12
     };
-    const seed = 42; // fixed seed for consistency across iterations
-    const rng = new PRNG(seed);
-    const bullCholeskyL = cholesky(DEFAULT_CORRELATION_MATRIX);
-    const bearCholeskyL = cholesky(BEAR_CORRELATION_MATRIX);
+    const rng = new PRNG(searchSeed);
     let successes = 0;
     for (let i = 0; i < numSims; i++) {
       const path = runSinglePath(testScenario, rng, bullCholeskyL, bearCholeskyL);
