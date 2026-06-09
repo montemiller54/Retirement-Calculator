@@ -97,9 +97,9 @@ export function ResultsPanel({ result, scenario, retirementAge, currentAge, isRu
         Charts labeled <span className="font-medium">Simulated</span> come from 5,000 Monte Carlo runs with real market volatility. Charts labeled <span className="font-medium">Average</span> use a smooth average-return projection.
       </div>
 
-      <AccountDrawdownChart data={result.medianPath} retirementAge={retirementAge} currentAge={currentAge} />
-
       <FanChart data={result.percentileBands} retirementAge={retirementAge} currentAge={currentAge} />
+
+      <AccountDrawdownChart data={result.medianPath} retirementAge={retirementAge} currentAge={currentAge} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <CashflowChart data={result.expectedPath} retirementAge={retirementAge} currentAge={currentAge} />
