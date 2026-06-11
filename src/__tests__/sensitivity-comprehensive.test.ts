@@ -152,8 +152,9 @@ describe('Spouse', () => {
   it('enabling spouse changes filing status behavior', () => {
     const solo = run({ spouse: { enabled: false, currentAge: 33, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67 } });
     const withSpouse = run({ spouse: { enabled: true, currentAge: 33, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67 } });
-    // With spouse enabled, the simulation should produce a different outcome
-    expect(Math.abs(withSpouse.medianEnding - solo.medianEnding)).toBeGreaterThanOrEqual(0);
+    // Adding a spouse changes filing status (single → mfj), brackets, std
+    // deduction, and adds SS income — must produce a measurably different median.
+    expect(Math.abs(withSpouse.medianEnding - solo.medianEnding)).toBeGreaterThan(1000);
   });
 });
 

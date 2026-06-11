@@ -1,6 +1,6 @@
 # Pessimism Diagnosis: Why Our MC Engine Is Tougher Than History
 
-_Generated: 2026-06-11T16:39:06.210Z_
+_Generated: 2026-06-11T18:54:20.817Z_
 
 Subtracting an assumed long-run inflation of 2.5% to convert nominal MC returns to real terms for apples-to-apples comparison with Shiller historical data.
 

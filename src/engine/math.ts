@@ -72,7 +72,15 @@ export function cholesky(matrix: number[][]): number[][] {
 // Uses Cholesky-correlated Gaussians. In bear years, assets in the regimeMask
 // have their mean/vol replaced with bear-regime values, producing realistic
 // crashes without impossible >-100% returns.
-import { BULL_REGIME, BEAR_REGIME } from '../constants/asset-classes';
+import { BULL_REGIME, BEAR_REGIME, DEFAULT_ASSET_RETURNS } from '../constants/asset-classes';
+import { ASSET_CLASSES } from '../types';
+
+// Per-asset deltas for user-tunable regime shifts.
+// User's "Avg Return %" and variability inputs shift both bull and bear regimes
+// uniformly: mean delta is added, stdDev is scaled by the user/default ratio.
+// When user keeps defaults, delta=0 and ratio=1 → engine uses BULL/BEAR_REGIME exactly.
+const DEFAULT_REGIME_MEANS = ASSET_CLASSES.map(ac => DEFAULT_ASSET_RETURNS[ac].mean);
+const DEFAULT_REGIME_STDDEVS = ASSET_CLASSES.map(ac => DEFAULT_ASSET_RETURNS[ac].stdDev);
 
 export function generateCorrelatedReturns(
   rng: PRNG,
@@ -89,14 +97,22 @@ export function generateCorrelatedReturns(
   const effMeans = new Array(n);
   const effStdDevs = new Array(n);
   for (let i = 0; i < n; i++) {
-    const useRegime = isBearYear && (!regimeMask || regimeMask[i]);
+    const useRegime = !regimeMask || regimeMask[i];
     if (useRegime) {
-      effMeans[i] = BEAR_REGIME.mean;
-      effStdDevs[i] = BEAR_REGIME.vol;
-    } else if (!isBearYear && (!regimeMask || regimeMask[i])) {
-      // Post-bear recovery overrides the standard bull mean for this year only
-      effMeans[i] = recoveryBoostMean ?? BULL_REGIME.mean;
-      effStdDevs[i] = BULL_REGIME.vol;
+      // Regime-switching asset: user mean/stdDev shifts both regimes uniformly.
+      // delta=0 / ratio=1 when user keeps defaults, so calibration is preserved.
+      const defaultMean = i < DEFAULT_REGIME_MEANS.length ? DEFAULT_REGIME_MEANS[i] : means[i];
+      const defaultStdDev = i < DEFAULT_REGIME_STDDEVS.length ? DEFAULT_REGIME_STDDEVS[i] : stdDevs[i];
+      const meanDelta = means[i] - defaultMean;
+      const stdRatio = defaultStdDev > 0 ? stdDevs[i] / defaultStdDev : 1;
+      if (isBearYear) {
+        effMeans[i] = BEAR_REGIME.mean + meanDelta;
+        effStdDevs[i] = BEAR_REGIME.vol * stdRatio;
+      } else {
+        // Post-bear recovery overrides the standard bull mean for this year only
+        effMeans[i] = (recoveryBoostMean ?? BULL_REGIME.mean) + meanDelta;
+        effStdDevs[i] = BULL_REGIME.vol * stdRatio;
+      }
     } else {
       effMeans[i] = means[i];
       effStdDevs[i] = stdDevs[i];

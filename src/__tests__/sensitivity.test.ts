@@ -203,8 +203,10 @@ describe('HIGH IMPACT: Withdrawal Strategy', () => {
     };
     const taxEff = run({ ...base, withdrawalStrategy: 'taxEfficient' });
     const proRata = run({ ...base, withdrawalStrategy: 'proRata' });
-    // They should differ — if they don't, the strategy isn't working
-    expect(Math.abs(taxEff.medianEnding - proRata.medianEnding)).toBeGreaterThan(1000);
+    // Direction depends on the interplay of RMDs, SS tax torpedo, and account
+    // composition; what matters is the strategy is actually distinguishing
+    // the two paths, not that one universally dominates.
+    expect(Math.abs(taxEff.medianEnding - proRata.medianEnding)).toBeGreaterThan(10000);
   });
 });
 
@@ -261,8 +263,9 @@ describe('MEDIUM IMPACT: Earnings', () => {
         cashAccount: 0, otherAssets: 0,
       },
     });
-    // These should produce meaningfully different ending balances
-    expect(Math.abs(allTraditional.medianEnding - allRoth.medianEnding)).toBeGreaterThan(1000);
+    // All-Roth wins on tax-free growth and avoids RMDs, so median ending
+    // balance should be measurably higher than all-Traditional.
+    expect(allRoth.medianEnding).toBeGreaterThan(allTraditional.medianEnding + 1000);
   });
 
   it('#9 higher employer match cap → higher median ending', () => {
@@ -369,8 +372,9 @@ describe('MEDIUM IMPACT: Investment Allocations', () => {
         }),
       }),
     });
-    // More equities in post-retirement should produce a meaningfully different outcome
-    expect(Math.abs(aggressivePost.medianEnding - conservativePost.medianEnding)).toBeGreaterThan(10000);
+    // Higher equity exposure post-retirement should produce a higher median
+    // ending balance (equity risk premium dominates over 30y horizon).
+    expect(aggressivePost.medianEnding).toBeGreaterThan(conservativePost.medianEnding + 10000);
   });
 
   it('#36 higher equity correlation → less diversification → lower success rate', () => {
