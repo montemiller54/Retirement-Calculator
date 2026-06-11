@@ -6,7 +6,7 @@ import type {
 } from '../types';
 import { ASSET_CLASSES, ACCOUNT_TYPES } from '../types';
 import { PRNG, cholesky, generateCorrelatedReturns, blendedReturn, crashFrequencyToSteadyState } from './math';
-import { DEFAULT_CORRELATION_MATRIX, BEAR_CORRELATION_MATRIX, DEFAULT_ASSET_RETURNS, BEAR_PERSISTENCE, BEAR_BOND_MEAN, POST_BEAR_RECOVERY_YEAR1_MEAN, POST_BEAR_RECOVERY_YEAR2_MEAN } from '../constants/asset-classes';
+import { DEFAULT_CORRELATION_MATRIX, BEAR_CORRELATION_MATRIX, DEFAULT_ASSET_RETURNS, BEAR_PERSISTENCE, BEAR_BOND_MEAN, POST_BEAR_RECOVERY_YEAR1_MEAN, POST_BEAR_RECOVERY_YEAR2_MEAN, MAX_BEAR_DURATION } from '../constants/asset-classes';
 import { allocateContributions } from './contributions';
 import { executeWithdrawals } from './withdrawals';
 import { estimateSSBenefit, getFullRetirementAgeMonths } from '../utils/social-security';
@@ -148,11 +148,12 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     const yearsFromNow = age - s.currentAge;
 
     // ── Generate returns for this year ──
-    // Markov regime transition: bear markets cluster realistically
+    // Markov regime transition: bear markets cluster realistically, capped
+    // at MAX_BEAR_DURATION consecutive years to match historical limits.
     if (yearsFromNow > 0) {
       const wasBear = inBearRegime;
       inBearRegime = inBearRegime
-        ? rng.next() < BEAR_PERSISTENCE
+        ? (bearDuration < MAX_BEAR_DURATION && rng.next() < BEAR_PERSISTENCE)
         : rng.next() < enterBear;
       if (wasBear && !inBearRegime) {
         // Bear → Bull transition: start recovery window (1-2 years)

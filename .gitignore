@@ -2,3 +2,7 @@ node_modules
 dist
 .DS_Store
 *.local
+
+# External benchmark cached data and reports
+scripts/external-benchmarks/data/*.json
+benchmarks/external-comparison.md
