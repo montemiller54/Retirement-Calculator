@@ -41,7 +41,7 @@ export interface ReturnOutlookPreset {
 export const RETURN_OUTLOOK_PRESETS: Record<ReturnOutlook, ReturnOutlookPreset> = {
   conservative: {
     means: { stocks: 0.07, bonds: 0.03, cash: 0.015, crypto: 0.05 },
-    crashFrequency: 7.5,
+    crashFrequency: 6.5,
   },
   moderate: {
     means: { stocks: 0.085, bonds: 0.04, cash: 0.025, crypto: 0.10 },
@@ -49,7 +49,7 @@ export const RETURN_OUTLOOK_PRESETS: Record<ReturnOutlook, ReturnOutlookPreset> 
   },
   optimistic: {
     means: { stocks: 0.10, bonds: 0.05, cash: 0.035, crypto: 0.15 },
-    crashFrequency: 3.5,
+    crashFrequency: 4.5,
   },
 };
 
