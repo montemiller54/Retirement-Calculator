@@ -1,6 +1,20 @@
-import type { ScenarioInput } from '../types';
-import { RISK_PROFILES, makeUniformAllocations, DEFAULT_ASSET_RETURNS, DEFAULT_CRASH_FREQUENCY } from './asset-classes';
+import type { ScenarioInput, AssetClass } from '../types';
+import { ASSET_CLASSES } from '../types';
+import { RISK_PROFILES, makeUniformAllocations, RETURN_OUTLOOK_PRESETS, DEFAULT_VOLATILITY } from './asset-classes';
 import { DEFAULT_401K_LIMIT, DEFAULT_IRA_LIMIT } from './contribution-limits';
+
+/** Build assetClassReturns from an outlook preset (means) + hardcoded volatility. */
+export function buildAssetClassReturns(
+  means: Record<AssetClass, number>,
+): Record<AssetClass, { mean: number; stdDev: number }> {
+  const out = {} as Record<AssetClass, { mean: number; stdDev: number }>;
+  for (const ac of ASSET_CLASSES) {
+    out[ac] = { mean: means[ac], stdDev: DEFAULT_VOLATILITY[ac] };
+  }
+  return out;
+}
+
+const DEFAULT_OUTLOOK = RETURN_OUTLOOK_PRESETS.moderate;
 
 export const DEFAULT_SCENARIO: ScenarioInput = {
   name: 'Default Scenario',
@@ -81,10 +95,11 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
   investments: {
     mode: 'simple',
     riskProfile: 'balanced',
+    returnOutlook: 'moderate',
     preRetirement: makeUniformAllocations(RISK_PROFILES.balanced),
     postRetirement: makeUniformAllocations(RISK_PROFILES.conservative),
-    assetClassReturns: { ...DEFAULT_ASSET_RETURNS },
-    crashFrequency: DEFAULT_CRASH_FREQUENCY,
+    assetClassReturns: buildAssetClassReturns(DEFAULT_OUTLOOK.means),
+    crashFrequency: DEFAULT_OUTLOOK.crashFrequency,
   },
 
   // Withdrawal

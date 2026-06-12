@@ -4,6 +4,7 @@ import type {
   AssetAllocation,
   AccountAllocations,
   RiskProfile,
+  ReturnOutlook,
 } from '../types';
 
 // Default expected returns and volatility per asset class
@@ -15,6 +16,47 @@ export const DEFAULT_ASSET_RETURNS: Record<AssetClass, AssetClassAssumption> = {
   bonds:  { mean: 0.04,  stdDev: 0.06 },
   cash:   { mean: 0.025, stdDev: 0.01 },
   crypto: { mean: 0.15,  stdDev: 0.50 },
+};
+
+// ── Default volatility by asset class (single source of truth) ──
+// These are the calibrated historical stdDev values. Changing them here
+// changes the engine's assumption everywhere. The UI no longer exposes
+// these to users (variability sliders were removed) but they are still
+// applied when building assetClassReturns for any scenario.
+export const DEFAULT_VOLATILITY: Record<AssetClass, number> = {
+  stocks: 0.16,
+  bonds:  0.06,
+  cash:   0.01,
+  crypto: 0.50,
+};
+
+// ── Return outlook presets ──
+// Each preset specifies the mean return per asset class and the crash frequency.
+// Volatility is NOT part of the preset — it stays at DEFAULT_VOLATILITY.
+export interface ReturnOutlookPreset {
+  means: Record<AssetClass, number>;
+  crashFrequency: number;
+}
+
+export const RETURN_OUTLOOK_PRESETS: Record<ReturnOutlook, ReturnOutlookPreset> = {
+  conservative: {
+    means: { stocks: 0.07, bonds: 0.03, cash: 0.015, crypto: 0.05 },
+    crashFrequency: 7.5,
+  },
+  moderate: {
+    means: { stocks: 0.085, bonds: 0.04, cash: 0.025, crypto: 0.10 },
+    crashFrequency: 5.5,
+  },
+  optimistic: {
+    means: { stocks: 0.10, bonds: 0.05, cash: 0.035, crypto: 0.15 },
+    crashFrequency: 3.5,
+  },
+};
+
+export const RETURN_OUTLOOK_LABELS: Record<ReturnOutlook, string> = {
+  conservative: 'Conservative',
+  moderate: 'Moderate',
+  optimistic: 'Optimistic',
 };
 
 // Bull-regime correlation matrix (Stocks, Bonds, Cash, Crypto)

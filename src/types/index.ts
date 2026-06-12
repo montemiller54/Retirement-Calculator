@@ -64,6 +64,9 @@ export type AccountAllocations = Record<AccountType, AssetAllocation>;
 // ── Risk profiles ──
 export type RiskProfile = 'conservative' | 'balanced' | 'aggressive';
 
+// ── Return outlook presets ──
+export type ReturnOutlook = 'conservative' | 'moderate' | 'optimistic';
+
 // ── Withdrawal strategies ──
 export type WithdrawalStrategy =
   | 'taxEfficient'
@@ -171,6 +174,7 @@ export interface AssetClassAssumption {
 export interface InvestmentAssumptions {
   mode: 'simple' | 'advanced';
   riskProfile: RiskProfile;
+  returnOutlook: ReturnOutlook;
   preRetirement: AccountAllocations;
   postRetirement: AccountAllocations;
   assetClassReturns: Record<AssetClass, AssetClassAssumption>;

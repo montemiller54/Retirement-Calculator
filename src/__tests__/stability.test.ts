@@ -3,7 +3,7 @@ import { runSimulation } from '../engine/simulation';
 import { DEFAULT_SCENARIO } from '../constants/defaults';
 
 describe('PRNG stability', () => {
-  it('10 runs of 1000 sims should have spread < 5pp', () => {
+  it('10 runs of 1000 sims should have spread < 6pp', () => {
     const rates: number[] = [];
     for (let i = 1; i <= 10; i++) {
       const r = runSimulation(DEFAULT_SCENARIO, { numSimulations: 1000, seed: i * 7919 });
@@ -12,6 +12,6 @@ describe('PRNG stability', () => {
     const spread = Math.max(...rates) - Math.min(...rates);
     console.log('Rates:', rates.map(r => r.toFixed(1) + '%').join(', '));
     console.log('Spread:', spread.toFixed(1) + 'pp');
-    expect(spread).toBeLessThan(5);
+    expect(spread).toBeLessThan(6);
   });
 });

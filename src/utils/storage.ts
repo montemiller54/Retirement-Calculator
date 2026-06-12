@@ -1,6 +1,6 @@
 import type { SavedScenario, ScenarioInput, AccountType } from '../types';
 import { ASSET_CLASSES, ACCOUNT_TYPES } from '../types';
-import { DEFAULT_ASSET_RETURNS, makeUniformAllocations, RISK_PROFILES, DEFAULT_CRASH_FREQUENCY } from '../constants/asset-classes';
+import { DEFAULT_ASSET_RETURNS, DEFAULT_VOLATILITY, makeUniformAllocations, RISK_PROFILES, DEFAULT_CRASH_FREQUENCY } from '../constants/asset-classes';
 import { DEFAULT_SCENARIO } from '../constants/defaults';
 
 const STORAGE_KEY = 'retirement-planner-scenarios';
@@ -198,6 +198,22 @@ function migrateScenario(s: ScenarioInput): ScenarioInput {
     }
     if (inv.crashFrequency == null) {
       inv.crashFrequency = DEFAULT_CRASH_FREQUENCY;
+    }
+    // Migrate missing returnOutlook: old scenarios don't have it.
+    // Keep their means/crashFrequency as-is; just mark the preset as 'moderate'.
+    if (inv.returnOutlook == null) {
+      inv.returnOutlook = 'moderate';
+    }
+    // Ensure all assetClassReturns use DEFAULT_VOLATILITY for stdDev
+    // (old scenarios may have user-tweaked variability from the removed sliders;
+    // normalize them to the calibrated defaults).
+    if (s.investments.assetClassReturns) {
+      for (const ac of ASSET_CLASSES) {
+        const entry = (s.investments.assetClassReturns as Record<string, { mean: number; stdDev: number }>)[ac];
+        if (entry) {
+          entry.stdDev = DEFAULT_VOLATILITY[ac as keyof typeof DEFAULT_VOLATILITY];
+        }
+      }
     }
   }
 

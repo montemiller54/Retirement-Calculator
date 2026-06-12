@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useReducer, type ReactNode
 import type { ScenarioInput } from '../types';
 import { ASSET_CLASSES, ACCOUNT_TYPES } from '../types';
 import { DEFAULT_SCENARIO } from '../constants/defaults';
-import { DEFAULT_ASSET_RETURNS, RISK_PROFILES } from '../constants/asset-classes';
+import { DEFAULT_ASSET_RETURNS, DEFAULT_VOLATILITY, RISK_PROFILES } from '../constants/asset-classes';
 import { loadWorkingState, saveWorkingState } from '../utils/storage';
 
 type Action =
@@ -85,7 +85,8 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
       (scenario.inflationVolatility == null) ||
       (scenario.rothContributionBasis == null) ||
       (scenario.ruleof55Eligible == null) ||
-      (!scenario.visibleAccounts);
+      (!scenario.visibleAccounts) ||
+      (scenario.investments?.returnOutlook == null);
     if (needsPatch) {
       const patched = { ...scenario };
       // Patch asset allocations
@@ -224,6 +225,19 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
           if ((patched.contributionAllocation as Record<string, number>)[acct] > 0) visible.add(acct);
         }
         (patched as Record<string, unknown>).visibleAccounts = ACCOUNT_TYPES.filter(a => visible.has(a));
+      }
+      // Patch returnOutlook for old scenarios
+      if (patched.investments?.returnOutlook == null) {
+        (patched.investments as unknown as Record<string, unknown>).returnOutlook = 'moderate';
+      }
+      // Normalize stdDev to calibrated defaults (variability sliders removed)
+      if (patched.investments?.assetClassReturns) {
+        for (const ac of ASSET_CLASSES) {
+          const entry = (patched.investments.assetClassReturns as Record<string, { mean: number; stdDev: number }>)[ac];
+          if (entry) {
+            entry.stdDev = DEFAULT_VOLATILITY[ac as keyof typeof DEFAULT_VOLATILITY];
+          }
+        }
       }
       dispatch({ type: 'LOAD_SCENARIO', scenario: patched });
     }

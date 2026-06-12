@@ -2,27 +2,18 @@ import React, { useState } from 'react';
 import { useScenario } from '../../context/ScenarioContext';
 import {
   ACCOUNT_TYPES, ACCOUNT_LABELS, ASSET_CLASSES, ASSET_CLASS_LABELS,
-  type AssetAllocation, type AccountType, type RiskProfile,
+  type AssetAllocation, type AccountType, type RiskProfile, type ReturnOutlook,
 } from '../../types';
-import { RISK_PROFILES, RISK_PROFILE_LABELS, makeUniformAllocations, DEFAULT_ASSET_RETURNS } from '../../constants/asset-classes';
+import {
+  RISK_PROFILES, RISK_PROFILE_LABELS, makeUniformAllocations,
+  RETURN_OUTLOOK_PRESETS, RETURN_OUTLOOK_LABELS, DEFAULT_VOLATILITY,
+} from '../../constants/asset-classes';
 import { CurrencyInput } from './CurrencyInput';
 import { PercentInput } from './PercentInput';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
 import { Toggle } from './shared';
 import { InfoTip } from './InfoTip';
 import { ACCOUNT_DESCRIPTIONS } from '../../constants/descriptions';
-
-// ── Variability scale: 1–10 (0.5 steps) ↔ stdDev (decimal) ──
-// Curve: vol = 0.01 + ((v-1)/9)^1.6888 * 0.59
-// Calibrated so v=1→1%, v=3→6%, v=5→16%, v=9→50%, v=10→60%
-function variabilityToStdDev(v: number): number {
-  return 0.01 + Math.pow((v - 1) / 9, 1.6888) * 0.59;
-}
-function stdDevToVariability(sd: number): number {
-  if (sd <= 0.01) return 1;
-  const raw = 1 + Math.pow((sd - 0.01) / 0.59, 1 / 1.6888) * 9;
-  return Math.round(Math.min(10, Math.max(1, raw)) * 2) / 2;
-}
 
 // ── Bear market frequency scale: 1–10 (0.5 steps) → bear-year probability ──
 // Slider value is stored directly as crashFrequency (1-10).
@@ -67,6 +58,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
   const [phase, setPhase] = useState<'pre' | 'post'>(scenario.currentAge >= scenario.retirementAge ? 'post' : 'pre');
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['balances']));
   const [customizeDefaults, setCustomizeDefaults] = useState(false);
+  const [customizeReturns, setCustomizeReturns] = useState(false);
   const isRetired = scenario.currentAge >= scenario.retirementAge;
 
   const totalBalance = ACCOUNT_TYPES.reduce((s, a) => s + scenario.balances[a], 0);
@@ -102,6 +94,19 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
     };
     setField('investments.postRetirement', makeUniformAllocations(RISK_PROFILES[postMap[profile]]));
     setCustomizeDefaults(false);
+  };
+
+  const handleReturnOutlook = (outlook: ReturnOutlook) => {
+    const preset = RETURN_OUTLOOK_PRESETS[outlook];
+    setField('investments.returnOutlook', outlook);
+    for (const ac of ASSET_CLASSES) {
+      setField(`investments.assetClassReturns.${ac}`, {
+        mean: preset.means[ac],
+        stdDev: DEFAULT_VOLATILITY[ac],
+      });
+    }
+    setField('investments.crashFrequency', preset.crashFrequency);
+    setCustomizeReturns(false);
   };
 
   const currentAllocations = phase === 'pre' ? inv.preRetirement : inv.postRetirement;
@@ -406,74 +411,110 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
       {openSections.has('returns') && (
         <div className="px-1 pb-2 space-y-2">
           <p className="text-[10px] text-gray-400">
-            Expected nominal returns and variability by asset class.
-            <InfoTip text="'Nominal' means before subtracting inflation. The simulation handles inflation separately. 'Variability' controls how much returns can swing up or down each year." />
+            Expected nominal returns by asset class and bear market frequency.
+            <InfoTip text="'Nominal' means before subtracting inflation. The simulation handles inflation separately. Conservative reflects current professional forecasts (6-7% stocks). Moderate blends near-term forecasts with long-term historical averages. Optimistic uses full historical averages (~10% stocks)." />
           </p>
-          <div className="space-y-1.5">
-            {/* Column headers */}
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] w-14"></span>
-              <span className="text-[10px] text-gray-400 w-20 text-center">Avg Return %</span>
-              <span className="text-[10px] text-gray-400 flex-1 text-center ml-4">Variability</span>
+
+          {/* Return outlook preset selector */}
+          <div className="space-y-2">
+            <label className="input-label">Market Outlook</label>
+            <div className="flex gap-1">
+              {(['conservative', 'moderate', 'optimistic'] as ReturnOutlook[]).map(o => (
+                <button
+                  key={o}
+                  className={`flex-1 text-xs py-1.5 rounded border ${
+                    inv.returnOutlook === o && !customizeReturns
+                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
+                      : 'border-gray-300 dark:border-gray-600'
+                  }`}
+                  onClick={() => handleReturnOutlook(o)}
+                >
+                  {RETURN_OUTLOOK_LABELS[o]}
+                </button>
+              ))}
             </div>
-            {ASSET_CLASSES.map(ac => {
-              const ret = inv.assetClassReturns[ac] ?? DEFAULT_ASSET_RETURNS[ac];
-              const varVal = stdDevToVariability(ret.stdDev);
-              const varLabel = varVal <= 2 ? 'Very Low' : varVal <= 3.5 ? 'Low' : varVal <= 6 ? 'Medium' : varVal <= 8 ? 'High' : 'Very High';
-              return (
-                <div key={ac} className="flex items-center gap-1">
-                  <span className="text-[11px] w-14 truncate">{ASSET_CLASS_LABELS[ac]}</span>
-                  <PercentInput
-                    className="input-field w-20 text-center text-[11px]"
-                    value={ret.mean}
-                    onChange={v => setField(`investments.assetClassReturns.${ac}.mean`, v)}
-                  />
-                  <div className="flex-1 flex items-center gap-1 ml-4">
-                    <input
-                      type="range"
-                      className="w-[50%]"
-                      min={1} max={10} step={0.5}
-                      value={varVal}
-                      onChange={e => setField(`investments.assetClassReturns.${ac}.stdDev`, variabilityToStdDev(parseFloat(e.target.value)))}
-                    />
-                    <span className="text-[10px] whitespace-nowrap">
-                      <span className="text-white">{varVal.toFixed(1)}</span>{' '}
-                      <span className="text-gray-500">{varLabel}</span>
-                    </span>
+          </div>
+
+          {/* Default return display (read-only summary) */}
+          {!customizeReturns && (
+            <div className="space-y-1">
+              <div className="grid grid-cols-4 gap-1.5">
+                {ASSET_CLASSES.map(ac => (
+                  <div key={ac} className="text-center">
+                    <label className="text-[10px] text-gray-500">{ASSET_CLASS_LABELS[ac]}</label>
+                    <div className="text-[11px] font-medium">
+                      {((inv.assetClassReturns[ac]?.mean ?? 0) * 100).toFixed(1)}%
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-            <label className="input-label mb-1">Bear Market Frequency</label>
-            {/* Zone labels above slider */}
-            <div className="flex justify-between px-1 mb-1">
-              <span className="text-[10px] text-blue-400">Infrequent</span>
-              <span className="text-[10px] text-amber-400">Average</span>
-              <span className="text-[10px] text-red-400">Frequent</span>
-            </div>
-            {/* Gradient-track slider with color-matched thumb */}
-            <input
-              type="range"
-              className={`bear-freq-slider w-full ${fieldErrorClass(ve, 'investments.crashFrequency')}`}
-              min={1} max={10} step={0.5}
-              value={inv.crashFrequency}
-              onChange={e => setField('investments.crashFrequency', parseFloat(e.target.value))}
-              style={{ '--thumb-color': bearFreqColor(inv.crashFrequency) } as React.CSSProperties}
-            />
-            <div className="flex justify-between items-center mt-1 px-1">
-              <span
-                className="text-[11px] font-medium"
-                style={{ color: bearFreqColor(inv.crashFrequency) }}
+                ))}
+              </div>
+              <div className="text-[11px] text-gray-400">
+                Bear frequency: <span className="font-medium" style={{ color: bearFreqColor(inv.crashFrequency) }}>
+                  {bearFreqLabel(inv.crashFrequency)} (~{bearFreqPct(inv.crashFrequency)}% bear years)
+                </span>
+              </div>
+              <button
+                className="text-[11px] text-primary-600 dark:text-primary-400 hover:underline"
+                onClick={() => setCustomizeReturns(true)}
               >
-                ~{bearFreqPct(inv.crashFrequency)}% bear years · {bearFreqLabel(inv.crashFrequency)}
-              </span>
+                Customize
+              </button>
             </div>
-            <p className="text-[10px] text-gray-400 mt-0.5">
-              How often bear markets occur. &lsquo;Historical&rsquo; matches the last ~100 years of data.
-            </p>
-          </div>
+          )}
+
+          {/* Customizable per-asset return inputs */}
+          {customizeReturns && (
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] w-14"></span>
+                <span className="text-[10px] text-gray-400 w-20 text-center">Avg Return %</span>
+              </div>
+              {ASSET_CLASSES.map(ac => {
+                const ret = inv.assetClassReturns[ac];
+                return (
+                  <div key={ac} className="flex items-center gap-1">
+                    <span className="text-[11px] w-14 truncate">{ASSET_CLASS_LABELS[ac]}</span>
+                    <PercentInput
+                      className="input-field w-20 text-center text-[11px]"
+                      value={ret?.mean ?? 0}
+                      onChange={v => setField(`investments.assetClassReturns.${ac}.mean`, v)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Bear market frequency (always visible when customizing) */}
+          {customizeReturns && (
+            <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+              <label className="input-label mb-1">Bear Market Frequency</label>
+              <div className="flex justify-between px-1 mb-1">
+                <span className="text-[10px] text-blue-400">Infrequent</span>
+                <span className="text-[10px] text-amber-400">Average</span>
+                <span className="text-[10px] text-red-400">Frequent</span>
+              </div>
+              <input
+                type="range"
+                className={`bear-freq-slider w-full ${fieldErrorClass(ve, 'investments.crashFrequency')}`}
+                min={1} max={10} step={0.5}
+                value={inv.crashFrequency}
+                onChange={e => setField('investments.crashFrequency', parseFloat(e.target.value))}
+                style={{ '--thumb-color': bearFreqColor(inv.crashFrequency) } as React.CSSProperties}
+              />
+              <div className="flex justify-between items-center mt-1 px-1">
+                <span
+                  className="text-[11px] font-medium"
+                  style={{ color: bearFreqColor(inv.crashFrequency) }}
+                >
+                  ~{bearFreqPct(inv.crashFrequency)}% bear years · {bearFreqLabel(inv.crashFrequency)}
+                </span>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-0.5">
+                How often bear markets occur. &lsquo;Historical&rsquo; matches the last ~100 years of data.
+              </p>
+            </div>
+          )}
           <FieldError errors={ve} field="investments.crashFrequency" />
         </div>
       )}
