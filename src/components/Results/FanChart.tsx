@@ -19,10 +19,10 @@ interface FanChartProps {
 
 const TOOLTIP_ORDER = ['p75', 'p50', 'p25', 'p10'];
 const TOOLTIP_LABELS: Record<string, string> = {
-  p75: 'Best 25%',
-  p50: 'Typical (Median)',
-  p25: 'Worst 25%',
-  p10: 'Worst 10%',
+  p75: '75th · Better than typical',
+  p50: 'Median · Typical',
+  p25: '25th · Worse than typical',
+  p10: '10th · Worst 10%',
 };
 
 export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
@@ -35,8 +35,8 @@ export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
         </h4>
         <div className="flex items-center gap-3 text-[10px] text-gray-500 dark:text-gray-400">
           <LegendSwatch color={FAN_MEDIAN_STROKE} kind="line" label="Median" />
-          <LegendSwatch color={FAN_BAND_COLOR} kind="band" opacity={FAN_BAND_INNER_OPACITY} label="25–75%" />
-          <LegendSwatch color={FAN_BAND_COLOR} kind="band" opacity={FAN_BAND_OUTER_OPACITY} label="10–90%" />
+          <LegendSwatch color={FAN_BAND_COLOR} kind="band" opacity={FAN_BAND_INNER_OPACITY} label="25th–75th" />
+          <LegendSwatch color={FAN_BAND_COLOR} kind="band" opacity={FAN_BAND_OUTER_OPACITY + FAN_BAND_INNER_OPACITY} label="10th–25th" />
         </div>
       </div>
       <ResponsiveContainer width="100%" height={300}>
@@ -73,10 +73,14 @@ export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
           <Area type="monotone" dataKey="p75" stroke="none" fill={FAN_BAND_COLOR} fillOpacity={FAN_BAND_OUTER_OPACITY} name="p75_area" tooltipType="none" />
           <Area type="monotone" dataKey="p25" stroke="none" fill={FAN_BAND_COLOR} fillOpacity={FAN_BAND_INNER_OPACITY} name="p25_area" tooltipType="none" />
           <Area type="monotone" dataKey="p10" stroke="none" fill={FAN_BAND_COLOR} fillOpacity={FAN_BAND_WORST_OPACITY} name="p10_area" tooltipType="none" />
+          {/* Invisible lines so all percentiles appear in the tooltip */}
+          <Line type="monotone" dataKey="p75" stroke="transparent" strokeWidth={0} dot={false} activeDot={false} name="p75" />
+          <Line type="monotone" dataKey="p25" stroke="transparent" strokeWidth={0} dot={false} activeDot={false} name="p25" />
+          <Line type="monotone" dataKey="p10" stroke="transparent" strokeWidth={0} dot={false} activeDot={false} name="p10" />
           <Line type="monotone" dataKey="p50" stroke={FAN_MEDIAN_STROKE} strokeWidth={2.5} dot={false} name="p50" />
         </ComposedChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">Range of outcomes across 5,000 simulations. The solid line is the median (typical outcome). The darker band covers the middle 50% of outcomes; the lighter band covers 80%.</p>
+      <p className="text-[10px] text-gray-400 mt-2 px-1">Range of outcomes across 5,000 simulations. The solid line is the median (typical outcome). The lighter band covers the middle 50% of outcomes (25th–75th percentile); the darker shading extends down to the 10th percentile (worst 10%).</p>
     </div>
   );
 }
