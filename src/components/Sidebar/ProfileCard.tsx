@@ -3,7 +3,6 @@ import { useScenario } from '../../context/ScenarioContext';
 import { FILING_STATUS_LABELS, type FilingStatus } from '../../types';
 import { STATE_TAX_DATA, STATE_CODES } from '../../constants/state-tax';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
-import { Toggle } from './shared';
 
 interface Toast {
   message: string;
@@ -72,19 +71,6 @@ export function ProfileCard({ validationErrors }: CardProps) {
             />
             <FieldError errors={ve} field="currentAge" />
           </Field>
-          {scenario.spouse?.enabled && (
-            <Field label="Spouse age" help="Spouse today." width="age">
-              <input
-                type="number"
-                className={`input-field text-center w-24 ${fieldErrorClass(ve, 'spouse.currentAge')}`}
-                value={scenario.spouse.currentAge}
-                min={18}
-                max={99}
-                onChange={e => setField('spouse.currentAge', parseInt(e.target.value) || 0)}
-              />
-              <FieldError errors={ve} field="spouse.currentAge" />
-            </Field>
-          )}
           <Field
             label="Retire at"
             help={
@@ -119,14 +105,44 @@ export function ProfileCard({ validationErrors }: CardProps) {
         </div>
 
         <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700/50">
-          <Toggle
-            checked={scenario.spouse?.enabled ?? false}
-            onChange={v => setField('spouse.enabled', v)}
-            label="Include spouse"
-          />
-          <p className="mt-1 ml-12 text-[11px] text-gray-500 dark:text-gray-400">
-            Models joint income, joint Social Security, and joint expenses.
-          </p>
+          {scenario.spouse?.enabled ? (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300">Spouse</h3>
+                <button
+                  type="button"
+                  onClick={() => setField('spouse.enabled', false)}
+                  className="text-[11px] text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+                >
+                  Remove
+                </button>
+              </div>
+              <Field label="Spouse age" help="Spouse today." width="age">
+                <input
+                  type="number"
+                  className={`input-field text-center w-24 ${fieldErrorClass(ve, 'spouse.currentAge')}`}
+                  value={scenario.spouse.currentAge}
+                  min={18}
+                  max={99}
+                  onChange={e => setField('spouse.currentAge', parseInt(e.target.value) || 0)}
+                />
+                <FieldError errors={ve} field="spouse.currentAge" />
+              </Field>
+            </div>
+          ) : (
+            <div>
+              <button
+                type="button"
+                onClick={() => setField('spouse.enabled', true)}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+              >
+                <span className="text-base leading-none">+</span> Add spouse
+              </button>
+              <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                Models joint income, joint Social Security, and joint expenses.
+              </p>
+            </div>
+          )}
         </div>
       </Section>
 
@@ -212,14 +228,14 @@ function Field({
     helpTone === 'success'
       ? 'text-green-600 dark:text-green-400 font-medium'
       : 'text-gray-500 dark:text-gray-400';
-  // width="age" sizes the field's help text to the input width so wrapping looks intentional
-  const helpWidthClass = width === 'age' ? 'max-w-[12rem]' : '';
-  const wrapperClass = width === 'age' ? 'shrink-0' : '';
+  // width="age" fixes the wrapper to a consistent column width so fields don't
+  // shift based on help-text length
+  const wrapperClass = width === 'age' ? 'shrink-0 w-44' : '';
   return (
     <div className={wrapperClass}>
       <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{label}</label>
       {children}
-      {help && <p className={`mt-1 text-[11px] ${helpClass} ${helpWidthClass}`}>{help}</p>}
+      {help && <p className={`mt-1 text-[11px] ${helpClass}`}>{help}</p>}
     </div>
   );
 }

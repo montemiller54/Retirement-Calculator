@@ -104,108 +104,110 @@ export function ScenarioManager() {
           size={Math.max((scenario.name || '').length, 12)}
         />
 
-        <button
-          ref={triggerRef}
-          type="button"
-          onClick={() => setOpen(o => !o)}
-          aria-expanded={open}
-          aria-haspopup="menu"
-          className={`shrink-0 inline-flex items-center justify-center w-7 h-7 rounded text-gray-500 dark:text-gray-400 transition-colors ${
-            open ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'hover:bg-gray-200 dark:hover:bg-gray-700'
-          }`}
-          title="Plan options"
-          aria-label="Plan options"
-        >
-          <Chevron open={open} />
-        </button>
+        <div className="relative shrink-0">
+          <button
+            ref={triggerRef}
+            type="button"
+            onClick={() => setOpen(o => !o)}
+            aria-expanded={open}
+            aria-haspopup="menu"
+            className={`inline-flex items-center justify-center w-7 h-7 rounded text-gray-500 dark:text-gray-400 transition-colors ${
+              open ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
+            title="Plan options"
+            aria-label="Plan options"
+          >
+            <Chevron open={open} />
+          </button>
+
+          {open && (
+            <div
+              ref={popoverRef}
+              role="menu"
+              className="absolute z-30 left-0 top-full mt-1 w-72 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg"
+            >
+              <div className="py-1">
+                <button
+                  role="menuitem"
+                  type="button"
+                  onClick={handleSaveAsNew}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  Save as new plan
+                </button>
+              </div>
+
+              {saved.length > 0 && (
+                <>
+                  <div className="border-t border-gray-100 dark:border-gray-800" />
+                  <div className="py-1 max-h-64 overflow-y-auto">
+                    <div className="px-3 py-1 text-[10px] font-semibold tracking-wider uppercase text-gray-400 dark:text-gray-500">
+                      Saved plans
+                    </div>
+                    {saved.map(s => {
+                      const isActive = s.id === activePlanId;
+                      return (
+                        <div
+                          key={s.id}
+                          className={`group flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer ${
+                            isActive
+                              ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                          }`}
+                          onClick={() => handleLoad(s)}
+                          role="menuitem"
+                        >
+                          <span className="w-2 flex-shrink-0">
+                            {isActive && <span className="block w-1.5 h-1.5 rounded-full bg-primary-500" />}
+                          </span>
+                          <span className="flex-1 truncate font-medium">{s.name}</span>
+                          <span className="text-[10px] text-gray-400">
+                            {new Date(s.savedAt).toLocaleDateString()}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDelete(e, s.id)}
+                            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 px-1"
+                            title="Delete plan"
+                            aria-label={`Delete ${s.name}`}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              <div className="border-t border-gray-100 dark:border-gray-800" />
+              <div className="py-1">
+                <button
+                  role="menuitem"
+                  type="button"
+                  onClick={handleExport}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  Export plan as JSON
+                </button>
+                <button
+                  role="menuitem"
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  Import plan from JSON…
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="flex-1" aria-hidden="true" />
 
         <SavedIndicator status={saveStatus} hasActivePlan={!!activePlanId} />
       </div>
-
-      {open && (
-        <div
-          ref={popoverRef}
-          role="menu"
-          className="absolute z-30 right-6 top-full mt-1 w-72 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg"
-        >
-          <div className="py-1">
-            <button
-              role="menuitem"
-              type="button"
-              onClick={handleSaveAsNew}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <PlusIcon className="w-4 h-4" />
-              Save as new plan
-            </button>
-          </div>
-
-          {saved.length > 0 && (
-            <>
-              <div className="border-t border-gray-100 dark:border-gray-800" />
-              <div className="py-1 max-h-64 overflow-y-auto">
-                <div className="px-3 py-1 text-[10px] font-semibold tracking-wider uppercase text-gray-400 dark:text-gray-500">
-                  Saved plans
-                </div>
-                {saved.map(s => {
-                  const isActive = s.id === activePlanId;
-                  return (
-                    <div
-                      key={s.id}
-                      className={`group flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer ${
-                        isActive
-                          ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
-                      }`}
-                      onClick={() => handleLoad(s)}
-                      role="menuitem"
-                    >
-                      <span className="w-2 flex-shrink-0">
-                        {isActive && <span className="block w-1.5 h-1.5 rounded-full bg-primary-500" />}
-                      </span>
-                      <span className="flex-1 truncate font-medium">{s.name}</span>
-                      <span className="text-[10px] text-gray-400">
-                        {new Date(s.savedAt).toLocaleDateString()}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => handleDelete(e, s.id)}
-                        className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 px-1"
-                        title="Delete plan"
-                        aria-label={`Delete ${s.name}`}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-
-          <div className="border-t border-gray-100 dark:border-gray-800" />
-          <div className="py-1">
-            <button
-              role="menuitem"
-              type="button"
-              onClick={handleExport}
-              className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              Export plan as JSON
-            </button>
-            <button
-              role="menuitem"
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              Import plan from JSON…
-            </button>
-          </div>
-        </div>
-      )}
 
       <input
         ref={fileInputRef}

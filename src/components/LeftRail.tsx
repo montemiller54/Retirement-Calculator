@@ -20,7 +20,7 @@ export function LeftRail({
   const [resultsOpen, setResultsOpen] = useState(true);
 
   return (
-    <aside className="w-[220px] shrink-0 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
+    <aside className="w-[220px] shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
       <nav className="flex-1 overflow-y-auto py-2 text-[13px]">
         <GroupHeader
           label="Profile"
@@ -81,7 +81,7 @@ export function LeftRail({
         </div>
       </nav>
 
-      <div className="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+      <div className="p-3 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <button
           className="btn-cta"
           onClick={onRun}
@@ -139,16 +139,20 @@ interface RailButtonProps {
 function RailButton({ label, active, disabled, badge, badgeKind, compact, onClick }: RailButtonProps) {
   const base = compact
     ? 'w-full text-left px-1 py-1.5 text-[12px] rounded transition-colors'
-    : 'w-full text-left pl-5 pr-3 py-1.5 transition-colors border-l-2';
+    : 'relative w-full text-left pl-5 pr-3 py-1.5 transition-colors';
   const stateClasses = disabled
     ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
     : active
     ? compact
       ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 font-medium'
-      : 'bg-white dark:bg-gray-800 text-primary-700 dark:text-primary-300 font-medium border-primary-500'
+      // Active rail item adopts the canvas background and the right border is
+      // "erased" with a negative margin so it visually merges into the content
+      // surface. A subtle 2px primary-tinted bar on the left signals "you are
+      // here" without shouting.
+      : 'bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-medium -mr-px before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-primary-400 dark:before:bg-primary-500'
     : compact
       ? 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border-transparent';
+      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800';
 
   return (
     <button
