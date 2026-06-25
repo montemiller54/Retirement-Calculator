@@ -77,10 +77,13 @@ export function ResultsPanel({ result, scenario, retirementAge, currentAge, isRu
   if (!result) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-center text-gray-400">
-          <div className="text-4xl mb-3">📊</div>
+        <div className="text-center text-gray-400 dark:text-gray-500">
+          <svg viewBox="0 0 24 24" className="w-10 h-10 mx-auto mb-3 text-primary-500/70" aria-hidden="true">
+            <path d="M3 18 Q 12 14 21 6" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" />
+            <line x1="3" y1="20" x2="21" y2="20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.35" />
+          </svg>
           <div className="text-sm">Configure your scenario and click</div>
-          <div className="text-sm font-medium">Run Simulation</div>
+          <div className="text-sm font-medium text-gray-600 dark:text-gray-300">Run Simulation</div>
         </div>
       </div>
     );

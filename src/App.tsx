@@ -28,32 +28,46 @@ function AppInner() {
   return (
     <div className="h-screen flex flex-col">
       {/* Top bar */}
-      <header className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shrink-0">
-        <div className="flex items-center gap-3">
-          <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100">📊 Retirement Planner</h1>
-          <span className="text-[10px] text-gray-400 hidden sm:inline" title="All data is stored in your browser's localStorage. Nothing is sent to any server.">
-            🔒 100% private — your data never leaves your browser
+      <header className="flex items-center justify-between px-5 py-2.5 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
+        <div className="flex items-center gap-4">
+          <a href="/" className="flex items-center gap-2 group">
+            <PlainsightMark className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+            <span className="text-[15px] font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+              Plainsight
+            </span>
+          </a>
+          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-[11px] font-medium text-gray-600 dark:text-gray-300"
+                title="All data is stored in your browser's localStorage. Nothing is sent to any server.">
+            <LockIcon className="w-3 h-3" />
+            100% private
           </span>
-          <div className="flex gap-1">
-            <button
-              className={`text-xs px-2 py-1 rounded ${tab === 'results' ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => setTab('results')}
-            >
-              Results
-            </button>
-            <button
-              className={`text-xs px-2 py-1 rounded ${tab === 'methodology' ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => setTab('methodology')}
-            >
-              Methodology
-            </button>
-          </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
           <button
-            className="text-sm p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+            className={`text-xs px-3 py-1.5 border-b-2 -mb-[10px] transition-colors ${
+              tab === 'results'
+                ? 'border-primary-500 text-primary-600 dark:text-primary-400 font-medium'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+            }`}
+            onClick={() => setTab('results')}
+          >
+            Results
+          </button>
+          <button
+            className={`text-xs px-3 py-1.5 border-b-2 -mb-[10px] transition-colors ${
+              tab === 'methodology'
+                ? 'border-primary-500 text-primary-600 dark:text-primary-400 font-medium'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+            }`}
+            onClick={() => setTab('methodology')}
+          >
+            Methodology
+          </button>
+          <button
+            className="ml-3 text-sm p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
             onClick={toggleDark}
             title="Toggle theme"
+            aria-label="Toggle theme"
           >
             {dark ? '☀️' : '🌙'}
           </button>
@@ -102,5 +116,25 @@ export default function App() {
     <ScenarioProvider>
       <AppInner />
     </ScenarioProvider>
+  );
+}
+
+// Plainsight mark: a horizon baseline and an ascending median line — the
+// two shapes our fan chart actually shows.
+function PlainsightMark({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path d="M3 18 Q 12 14 21 6" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" />
+      <line x1="3" y1="20" x2="21" y2="20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.35" />
+    </svg>
+  );
+}
+
+function LockIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
   );
 }
