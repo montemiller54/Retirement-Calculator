@@ -7,10 +7,9 @@ export const RETIREMENT_MARKER_STROKE = '#64748b';
 export const RETIREMENT_MARKER_FILL = '#64748b';
 
 export const FAN_BAND_COLOR = '#3b82f6';
-// Middle 50% (p25–p75): lighter, broader "typical range"
-export const FAN_BAND_MIDDLE_OPACITY = 0.18;
-// Tail band (p10–p25): a touch more present so worst-case tail reads
-export const FAN_BAND_TAIL_OPACITY = 0.28;
+export const FAN_BAND_OUTER_OPACITY = 0.12;
+export const FAN_BAND_INNER_OPACITY = 0.28;
+export const FAN_BAND_WORST_OPACITY = 0.18;
 export const FAN_MEDIAN_STROKE = '#f59e0b';
 
 export const FAILURE_BAR_FILL = '#f47c79';

@@ -1,28 +1,26 @@
 import React, { useState } from 'react';
 import { ScenarioProvider, useScenario } from './context/ScenarioContext';
-import { Sidebar } from './components/Sidebar';
 import { ResultsPanel } from './components/Results';
 import { ScenarioManager } from './components/ScenarioManager';
 import { AssumptionsPage } from './components/AssumptionsPage';
+import { LeftRail } from './components/LeftRail';
+import { ProfileCanvas } from './components/ProfileCanvas';
 import { useSimulation } from './hooks/useSimulation';
 import { useTheme } from './hooks/useTheme';
-import { validateScenario, type ValidationError } from './utils/validation';
-
-type Tab = 'results' | 'methodology';
+import { validateScenario } from './utils/validation';
+import type { AppView } from './navigation';
 
 function AppInner() {
   const { scenario } = useScenario();
   const { result, progress, isRunning, error, run } = useSimulation();
   const { dark, toggleDark } = useTheme();
-  const [tab, setTab] = useState<Tab>('results');
+  const [view, setView] = useState<AppView>({ kind: 'profile', sectionId: 'profile' });
 
   const validationErrors = validateScenario(scenario);
 
   const handleRun = () => {
     if (validationErrors.length > 0) return;
-    run(scenario, {
-      numSimulations: 5000,
-    });
+    run(scenario, { numSimulations: 5000 });
   };
 
   return (
@@ -44,26 +42,6 @@ function AppInner() {
         </div>
         <div className="flex items-center gap-1">
           <button
-            className={`text-xs px-3 py-1.5 border-b-2 -mb-[10px] transition-colors ${
-              tab === 'results'
-                ? 'border-primary-500 text-primary-600 dark:text-primary-400 font-medium'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-            }`}
-            onClick={() => setTab('results')}
-          >
-            Results
-          </button>
-          <button
-            className={`text-xs px-3 py-1.5 border-b-2 -mb-[10px] transition-colors ${
-              tab === 'methodology'
-                ? 'border-primary-500 text-primary-600 dark:text-primary-400 font-medium'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-            }`}
-            onClick={() => setTab('methodology')}
-          >
-            Methodology
-          </button>
-          <button
             className="ml-3 text-sm p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
             onClick={toggleDark}
             title="Toggle theme"
@@ -76,35 +54,49 @@ function AppInner() {
 
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar: title strip + card content */}
-        <aside className="w-[520px] xl:w-[580px] shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
-          <ScenarioManager />
-          <Sidebar
-            validationErrors={validationErrors}
-            onRun={handleRun}
-            isRunning={isRunning}
-            progress={progress}
-          />
-        </aside>
+        <LeftRail
+          view={view}
+          setView={setView}
+          validationErrors={validationErrors}
+          onRun={handleRun}
+          isRunning={isRunning}
+          progress={progress}
+          hasResults={result !== null}
+        />
 
-        {/* Main area */}
-        <main className="flex-1 bg-gray-50 dark:bg-gray-950 overflow-hidden">
-          {tab === 'results' ? (
-            <ResultsPanel
-              result={result}
-              scenario={scenario}
-              retirementAge={scenario.retirementAge}
-              currentAge={scenario.currentAge}
-              isRunning={isRunning}
-              progress={progress}
-              error={error}
-              validationErrors={validationErrors}
-            />
-          ) : (
-            <div className="h-full overflow-y-auto">
-              <AssumptionsPage />
-            </div>
-          )}
+        <main className="flex-1 bg-gray-50 dark:bg-gray-950 flex flex-col overflow-hidden">
+          <div className="shrink-0 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+            <ScenarioManager />
+          </div>
+
+          <div className="flex-1 overflow-hidden">
+            {view.kind === 'profile' && (
+              <ProfileCanvas
+                sectionId={view.sectionId}
+                validationErrors={validationErrors}
+                setView={setView}
+                onRun={handleRun}
+                isRunning={isRunning}
+              />
+            )}
+            {view.kind === 'results' && (
+              <ResultsPanel
+                result={result}
+                scenario={scenario}
+                retirementAge={scenario.retirementAge}
+                currentAge={scenario.currentAge}
+                isRunning={isRunning}
+                progress={progress}
+                error={error}
+                validationErrors={validationErrors}
+              />
+            )}
+            {view.kind === 'methodology' && (
+              <div className="h-full overflow-y-auto">
+                <AssumptionsPage />
+              </div>
+            )}
+          </div>
         </main>
       </div>
     </div>
