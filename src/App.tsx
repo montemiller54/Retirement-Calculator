@@ -65,7 +65,7 @@ function AppInner() {
         />
 
         <main className="flex-1 bg-gray-50 dark:bg-gray-950 flex flex-col overflow-hidden">
-          <div className="shrink-0 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+          <div className="shrink-0">
             <ScenarioManager />
           </div>
 
