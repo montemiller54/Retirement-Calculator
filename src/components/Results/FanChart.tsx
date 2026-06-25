@@ -7,7 +7,7 @@ import type { PercentileBand } from '../../types';
 import { formatCompact } from '../../utils/format';
 import {
   GRID_STROKE, AXIS_TICK_FILL, RETIREMENT_MARKER_STROKE, RETIREMENT_MARKER_FILL,
-  FAN_BAND_COLOR, FAN_BAND_OUTER_OPACITY, FAN_BAND_INNER_OPACITY, FAN_BAND_WORST_OPACITY,
+  FAN_BAND_COLOR, FAN_BAND_MIDDLE_OPACITY, FAN_BAND_TAIL_OPACITY,
   FAN_MEDIAN_STROKE, TOOLTIP_STYLE,
 } from './chartTheme';
 
@@ -27,6 +27,14 @@ const TOOLTIP_LABELS: Record<string, string> = {
 
 export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
   const birthYear = new Date().getFullYear() - currentAge;
+  // Banded ranges: each Area fills only between two percentiles, not from zero.
+  // This means the chart shows exactly two shaded zones (middle 50% and tail),
+  // matching the legend — no mystery third color below p10.
+  const banded = data.map((d) => ({
+    ...d,
+    middleRange: [d.p25, d.p75] as [number, number],
+    tailRange: [d.p10, d.p25] as [number, number],
+  }));
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-2 gap-3 flex-wrap">
@@ -35,12 +43,12 @@ export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
         </h4>
         <div className="flex items-center gap-3 text-[10px] text-gray-500 dark:text-gray-400">
           <LegendSwatch color={FAN_MEDIAN_STROKE} kind="line" label="Median" />
-          <LegendSwatch color={FAN_BAND_COLOR} kind="band" opacity={FAN_BAND_INNER_OPACITY} label="25th–75th" />
-          <LegendSwatch color={FAN_BAND_COLOR} kind="band" opacity={FAN_BAND_OUTER_OPACITY + FAN_BAND_INNER_OPACITY} label="10th–25th" />
+          <LegendSwatch color={FAN_BAND_COLOR} kind="band" opacity={FAN_BAND_MIDDLE_OPACITY} label="25th–75th" />
+          <LegendSwatch color={FAN_BAND_COLOR} kind="band" opacity={FAN_BAND_TAIL_OPACITY} label="10th–25th" />
         </div>
       </div>
       <ResponsiveContainer width="100%" height={300}>
-        <ComposedChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+        <ComposedChart data={banded} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
           <CartesianGrid stroke={GRID_STROKE} vertical={false} />
           <XAxis
             dataKey="age"
@@ -54,7 +62,11 @@ export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
             width={55}
           />
           <Tooltip
-            formatter={(val: number, name: string) => [formatCompact(val), TOOLTIP_LABELS[name] ?? name]}
+            formatter={(val: number | number[], name: string) => {
+              // Hide the range-band entries from the tooltip
+              if (name === 'middleRange' || name === 'tailRange') return [null, null] as any;
+              return [formatCompact(val as number), TOOLTIP_LABELS[name] ?? name];
+            }}
             itemSorter={(item) => {
               const idx = TOOLTIP_ORDER.indexOf(item.dataKey as string);
               return idx >= 0 ? idx : 99;
@@ -70,9 +82,9 @@ export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
             strokeDasharray="4 4"
             label={{ value: 'Retire', position: 'top', fontSize: 10, fill: RETIREMENT_MARKER_FILL }}
           />
-          <Area type="monotone" dataKey="p75" stroke="none" fill={FAN_BAND_COLOR} fillOpacity={FAN_BAND_OUTER_OPACITY} name="p75_area" tooltipType="none" />
-          <Area type="monotone" dataKey="p25" stroke="none" fill={FAN_BAND_COLOR} fillOpacity={FAN_BAND_INNER_OPACITY} name="p25_area" tooltipType="none" />
-          <Area type="monotone" dataKey="p10" stroke="none" fill={FAN_BAND_COLOR} fillOpacity={FAN_BAND_WORST_OPACITY} name="p10_area" tooltipType="none" />
+          {/* Banded fills: only between the two percentiles, not from zero */}
+          <Area type="monotone" dataKey="middleRange" stroke="none" fill={FAN_BAND_COLOR} fillOpacity={FAN_BAND_MIDDLE_OPACITY} name="middleRange" activeDot={false} />
+          <Area type="monotone" dataKey="tailRange" stroke="none" fill={FAN_BAND_COLOR} fillOpacity={FAN_BAND_TAIL_OPACITY} name="tailRange" activeDot={false} />
           {/* Invisible lines so all percentiles appear in the tooltip */}
           <Line type="monotone" dataKey="p75" stroke="transparent" strokeWidth={0} dot={false} activeDot={false} name="p75" />
           <Line type="monotone" dataKey="p25" stroke="transparent" strokeWidth={0} dot={false} activeDot={false} name="p25" />
