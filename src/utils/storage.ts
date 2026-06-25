@@ -5,6 +5,7 @@ import { DEFAULT_SCENARIO } from '../constants/defaults';
 
 const STORAGE_KEY = 'retirement-planner-scenarios';
 const WORKING_KEY = 'retirement-planner-working';
+const ACTIVE_PLAN_KEY = 'retirement-planner-active-plan';
 
 /**
  * Migrate a loaded scenario to ensure all current asset classes and account types are present.
@@ -274,6 +275,27 @@ export function saveScenario(scenario: ScenarioInput): SavedScenario {
 export function deleteScenario(id: string): void {
   const scenarios = loadScenarios().filter(s => s.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(scenarios));
+}
+
+/** Update an existing saved plan by id. Returns true if found and updated. */
+export function updateScenarioById(id: string, scenario: ScenarioInput): boolean {
+  const scenarios = loadScenarios();
+  const idx = scenarios.findIndex(s => s.id === id);
+  if (idx < 0) return false;
+  scenarios[idx] = { ...scenarios[idx], name: scenario.name, input: scenario, savedAt: new Date().toISOString() };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(scenarios));
+  return true;
+}
+
+export function loadActivePlanId(): string | null {
+  try { return localStorage.getItem(ACTIVE_PLAN_KEY); } catch { return null; }
+}
+
+export function saveActivePlanId(id: string | null): void {
+  try {
+    if (id) localStorage.setItem(ACTIVE_PLAN_KEY, id);
+    else localStorage.removeItem(ACTIVE_PLAN_KEY);
+  } catch { /* ignore */ }
 }
 
 export function exportScenario(scenario: ScenarioInput): string {

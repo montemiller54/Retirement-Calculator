@@ -1,9 +1,12 @@
-import React, { createContext, useContext, useEffect, useReducer, type ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useReducer, useRef, useState, type ReactNode } from 'react';
 import type { ScenarioInput } from '../types';
 import { ASSET_CLASSES, ACCOUNT_TYPES } from '../types';
 import { DEFAULT_SCENARIO } from '../constants/defaults';
 import { DEFAULT_ASSET_RETURNS, DEFAULT_VOLATILITY, RISK_PROFILES } from '../constants/asset-classes';
-import { loadWorkingState, saveWorkingState } from '../utils/storage';
+import {
+  loadWorkingState, saveWorkingState,
+  loadActivePlanId, saveActivePlanId, updateScenarioById,
+} from '../utils/storage';
 
 type Action =
   | { type: 'SET_FIELD'; path: string; value: unknown }
@@ -45,8 +48,11 @@ interface ScenarioContextType {
   scenario: ScenarioInput;
   dispatch: React.Dispatch<Action>;
   setField: (path: string, value: unknown) => void;
-  loadScenario: (s: ScenarioInput) => void;
+  loadScenario: (s: ScenarioInput, planId?: string | null) => void;
   reset: () => void;
+  activePlanId: string | null;
+  setActivePlanId: (id: string | null) => void;
+  saveStatus: 'idle' | 'saved';
 }
 
 const ScenarioContext = createContext<ScenarioContextType | null>(null);
@@ -60,6 +66,10 @@ function getInitialState(): ScenarioInput {
 
 export function ScenarioProvider({ children }: { children: ReactNode }) {
   const [scenario, dispatch] = useReducer(reducer, null, getInitialState);
+  const [activePlanId, setActivePlanIdState] = useState<string | null>(() => loadActivePlanId());
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
+  const saveStatusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFirstRender = useRef(true);
 
   // Patch in-memory state if asset classes or account types were added (handles HMR / stale state)
   useEffect(() => {
@@ -243,21 +253,45 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-save working state on every change
+  // Auto-save working state and (if a plan is active) the saved plan entry on every change
   useEffect(() => {
     saveWorkingState(scenario);
-  }, [scenario]);
+    if (activePlanId) {
+      const ok = updateScenarioById(activePlanId, scenario);
+      // If the saved plan was deleted out from under us, drop the active id
+      if (!ok) setActivePlanIdState(null);
+    }
+    // Skip the "Saved" flash on the very first render after load
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    setSaveStatus('saved');
+    if (saveStatusTimer.current) clearTimeout(saveStatusTimer.current);
+    saveStatusTimer.current = setTimeout(() => setSaveStatus('idle'), 1800);
+  }, [scenario, activePlanId]);
 
   const setField = (path: string, value: unknown) =>
     dispatch({ type: 'SET_FIELD', path, value });
 
-  const loadScenario = (s: ScenarioInput) =>
+  const loadScenario = (s: ScenarioInput, planId: string | null = null) => {
     dispatch({ type: 'LOAD_SCENARIO', scenario: s });
+    setActivePlanIdState(planId);
+    saveActivePlanId(planId);
+  };
+
+  const setActivePlanId = (id: string | null) => {
+    setActivePlanIdState(id);
+    saveActivePlanId(id);
+  };
 
   const reset = () => dispatch({ type: 'RESET' });
 
   return (
-    <ScenarioContext.Provider value={{ scenario, dispatch, setField, loadScenario, reset }}>
+    <ScenarioContext.Provider value={{
+      scenario, dispatch, setField, loadScenario, reset,
+      activePlanId, setActivePlanId, saveStatus,
+    }}>
       {children}
     </ScenarioContext.Provider>
   );
