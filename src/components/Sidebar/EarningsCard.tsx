@@ -101,11 +101,12 @@ export function EarningsCard({ validationErrors }: CardProps) {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <input
-                    className="input-field flex-1 text-sm font-medium"
+                    className="input-field text-sm font-medium w-2/3"
                     value={job.name}
                     placeholder="e.g., Acme Corp"
                     onChange={e => updateJob(job.id, 'name', e.target.value)}
                   />
+                  <div className="flex-1" />
                   {isActive && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded">
                       Active
@@ -122,7 +123,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-4 max-w-[80%]">
                   <Field label="Monthly pay">
                     <div className="relative">
                       <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
@@ -227,28 +228,24 @@ export function EarningsCard({ validationErrors }: CardProps) {
         description="How much pay rises each year, and how much of it you save."
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
-          <Field
-            label="Salary growth"
-            help="Annual raise rate, before promotions. 1–3% is typical."
-          >
+          <div>
             <PctSlider
-              label=""
+              label="Salary growth"
               value={scenario.salaryGrowthRate * 100}
               onChange={v => setField('salaryGrowthRate', v / 100)}
               min={0} max={10} step={0.5}
             />
-          </Field>
-          <Field
-            label="Savings rate"
-            help="Portion of pay saved each month. Split across accounts below."
-          >
+            <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">Annual raise rate, before promotions. 1–3% is typical.</p>
+          </div>
+          <div>
             <PctSlider
-              label=""
+              label="Savings rate"
               value={scenario.totalSavingsRate * 100}
               onChange={v => setField('totalSavingsRate', v / 100)}
               min={0} max={60} step={1}
             />
-          </Field>
+            <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">Portion of pay saved each month. Split across accounts below.</p>
+          </div>
         </div>
       </Section>
 
@@ -293,15 +290,15 @@ export function EarningsCard({ validationErrors }: CardProps) {
 
           <div className="space-y-1.5">
             {visibleAccounts.map(acct => (
-              <div key={acct} className="flex items-center gap-3 py-1">
-                <span className="text-sm flex-1 text-gray-700 dark:text-gray-200">
+              <div key={acct} className="flex items-center gap-2 py-1">
+                <span className="text-sm w-44 shrink-0 text-gray-700 dark:text-gray-200">
                   {ACCOUNT_LABELS[acct]}
                   <InfoTip text={ACCOUNT_DESCRIPTIONS[acct]} />
                 </span>
                 <div className="flex items-center gap-1">
                   <input
                     type="number"
-                    className={`input-field w-20 text-right text-sm ${allocSum !== 100 ? 'border-red-300 dark:border-red-700' : ''}`}
+                    className={`input-field w-16 text-right text-sm ${allocSum !== 100 ? 'border-red-300 dark:border-red-700' : ''}`}
                     min={0} max={100}
                     value={scenario.contributionAllocation[acct]}
                     onChange={e => handleAllocChange(acct, parseInt(e.target.value) || 0)}
