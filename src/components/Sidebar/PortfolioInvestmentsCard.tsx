@@ -123,11 +123,6 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
       {/* ── Account Balances ── */}
       <Section
         title="Account Balances"
-        trailing={
-          <span className="font-medium text-primary-600 dark:text-primary-400">
-            ${totalBalance.toLocaleString()}
-          </span>
-        }
       >
         <div className="space-y-2">
           {visibleAccounts.map(acct => (
@@ -150,6 +145,13 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
               >✕</button>
             </div>
           ))}
+        </div>
+
+        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Portfolio</span>
+          <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">
+            ${totalBalance.toLocaleString()}
+          </span>
         </div>
 
         {hiddenAccounts.length > 0 && (
