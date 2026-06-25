@@ -115,7 +115,7 @@ export function Field({
   const wrapperClass = width === 'age' ? 'shrink-0 w-56' : '';
   return (
     <div className={wrapperClass}>
-      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{label}</label>
+      <label className="input-label">{label}</label>
       {children}
       {help && <p className={`mt-1 text-[11px] ${helpClass}`}>{help}</p>}
     </div>
