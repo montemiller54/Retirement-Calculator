@@ -96,7 +96,7 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
             <InfoTip text="Total amount you've directly contributed to Roth IRAs (not conversions or earnings). This amount can always be withdrawn penalty-free and tax-free, even before 59½." />
           </div>
           {scenario.rothContributionBasis > 0 && (
-            <div className="relative mt-1">
+            <div className="relative mt-1 w-48">
               <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
               <CurrencyInput value={scenario.rothContributionBasis} onChange={v => setField('rothContributionBasis', v)} />
             </div>

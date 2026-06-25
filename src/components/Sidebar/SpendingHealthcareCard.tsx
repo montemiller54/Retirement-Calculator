@@ -183,15 +183,6 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
       <Section
         title="One-Time Expenses"
         description="Lump-sum costs at a specific age (e.g. new car, wedding, home repair)."
-        trailing={
-          <button
-            type="button"
-            className="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-            onClick={addExpense}
-          >
-            + Add
-          </button>
-        }
       >
         {scenario.oneTimeExpenses.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 italic">No one-time expenses added.</p>
@@ -242,6 +233,13 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
             ))}
           </div>
         )}
+        <button
+          type="button"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+          onClick={addExpense}
+        >
+          <span className="text-base leading-none">+</span> Add expense
+        </button>
       </Section>
     </div>
   );
