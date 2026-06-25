@@ -1133,3 +1133,27 @@ export function findSafeSpending(
     achievedSuccessRate: finalRate,
   };
 }
+
+// Calibration utility: samples raw per-year blended portfolio returns by running
+// stripped paths and computing year-over-year balance growth. Used by calibration
+// tests to verify that user-configured asset means/stdDevs actually propagate
+// through the engine. Caller must pass a scenario with no spending/contributions
+// /taxes/inflation so balance changes reflect investment return alone.
+export function sampleBlendedReturns(
+  scenario: ScenarioInput,
+  options: { numPaths: number; seed: number },
+): number[] {
+  const rng = new PRNG(options.seed);
+  const bullL = cholesky(DEFAULT_CORRELATION_MATRIX);
+  const bearL = cholesky(BEAR_CORRELATION_MATRIX);
+  const out: number[] = [];
+  for (let p = 0; p < options.numPaths; p++) {
+    const path = runSinglePath(scenario, rng, bullL, bearL);
+    for (let y = 1; y < path.years.length; y++) {
+      const prev = path.years[y - 1].totalBalance;
+      const curr = path.years[y].totalBalance;
+      if (prev > 0) out.push(curr / prev - 1);
+    }
+  }
+  return out;
+}

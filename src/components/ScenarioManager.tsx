@@ -57,7 +57,7 @@ export function ScenarioManager() {
           onChange={e => setField('name', e.target.value)}
           placeholder="Scenario name"
         />
-        <button className="btn-primary text-xs" onClick={handleSave}>Save</button>
+        <button className="btn-secondary text-xs" onClick={handleSave}>Save</button>
         <button className="btn-secondary text-xs" onClick={() => setShowList(!showList)}>
           {showList ? 'Close' : 'Load'}
         </button>

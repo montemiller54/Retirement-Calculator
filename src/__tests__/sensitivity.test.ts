@@ -146,28 +146,78 @@ describe('HIGH IMPACT: Income Sources', () => {
 });
 
 describe('HIGH IMPACT: Investment Assumptions', () => {
-  it('#32 higher expected returns → higher success rate', () => {
-    const lowReturns = run({
+  // #32a–#32d vary one asset class mean at a time. Bundling all four in a single
+  // test (the previous #32) could hide a hardcoded/ignored parameter because the
+  // other levers still moved the result. Each test holds three asset classes
+  // constant and requires a non-trivial magnitude change so a stuck value fails.
+  const constantReturns = {
+    stocks: { mean: 0.08, stdDev: 0.16 },
+    bonds:  { mean: 0.04, stdDev: 0.06 },
+    cash:   { mean: 0.02, stdDev: 0.01 },
+    crypto: { mean: 0.10, stdDev: 0.50 },
+  };
+
+  it('#32a higher stocks.mean → measurably higher success rate', () => {
+    const low = run({
       investments: withInvestments({
-        assetClassReturns: {
-          stocks: { mean: 0.05, stdDev: 0.18 },
-          bonds: { mean: 0.02, stdDev: 0.06 },
-          cash: { mean: 0.01, stdDev: 0.01 },
-          crypto: { mean: 0.15, stdDev: 0.60 },
-        },
+        assetClassReturns: { ...constantReturns, stocks: { mean: 0.05, stdDev: 0.16 } },
       }),
-    });
-    const highReturns = run({
+    }, 1000);
+    const high = run({
       investments: withInvestments({
-        assetClassReturns: {
-          stocks: { mean: 0.12, stdDev: 0.18 },
-          bonds: { mean: 0.05, stdDev: 0.06 },
-          cash: { mean: 0.03, stdDev: 0.01 },
-          crypto: { mean: 0.15, stdDev: 0.60 },
-        },
+        assetClassReturns: { ...constantReturns, stocks: { mean: 0.15, stdDev: 0.16 } },
       }),
-    });
-    expect(highReturns.successRate).toBeGreaterThan(lowReturns.successRate);
+    }, 1000);
+    expect(high.successRate - low.successRate).toBeGreaterThan(0.05);
+  });
+
+  it('#32b higher bonds.mean → measurably higher success rate', () => {
+    const low = run({
+      investments: withInvestments({
+        assetClassReturns: { ...constantReturns, bonds: { mean: 0.01, stdDev: 0.06 } },
+      }),
+    }, 1000);
+    const high = run({
+      investments: withInvestments({
+        assetClassReturns: { ...constantReturns, bonds: { mean: 0.07, stdDev: 0.06 } },
+      }),
+    }, 1000);
+    expect(high.successRate - low.successRate).toBeGreaterThan(0.02);
+  });
+
+  it('#32c higher cash.mean → measurably higher median ending balance', () => {
+    const low = run({
+      investments: withInvestments({
+        assetClassReturns: { ...constantReturns, cash: { mean: 0.0, stdDev: 0.01 } },
+      }),
+    }, 1000);
+    const high = run({
+      investments: withInvestments({
+        assetClassReturns: { ...constantReturns, cash: { mean: 0.06, stdDev: 0.01 } },
+      }),
+    }, 1000);
+    expect(high.medianEnding).toBeGreaterThan(low.medianEnding * 1.01);
+  });
+
+  it('#32d higher crypto.mean → measurably higher median ending balance', () => {
+    // Default risk profiles allocate 0% to crypto, so crypto.mean has no effect
+    // unless the allocation is overridden. Use 20% crypto here to expose the parameter.
+    const cryptoAlloc = makeUniformAllocations({ stocks: 50, bonds: 25, cash: 5, crypto: 20 });
+    const low = run({
+      investments: withInvestments({
+        preRetirement: cryptoAlloc,
+        postRetirement: cryptoAlloc,
+        assetClassReturns: { ...constantReturns, crypto: { mean: 0.0, stdDev: 0.50 } },
+      }),
+    }, 1000);
+    const high = run({
+      investments: withInvestments({
+        preRetirement: cryptoAlloc,
+        postRetirement: cryptoAlloc,
+        assetClassReturns: { ...constantReturns, crypto: { mean: 0.30, stdDev: 0.50 } },
+      }),
+    }, 1000);
+    expect(high.medianEnding).toBeGreaterThan(low.medianEnding * 1.02);
   });
 
   it('#33 higher crash frequency → lower success rate', () => {

@@ -135,7 +135,10 @@ export function generateCorrelatedReturns(
 
   const returns = new Array(n);
   for (let i = 0; i < n; i++) {
-    returns[i] = Math.max(-1, effMeans[i] + effStdDevs[i] * correlated[i]);
+    // Floor at -60%: historical worst calendar-year stock return is ~-43% (1931);
+    // even 2008 was -38%. Allow severe bears but prevent unrealistic wipeouts
+    // from Gaussian tails in the bear regime.
+    returns[i] = Math.max(-0.60, effMeans[i] + effStdDevs[i] * correlated[i]);
   }
   return returns;
 }
