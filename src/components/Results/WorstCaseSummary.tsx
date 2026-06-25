@@ -2,6 +2,9 @@ import React from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
+import {
+  GRID_STROKE, AXIS_TICK_FILL, AXIS_LINE_STROKE, FAILURE_BAR_FILL, TOOLTIP_STYLE,
+} from './chartTheme';
 
 interface WorstCaseSummaryProps {
   depletionAges: (number | null)[];
@@ -32,8 +35,8 @@ export function WorstCaseSummary({ depletionAges, successRate }: WorstCaseSummar
         When Money Runs Out
       </h4>
       <div className="flex items-baseline gap-2 mb-2">
-        <span className={`text-lg font-bold ${failureCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-          {failureCount}
+        <span className="text-lg font-bold tabular-nums text-gray-700 dark:text-gray-200">
+          {failureCount.toLocaleString()}
         </span>
         <span className="text-xs text-gray-400">
           of {totalSims.toLocaleString()} simulations failed
@@ -44,29 +47,29 @@ export function WorstCaseSummary({ depletionAges, successRate }: WorstCaseSummar
       {chartData.length > 0 ? (
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={chartData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+            <CartesianGrid stroke={GRID_STROKE} vertical={false} />
             <XAxis
               dataKey="age"
-              tick={{ fill: '#888', fontSize: 11 }}
+              tick={{ fill: AXIS_TICK_FILL, fontSize: 11 }}
               tickLine={false}
               minTickGap={20}
-              axisLine={{ stroke: '#444' }}
-              label={{ value: 'Age', position: 'insideBottom', offset: -2, fill: '#666', fontSize: 10 }}
+              axisLine={{ stroke: AXIS_LINE_STROKE }}
+              label={{ value: 'Age', position: 'insideBottom', offset: -2, fill: AXIS_TICK_FILL, fontSize: 10 }}
             />
             <YAxis
-              tick={{ fill: '#888', fontSize: 11 }}
+              tick={{ fill: AXIS_TICK_FILL, fontSize: 11 }}
               tickLine={false}
               axisLine={false}
               allowDecimals={false}
             />
             <Tooltip
-              contentStyle={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 6, fontSize: 12 }}
-              labelStyle={{ color: '#aaa' }}
-              itemStyle={{ color: '#f47c79' }}
+              contentStyle={TOOLTIP_STYLE}
+              labelStyle={{ color: '#0f172a', fontWeight: 600 }}
+              itemStyle={{ color: '#374151' }}
               formatter={(value: number) => [`${value} simulations`, 'Depleted']}
               labelFormatter={(age: number) => `Age ${age}`}
             />
-            <Bar dataKey="count" fill="#f47c79" radius={[2, 2, 0, 0]} />
+            <Bar dataKey="count" fill={FAILURE_BAR_FILL} radius={[2, 2, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       ) : (

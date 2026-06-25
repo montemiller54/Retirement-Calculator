@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import type { YearResult } from '../../types';
 import { formatCompact } from '../../utils/format';
+import { GRID_STROKE, AXIS_TICK_FILL, TOOLTIP_STYLE } from './chartTheme';
 
 interface CashflowChartProps {
   data: YearResult[];
@@ -58,14 +59,15 @@ export function CashflowChart({ data, retirementAge, currentAge }: CashflowChart
       </h4>
       <ResponsiveContainer width="100%" height={250}>
         <ComposedChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" />
-          <XAxis dataKey="age" tick={{ fontSize: 10, fill: '#888', stroke: 'none' }} minTickGap={20} />
-          <YAxis tickFormatter={formatCompact} tick={{ fontSize: 10, fill: '#888', stroke: 'none' }} width={55} />
+          <CartesianGrid stroke={GRID_STROKE} vertical={false} />
+          <XAxis dataKey="age" tick={{ fontSize: 10, fill: AXIS_TICK_FILL, stroke: 'none' }} minTickGap={20} />
+          <YAxis tickFormatter={formatCompact} tick={{ fontSize: 10, fill: AXIS_TICK_FILL, stroke: 'none' }} width={55} />
           <Tooltip
             formatter={(val: number, name: string) => [formatCompact(val), name]}
             labelFormatter={(label) => `Age ${label}  ·  Year ${birthYear + Number(label)}`}
-            contentStyle={{ fontSize: 11 }}
-            labelStyle={{ color: '#000' }}
+            contentStyle={TOOLTIP_STYLE}
+            labelStyle={{ color: '#0f172a', fontWeight: 600 }}
+            itemStyle={{ color: '#374151' }}
           />
           <Legend wrapperStyle={{ fontSize: 10 }} />
           {visibleSeries.map(s => (

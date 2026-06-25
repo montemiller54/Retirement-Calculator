@@ -5,6 +5,11 @@ import {
 } from 'recharts';
 import type { PercentileBand } from '../../types';
 import { formatCompact } from '../../utils/format';
+import {
+  GRID_STROKE, AXIS_TICK_FILL, RETIREMENT_MARKER_STROKE, RETIREMENT_MARKER_FILL,
+  FAN_BAND_COLOR, FAN_BAND_OUTER_OPACITY, FAN_BAND_INNER_OPACITY, FAN_BAND_WORST_OPACITY,
+  FAN_MEDIAN_STROKE, TOOLTIP_STYLE,
+} from './chartTheme';
 
 interface FanChartProps {
   data: PercentileBand[];
@@ -24,21 +29,28 @@ export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
   const birthYear = new Date().getFullYear() - currentAge;
   return (
     <div className="card">
-      <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-        Portfolio Value Over Time (Simulated)
-      </h4>
+      <div className="flex items-center justify-between mb-2 gap-3 flex-wrap">
+        <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          Portfolio Value Over Time (Simulated)
+        </h4>
+        <div className="flex items-center gap-3 text-[10px] text-gray-500 dark:text-gray-400">
+          <LegendSwatch color={FAN_MEDIAN_STROKE} kind="line" label="Median" />
+          <LegendSwatch color={FAN_BAND_COLOR} kind="band" opacity={FAN_BAND_INNER_OPACITY} label="25–75%" />
+          <LegendSwatch color={FAN_BAND_COLOR} kind="band" opacity={FAN_BAND_OUTER_OPACITY} label="10–90%" />
+        </div>
+      </div>
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#4b5563" />
+          <CartesianGrid stroke={GRID_STROKE} vertical={false} />
           <XAxis
             dataKey="age"
-            tick={{ fontSize: 10, fill: '#888', stroke: 'none' }}
+            tick={{ fontSize: 10, fill: AXIS_TICK_FILL, stroke: 'none' }}
             minTickGap={20}
-            label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fontSize: 11, fill: '#888' }}
+            label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fontSize: 11, fill: AXIS_TICK_FILL }}
           />
           <YAxis
             tickFormatter={formatCompact}
-            tick={{ fontSize: 10, fill: '#888', stroke: 'none' }}
+            tick={{ fontSize: 10, fill: AXIS_TICK_FILL, stroke: 'none' }}
             width={55}
           />
           <Tooltip
@@ -48,54 +60,36 @@ export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
               return idx >= 0 ? idx : 99;
             }}
             labelFormatter={(label) => `Age ${label}  ·  Year ${birthYear + Number(label)}`}
-            contentStyle={{ fontSize: 11 }}
-            labelStyle={{ color: '#000' }}
+            contentStyle={TOOLTIP_STYLE}
+            labelStyle={{ color: '#0f172a', fontWeight: 600 }}
             itemStyle={{ color: '#374151' }}
           />
           <ReferenceLine
             x={retirementAge}
-            stroke="#ef4444"
-            strokeDasharray="5 5"
-            label={{ value: 'Retire', position: 'top', fontSize: 10, fill: '#ef4444' }}
+            stroke={RETIREMENT_MARKER_STROKE}
+            strokeDasharray="4 4"
+            label={{ value: 'Retire', position: 'top', fontSize: 10, fill: RETIREMENT_MARKER_FILL }}
           />
-          {/* p75 band — light blue */}
-          <Area
-            type="monotone"
-            dataKey="p75"
-            stroke="none"
-            fill="#93c5fd"
-            fillOpacity={0.4}
-            name="p75_area"
-            tooltipType="none"
-          />
-          {/* p25 band — medium blue */}
-          <Area
-            type="monotone"
-            dataKey="p25"
-            stroke="none"
-            fill="#bfdbfe"
-            fillOpacity={0.6}
-            name="p25_area"
-            tooltipType="none"
-          />
-          {/* p10 band — purple shading */}
-          <Area
-            type="monotone"
-            dataKey="p10"
-            stroke="none"
-            fill="#7c3aed"
-            fillOpacity={0.35}
-            name="p10_area"
-            tooltipType="none"
-          />
-          {/* Lines for all percentiles */}
-          <Line type="monotone" dataKey="p75" stroke="#3b82f6" strokeWidth={1} dot={false} name="p75" legendType="none" />
-          <Line type="monotone" dataKey="p50" stroke="#fbbf24" strokeWidth={2} strokeDasharray="6 3" dot={false} name="p50" />
-          <Line type="monotone" dataKey="p25" stroke="#60a5fa" strokeWidth={1} dot={false} name="p25" legendType="none" />
-          <Line type="monotone" dataKey="p10" stroke="#7c3aed" strokeWidth={1.5} dot={false} name="p10" legendType="none" />
+          <Area type="monotone" dataKey="p75" stroke="none" fill={FAN_BAND_COLOR} fillOpacity={FAN_BAND_OUTER_OPACITY} name="p75_area" tooltipType="none" />
+          <Area type="monotone" dataKey="p25" stroke="none" fill={FAN_BAND_COLOR} fillOpacity={FAN_BAND_INNER_OPACITY} name="p25_area" tooltipType="none" />
+          <Area type="monotone" dataKey="p10" stroke="none" fill={FAN_BAND_COLOR} fillOpacity={FAN_BAND_WORST_OPACITY} name="p10_area" tooltipType="none" />
+          <Line type="monotone" dataKey="p50" stroke={FAN_MEDIAN_STROKE} strokeWidth={2.5} dot={false} name="p50" />
         </ComposedChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">Range of outcomes across 5,000 simulations. The dashed gold line shows the median at each age. The purple shaded area shows the worst 10%. Lighter bands show the wider range of possibilities.</p>
+      <p className="text-[10px] text-gray-400 mt-2 px-1">Range of outcomes across 5,000 simulations. The solid line is the median (typical outcome). The darker band covers the middle 50% of outcomes; the lighter band covers 80%.</p>
     </div>
+  );
+}
+
+function LegendSwatch({ color, kind, opacity = 1, label }: { color: string; kind: 'line' | 'band'; opacity?: number; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {kind === 'line' ? (
+        <span className="inline-block w-4 h-[2.5px] rounded-sm" style={{ background: color }} />
+      ) : (
+        <span className="inline-block w-4 h-2.5 rounded-sm" style={{ background: color, opacity }} />
+      )}
+      <span>{label}</span>
+    </span>
   );
 }
