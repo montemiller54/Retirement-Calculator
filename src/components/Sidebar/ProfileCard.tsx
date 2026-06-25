@@ -63,7 +63,7 @@ export function ProfileCard({ validationErrors }: CardProps) {
           <Field label="Your age" help="You today." width="age">
             <input
               type="number"
-              className={`input-field text-center w-24 ${fieldErrorClass(ve, 'currentAge')}`}
+              className={`input-field text-center w-full ${fieldErrorClass(ve, 'currentAge')}`}
               value={scenario.currentAge}
               min={18}
               max={99}
@@ -83,7 +83,7 @@ export function ProfileCard({ validationErrors }: CardProps) {
           >
             <input
               type="number"
-              className={`input-field text-center w-24 ${fieldErrorClass(ve, 'retirementAge')}`}
+              className={`input-field text-center w-full ${fieldErrorClass(ve, 'retirementAge')}`}
               value={scenario.retirementAge}
               min={18}
               max={99}
@@ -94,7 +94,7 @@ export function ProfileCard({ validationErrors }: CardProps) {
           <Field label="Plan to" help="Often 90–95 to plan for longer lives." width="age">
             <input
               type="number"
-              className={`input-field text-center w-24 ${fieldErrorClass(ve, 'endAge')}`}
+              className={`input-field text-center w-full ${fieldErrorClass(ve, 'endAge')}`}
               value={scenario.endAge}
               min={scenario.currentAge + 1}
               max={120}
@@ -120,7 +120,7 @@ export function ProfileCard({ validationErrors }: CardProps) {
               <Field label="Spouse age" help="Spouse today." width="age">
                 <input
                   type="number"
-                  className={`input-field text-center w-24 ${fieldErrorClass(ve, 'spouse.currentAge')}`}
+                  className={`input-field text-center w-full ${fieldErrorClass(ve, 'spouse.currentAge')}`}
                   value={scenario.spouse.currentAge}
                   min={18}
                   max={99}
@@ -230,7 +230,7 @@ function Field({
       : 'text-gray-500 dark:text-gray-400';
   // width="age" fixes the wrapper to a consistent column width so fields don't
   // shift based on help-text length
-  const wrapperClass = width === 'age' ? 'shrink-0 w-44' : '';
+  const wrapperClass = width === 'age' ? 'shrink-0 w-56' : '';
   return (
     <div className={wrapperClass}>
       <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{label}</label>
