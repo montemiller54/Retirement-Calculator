@@ -50,7 +50,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
       {/* ── Monthly Spending ── */}
       <Section title="Monthly Spending" description="Your base monthly expenses in today's dollars. Automatically adjusted for inflation.">
         <div className="space-y-4">
-          <div className="max-w-sm">
+          <div>
             <Field label="Monthly amount" help="Exclude mortgage P&I and healthcare if modeled below.">
               <div className="relative w-48">
                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
@@ -62,7 +62,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
             </Field>
           </div>
 
-          <div className="max-w-sm">
+          <div>
             <PctSlider
               label="Inflation"
               value={scenario.spendingInflationRate * 100}
@@ -94,7 +94,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
 
           {scenario.housing?.enabled && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 max-w-md">
+              <div className="grid grid-cols-2 gap-4">
                 <Field label={<>Monthly Mortgage <InfoTip text="Enter only principal and interest — exclude taxes, insurance, and HOA fees. Those should be included in your base monthly spending." /></>}>
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
@@ -106,7 +106,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
                 </Field>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 max-w-md">
+              <div className="grid grid-cols-2 gap-4">
                 <Field label="Downsizing Proceeds" help="0 = no downsizing">
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
@@ -135,7 +135,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
 
           {hc.enabled && (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4 max-w-lg">
+              <div className="grid grid-cols-3 gap-4">
                 <Field
                   label={<>Pre-<input type="number" className={`inline-input w-8 ${fieldErrorClass(ve, 'healthcare.medicareStartAge')}`} value={hc.medicareStartAge} onChange={e => setField('healthcare.medicareStartAge', parseInt(e.target.value) || 65)} /> $/mo</>}
                   help={`age ${scenario.retirementAge}–${hc.medicareStartAge - 1}`}
@@ -166,7 +166,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
                 </Field>
               </div>
 
-              <div className="max-w-sm pt-2">
+              <div className="pt-2">
                 <PctSlider
                   label="Medical Inflation"
                   value={hc.inflationRate * 100}
@@ -199,7 +199,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
           <div className="space-y-3">
             {scenario.oneTimeExpenses.map(exp => (
               <div key={exp.id} className="rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-3 space-y-2">
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-2 items-start">
                   <input
                     className="input-field w-48 text-sm"
                     value={exp.name}
@@ -226,7 +226,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
                   </div>
                   <button
                     type="button"
-                    className="text-gray-400 hover:text-red-500 text-sm px-1 shrink-0"
+                    className="text-gray-400 hover:text-red-500 text-sm px-1 shrink-0 mt-2"
                     onClick={() => removeExpense(exp.id)}
                     aria-label="Remove expense"
                   >✕</button>

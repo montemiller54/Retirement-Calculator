@@ -168,7 +168,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
         )}
 
         {visibleAccounts.includes('taxable') && (
-          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 max-w-sm">
+          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
             <label className="input-label">Original Investment %
               <InfoTip text="The percentage of your taxable brokerage account that represents money you originally invested (your 'cost basis'), versus gains from growth. This affects how much tax you pay when selling." />
             </label>
@@ -200,7 +200,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
         <div className="space-y-4">
           <div>
             <label className="input-label">Risk Profile</label>
-            <div className="flex gap-2 max-w-md">
+            <div className="flex gap-2">
               {(['conservative', 'balanced', 'aggressive'] as RiskProfile[]).map(p => (
                 <button
                   key={p}
@@ -220,7 +220,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
 
           {/* Default allocation display — Pre & Post */}
           {!showPerAccount && (
-            <div className="max-w-md">
+            <div>
               {/* Asset class column headers */}
               <div className="grid grid-cols-[100px_repeat(4,1fr)] gap-2 mb-1">
                 <span />
@@ -332,9 +332,9 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
           </div>
 
           {showPerAccount && (
-            <div className="max-w-lg">
+            <div>
               {!isRetired && (
-                <div className="flex gap-1 mb-3 max-w-xs">
+                <div className="flex gap-1 mb-3">
                   {(['pre', 'post'] as const).map(p => (
                     <button
                       key={p}
@@ -417,7 +417,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
           {/* Market Outlook selector */}
           <div>
             <label className="input-label">Market Outlook</label>
-            <div className="flex gap-2 max-w-md">
+            <div className="flex gap-2">
               {(['conservative', 'moderate', 'optimistic'] as ReturnOutlook[]).map(o => (
                 <button
                   key={o}
@@ -437,7 +437,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
 
           {/* Default return summary */}
           {!customizeReturns && (
-            <div className="max-w-sm space-y-2">
+            <div className="space-y-2">
               <div className="grid grid-cols-4 gap-3">
                 {ASSET_CLASSES.map(ac => (
                   <div key={ac} className="text-center">
@@ -466,7 +466,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
 
           {/* Customizable per-asset return inputs */}
           {customizeReturns && (
-            <div className="max-w-sm space-y-3">
+            <div className="space-y-3">
               <div className="space-y-1.5">
                 <div className="grid grid-cols-[80px_1fr] gap-2 items-center">
                   <span className="text-xs font-medium text-gray-500" />
