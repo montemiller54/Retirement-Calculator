@@ -26,8 +26,8 @@ function AppInner() {
   return (
     <div className="h-screen flex flex-col">
       {/* Top bar */}
-      <header className="flex items-center justify-between px-5 py-2.5 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
-        <div className="flex items-center gap-4">
+      <header className="flex items-center px-5 py-2.5 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
+        <div className="flex items-center gap-4 shrink-0">
           <a href="/" className="flex items-center gap-2 group">
             <PlainsightMark className="w-6 h-6 text-primary-600 dark:text-primary-400" />
             <span className="text-[15px] font-semibold tracking-tight text-gray-900 dark:text-gray-100">
@@ -40,10 +40,12 @@ function AppInner() {
             100% private
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex-1 flex items-center justify-center">
           <ScenarioManager />
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
           <button
-            className="ml-1 text-sm p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
+            className="text-sm p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
             onClick={toggleDark}
             title="Toggle theme"
             aria-label="Toggle theme"

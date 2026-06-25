@@ -90,12 +90,12 @@ export function ScenarioManager() {
 
   return (
     <div className="flex items-center gap-2">
-        <span className="text-[10px] font-bold tracking-wider uppercase text-gray-500 dark:text-gray-400 shrink-0">
+        <span className="text-xs font-bold tracking-wider uppercase text-gray-400 dark:text-gray-500 shrink-0">
           Plan
         </span>
 
         <input
-          className="w-auto min-w-[140px] max-w-xs bg-transparent border-0 border-b border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-primary-500 focus:outline-none focus:ring-0 px-1 py-0.5 text-sm font-semibold text-gray-900 dark:text-gray-100 transition-colors"
+          className="w-auto min-w-[140px] max-w-xs bg-transparent border-0 border-b border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-primary-500 focus:outline-none focus:ring-0 px-1 py-0.5 text-base font-semibold text-gray-900 dark:text-gray-100 transition-colors"
           value={scenario.name}
           onChange={e => setField('name', e.target.value)}
           placeholder="Untitled plan"
