@@ -321,7 +321,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
           {hiddenAccounts.length > 0 && (
             <div>
               <select
-                className="input-field text-sm"
+                className="input-field text-sm w-56"
                 value=""
                 onChange={e => { if (e.target.value) addAccount(e.target.value as AccountType); }}
               >
