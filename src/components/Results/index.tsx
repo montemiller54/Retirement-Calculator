@@ -3,6 +3,7 @@ import type { SimulationResult, ScenarioInput } from '../../types';
 import type { ValidationError } from '../../utils/validation';
 import { SuccessGauge } from './SuccessGauge';
 import { FanChart } from './FanChart';
+import { PlanJourneyChart } from './PlanJourneyChart';
 import { AccountDrawdownChart } from './AccountDrawdownChart';
 import { CashflowChart } from './CashflowChart';
 import { TaxChart } from './TaxChart';
@@ -99,6 +100,8 @@ export function ResultsPanel({ result, scenario, retirementAge, currentAge, isRu
       <div className="text-[11px] text-gray-500 dark:text-gray-400 px-1">
         Charts labeled <span className="font-medium">Simulated</span> come from 5,000 Monte Carlo runs with real market volatility. Charts labeled <span className="font-medium">Average</span> use a smooth average-return projection.
       </div>
+
+      <PlanJourneyChart data={result.medianPath} scenario={scenario} retirementAge={retirementAge} currentAge={currentAge} />
 
       <FanChart data={result.percentileBands} retirementAge={retirementAge} currentAge={currentAge} />
 

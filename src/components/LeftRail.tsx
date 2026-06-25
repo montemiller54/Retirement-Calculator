@@ -71,6 +71,17 @@ export function LeftRail({
           </ul>
         )}
 
+        <div className="mt-1 px-3 py-2">
+          <button
+            className="btn-cta"
+            onClick={onRun}
+            disabled={isRunning || validationErrors.length > 0}
+            title={validationErrors.length > 0 ? 'Fix validation errors first' : undefined}
+          >
+            {isRunning ? `Running ${progress}%` : 'Run Simulation'}
+          </button>
+        </div>
+
         <div className="mt-1 px-3 pt-2 border-t border-gray-200 dark:border-gray-800">
           <RailButton
             label="Methodology"
@@ -80,17 +91,6 @@ export function LeftRail({
           />
         </div>
       </nav>
-
-      <div className="p-3 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <button
-          className="btn-cta"
-          onClick={onRun}
-          disabled={isRunning || validationErrors.length > 0}
-          title={validationErrors.length > 0 ? 'Fix validation errors first' : undefined}
-        >
-          {isRunning ? `Running ${progress}%` : 'Run Simulation'}
-        </button>
-      </div>
     </aside>
   );
 }

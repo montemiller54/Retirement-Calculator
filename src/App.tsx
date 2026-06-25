@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ScenarioProvider, useScenario } from './context/ScenarioContext';
 import { ResultsPanel } from './components/Results';
 import { ScenarioManager } from './components/ScenarioManager';
@@ -17,6 +17,15 @@ function AppInner() {
   const [view, setView] = useState<AppView>({ kind: 'profile', sectionId: 'profile' });
 
   const validationErrors = validateScenario(scenario);
+
+  // Auto-navigate to results when simulation completes
+  const wasRunning = useRef(false);
+  useEffect(() => {
+    if (wasRunning.current && !isRunning && result) {
+      setView({ kind: 'results', sectionId: 'all' });
+    }
+    wasRunning.current = isRunning;
+  }, [isRunning, result]);
 
   const handleRun = () => {
     if (validationErrors.length > 0) return;
