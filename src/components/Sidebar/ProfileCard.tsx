@@ -60,11 +60,11 @@ export function ProfileCard({ validationErrors }: CardProps) {
         title="Timeline"
         description="When you're working, when you stop, and how long the plan needs to last."
       >
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-          <Field label="Your age" help="You today.">
+        <div className="flex flex-wrap gap-x-8 gap-y-4">
+          <Field label="Your age" help="You today." width="age">
             <input
               type="number"
-              className={`input-field text-right ${fieldErrorClass(ve, 'currentAge')}`}
+              className={`input-field text-center w-24 ${fieldErrorClass(ve, 'currentAge')}`}
               value={scenario.currentAge}
               min={18}
               max={99}
@@ -72,6 +72,19 @@ export function ProfileCard({ validationErrors }: CardProps) {
             />
             <FieldError errors={ve} field="currentAge" />
           </Field>
+          {scenario.spouse?.enabled && (
+            <Field label="Spouse age" help="Spouse today." width="age">
+              <input
+                type="number"
+                className={`input-field text-center w-24 ${fieldErrorClass(ve, 'spouse.currentAge')}`}
+                value={scenario.spouse.currentAge}
+                min={18}
+                max={99}
+                onChange={e => setField('spouse.currentAge', parseInt(e.target.value) || 0)}
+              />
+              <FieldError errors={ve} field="spouse.currentAge" />
+            </Field>
+          )}
           <Field
             label="Retire at"
             help={
@@ -80,10 +93,11 @@ export function ProfileCard({ validationErrors }: CardProps) {
                 : 'When you stop working full-time.'
             }
             helpTone={scenario.currentAge >= scenario.retirementAge ? 'success' : 'muted'}
+            width="age"
           >
             <input
               type="number"
-              className={`input-field text-right ${fieldErrorClass(ve, 'retirementAge')}`}
+              className={`input-field text-center w-24 ${fieldErrorClass(ve, 'retirementAge')}`}
               value={scenario.retirementAge}
               min={18}
               max={99}
@@ -91,10 +105,10 @@ export function ProfileCard({ validationErrors }: CardProps) {
             />
             <FieldError errors={ve} field="retirementAge" />
           </Field>
-          <Field label="Plan to" help="A common choice is 90–95 to be safe against living longer than expected.">
+          <Field label="Plan to" help="Often 90–95 to plan for longer lives." width="age">
             <input
               type="number"
-              className={`input-field text-right ${fieldErrorClass(ve, 'endAge')}`}
+              className={`input-field text-center w-24 ${fieldErrorClass(ve, 'endAge')}`}
               value={scenario.endAge}
               min={scenario.currentAge + 1}
               max={120}
@@ -103,10 +117,21 @@ export function ProfileCard({ validationErrors }: CardProps) {
             <FieldError errors={ve} field="endAge" />
           </Field>
         </div>
+
+        <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700/50">
+          <Toggle
+            checked={scenario.spouse?.enabled ?? false}
+            onChange={v => setField('spouse.enabled', v)}
+            label="Include spouse"
+          />
+          <p className="mt-1 ml-12 text-[11px] text-gray-500 dark:text-gray-400">
+            Models joint income, joint Social Security, and joint expenses.
+          </p>
+        </div>
       </Section>
 
       <Section
-        title="Tax situation"
+        title="Taxes"
         description="Used to estimate federal and state income taxes throughout the plan."
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
@@ -133,32 +158,6 @@ export function ProfileCard({ validationErrors }: CardProps) {
             </select>
           </Field>
         </div>
-      </Section>
-
-      <Section
-        title="Spouse"
-        description="Add a spouse to model joint income, joint Social Security, and joint expenses."
-      >
-        <Toggle
-          checked={scenario.spouse?.enabled ?? false}
-          onChange={v => setField('spouse.enabled', v)}
-          label="Include spouse in this plan"
-        />
-        {scenario.spouse?.enabled && (
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-4">
-            <Field label="Spouse age" help="Spouse today.">
-              <input
-                type="number"
-                className={`input-field text-right ${fieldErrorClass(ve, 'spouse.currentAge')}`}
-                value={scenario.spouse.currentAge}
-                min={18}
-                max={99}
-                onChange={e => setField('spouse.currentAge', parseInt(e.target.value) || 0)}
-              />
-              <FieldError errors={ve} field="spouse.currentAge" />
-            </Field>
-          </div>
-        )}
       </Section>
 
       {/* Toast notification for auto-synced job end age */}
@@ -200,22 +199,27 @@ function Field({
   label,
   help,
   helpTone = 'muted',
+  width,
   children,
 }: {
   label: React.ReactNode;
   help?: React.ReactNode;
   helpTone?: 'muted' | 'success';
+  width?: 'age';
   children: React.ReactNode;
 }) {
   const helpClass =
     helpTone === 'success'
       ? 'text-green-600 dark:text-green-400 font-medium'
       : 'text-gray-500 dark:text-gray-400';
+  // width="age" sizes the field's help text to the input width so wrapping looks intentional
+  const helpWidthClass = width === 'age' ? 'max-w-[12rem]' : '';
+  const wrapperClass = width === 'age' ? 'shrink-0' : '';
   return (
-    <div>
+    <div className={wrapperClass}>
       <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{label}</label>
       {children}
-      {help && <p className={`mt-1 text-[11px] ${helpClass}`}>{help}</p>}
+      {help && <p className={`mt-1 text-[11px] ${helpClass} ${helpWidthClass}`}>{help}</p>}
     </div>
   );
 }
