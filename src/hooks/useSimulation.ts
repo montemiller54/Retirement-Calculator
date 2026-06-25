@@ -6,6 +6,8 @@ interface UseSimulationReturn {
   progress: number; // 0-100
   isRunning: boolean;
   error: string | null;
+  lastRunScenario: ScenarioInput | null;
+  lastRunAt: number | null;
   run: (scenario: ScenarioInput, params?: Partial<SimulationParams>) => void;
   cancel: () => void;
 }
@@ -15,6 +17,8 @@ export function useSimulation(): UseSimulationReturn {
   const [progress, setProgress] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastRunScenario, setLastRunScenario] = useState<ScenarioInput | null>(null);
+  const [lastRunAt, setLastRunAt] = useState<number | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const retriesRef = useRef(0);
   const MAX_RETRIES = 2;
@@ -36,6 +40,7 @@ export function useSimulation(): UseSimulationReturn {
     setProgress(0);
     setIsRunning(true);
     retriesRef.current = 0;
+    const scenarioSnapshot = JSON.parse(JSON.stringify(scenario)) as ScenarioInput;
 
     const startWorker = () => {
       const worker = new Worker(
@@ -52,6 +57,8 @@ export function useSimulation(): UseSimulationReturn {
             break;
           case 'complete':
             setResult(msg.result);
+            setLastRunScenario(scenarioSnapshot);
+            setLastRunAt(Date.now());
             setIsRunning(false);
             setProgress(100);
             worker.terminate();
@@ -100,5 +107,5 @@ export function useSimulation(): UseSimulationReturn {
     };
   }, []);
 
-  return { result, progress, isRunning, error, run, cancel };
+  return { result, progress, isRunning, error, lastRunScenario, lastRunAt, run, cancel };
 }

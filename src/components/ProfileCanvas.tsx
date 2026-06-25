@@ -54,7 +54,7 @@ export function ProfileCanvas({ sectionId, validationErrors, setView, onRun, isR
                 onClick={() => {
                   if (hasAnyErrors) return;
                   onRun();
-                  setView({ kind: 'results', sectionId: 'all' });
+                  setView({ kind: 'results', sectionId: 'plan' });
                 }}
                 disabled={isRunning || hasAnyErrors}
                 title={hasAnyErrors ? 'Fix validation errors first' : undefined}

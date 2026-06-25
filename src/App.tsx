@@ -12,7 +12,7 @@ import type { AppView } from './navigation';
 
 function AppInner() {
   const { scenario } = useScenario();
-  const { result, progress, isRunning, error, run } = useSimulation();
+  const { result, progress, isRunning, error, lastRunScenario, lastRunAt, run } = useSimulation();
   const { dark, toggleDark } = useTheme();
   const [view, setView] = useState<AppView>({ kind: 'profile', sectionId: 'profile' });
 
@@ -22,7 +22,7 @@ function AppInner() {
   const wasRunning = useRef(false);
   useEffect(() => {
     if (wasRunning.current && !isRunning && result) {
-      setView({ kind: 'results', sectionId: 'all' });
+      setView({ kind: 'results', sectionId: 'plan' });
     }
     wasRunning.current = isRunning;
   }, [isRunning, result]);
@@ -97,6 +97,11 @@ function AppInner() {
                 progress={progress}
                 error={error}
                 validationErrors={validationErrors}
+                activeTab={view.sectionId}
+                setActiveTab={(id) => setView({ kind: 'results', sectionId: id })}
+                lastRunScenario={lastRunScenario}
+                lastRunAt={lastRunAt}
+                onRun={handleRun}
               />
             )}
             {view.kind === 'methodology' && (

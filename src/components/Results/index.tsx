@@ -1,6 +1,8 @@
 import React from 'react';
 import type { SimulationResult, ScenarioInput } from '../../types';
 import type { ValidationError } from '../../utils/validation';
+import type { ResultsSectionId } from '../../navigation';
+import { RESULTS_SECTIONS } from '../../navigation';
 import { SuccessGauge } from './SuccessGauge';
 import { FanChart } from './FanChart';
 import { PlanJourneyChart } from './PlanJourneyChart';
@@ -9,6 +11,8 @@ import { CashflowChart } from './CashflowChart';
 import { TaxChart } from './TaxChart';
 import { SafeSpendingSection } from './SafeSpendingSection';
 import { WorstCaseSummary } from './WorstCaseSummary';
+import { TrajectoryTable } from './TrajectoryTable';
+import { PlanStatusStrip } from './PlanStatusStrip';
 
 interface ResultsPanelProps {
   result: SimulationResult | null;
@@ -19,9 +23,17 @@ interface ResultsPanelProps {
   progress: number;
   error: string | null;
   validationErrors: ValidationError[];
+  activeTab: ResultsSectionId;
+  setActiveTab: (id: ResultsSectionId) => void;
+  lastRunScenario: ScenarioInput | null;
+  lastRunAt: number | null;
+  onRun: () => void;
 }
 
-export function ResultsPanel({ result, scenario, retirementAge, currentAge, isRunning, progress, error, validationErrors }: ResultsPanelProps) {
+export function ResultsPanel({
+  result, scenario, retirementAge, currentAge, isRunning, progress, error, validationErrors,
+  activeTab, setActiveTab, lastRunScenario, lastRunAt, onRun,
+}: ResultsPanelProps) {
   if (validationErrors.length > 0) {
     return (
       <div className="flex items-center justify-center h-full p-8">
@@ -56,7 +68,7 @@ export function ResultsPanel({ result, scenario, retirementAge, currentAge, isRu
     );
   }
 
-  if (isRunning) {
+  if (isRunning && !result) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="card text-center">
@@ -91,28 +103,106 @@ export function ResultsPanel({ result, scenario, retirementAge, currentAge, isRu
   }
 
   return (
-    <div className="h-full overflow-y-auto p-4 space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <SuccessGauge rate={result.successRate} numSimulations={result.endingBalances.length} />
-        <WorstCaseSummary depletionAges={result.depletionAges} successRate={result.successRate} />
+    <div className="h-full overflow-y-auto">
+      <PlanStatusStrip
+        result={result}
+        scenario={scenario}
+        lastRunScenario={lastRunScenario}
+        lastRunAt={lastRunAt}
+        isRunning={isRunning}
+        onRun={onRun}
+        canRun={validationErrors.length === 0}
+      />
+
+      <div className="sticky top-[49px] z-10 bg-gray-50 dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-center gap-1 px-4 overflow-x-auto">
+          {RESULTS_SECTIONS.map(({ id, label }) => {
+            const active = activeTab === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setActiveTab(id)}
+                className={
+                  active
+                    ? 'relative px-3 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 border-b-2 border-primary-500 -mb-px'
+                    : 'relative px-3 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border-b-2 border-transparent -mb-px'
+                }
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="text-[11px] text-gray-500 dark:text-gray-400 px-1">
-        Charts labeled <span className="font-medium">Simulated</span> come from 5,000 Monte Carlo runs with real market volatility. Charts labeled <span className="font-medium">Average</span> use a smooth average-return projection.
+      <div className="p-4 space-y-4">
+        {activeTab === 'plan' && (
+          <>
+            <PlanJourneyChart
+              data={result.medianPath}
+              scenario={scenario}
+              retirementAge={retirementAge}
+              currentAge={currentAge}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <SuccessGauge rate={result.successRate} numSimulations={result.endingBalances.length} />
+              <div className="card flex flex-col justify-center">
+                <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+                  What's next
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                  Explore the other tabs to see how your portfolio holds up under volatility,
+                  where your income comes from each year, what you'll pay in taxes, and which
+                  accounts get spent first.
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeTab === 'outcomes' && (
+          <>
+            <FanChart
+              data={result.percentileBands}
+              retirementAge={retirementAge}
+              currentAge={currentAge}
+            />
+            <WorstCaseSummary
+              depletionAges={result.depletionAges}
+              successRate={result.successRate}
+            />
+            <SafeSpendingSection scenario={scenario} />
+          </>
+        )}
+
+        {activeTab === 'cashflow' && (
+          <CashflowChart
+            data={result.expectedPath}
+            retirementAge={retirementAge}
+            currentAge={currentAge}
+          />
+        )}
+
+        {activeTab === 'taxes' && (
+          <TaxChart data={result.expectedPath} currentAge={currentAge} />
+        )}
+
+        {activeTab === 'accounts' && (
+          <>
+            <AccountDrawdownChart
+              data={result.medianPath}
+              retirementAge={retirementAge}
+              currentAge={currentAge}
+            />
+            <TrajectoryTable data={result.medianPath} />
+          </>
+        )}
+
+        <p className="text-[11px] text-gray-500 dark:text-gray-400 px-1">
+          Charts labeled <span className="font-medium">Simulated</span> come from 5,000 Monte Carlo runs with real market volatility. Charts labeled <span className="font-medium">Average</span> use a smooth average-return projection.
+        </p>
       </div>
-
-      <PlanJourneyChart data={result.medianPath} scenario={scenario} retirementAge={retirementAge} currentAge={currentAge} />
-
-      <FanChart data={result.percentileBands} retirementAge={retirementAge} currentAge={currentAge} />
-
-      <AccountDrawdownChart data={result.medianPath} retirementAge={retirementAge} currentAge={currentAge} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <CashflowChart data={result.expectedPath} retirementAge={retirementAge} currentAge={currentAge} />
-        <TaxChart data={result.expectedPath} currentAge={currentAge} />
-      </div>
-
-      <SafeSpendingSection scenario={scenario} />
     </div>
   );
 }
