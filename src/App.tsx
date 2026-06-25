@@ -40,9 +40,10 @@ function AppInner() {
             100% private
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-3">
+          <ScenarioManager />
           <button
-            className="ml-3 text-sm p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
+            className="ml-1 text-sm p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
             onClick={toggleDark}
             title="Toggle theme"
             aria-label="Toggle theme"
@@ -65,10 +66,6 @@ function AppInner() {
         />
 
         <main className="flex-1 bg-gray-50 dark:bg-gray-950 flex flex-col overflow-hidden">
-          <div className="shrink-0">
-            <ScenarioManager />
-          </div>
-
           <div className="flex-1 overflow-hidden">
             {view.kind === 'profile' && (
               <ProfileCanvas
