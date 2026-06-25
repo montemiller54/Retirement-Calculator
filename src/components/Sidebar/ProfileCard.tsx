@@ -3,6 +3,7 @@ import { useScenario } from '../../context/ScenarioContext';
 import { FILING_STATUS_LABELS, type FilingStatus } from '../../types';
 import { STATE_TAX_DATA, STATE_CODES } from '../../constants/state-tax';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
+import { Section, Field } from './shared';
 
 interface Toast {
   message: string;
@@ -188,54 +189,6 @@ export function ProfileCard({ validationErrors }: CardProps) {
           </button>
         </div>
       )}
-    </div>
-  );
-}
-
-// Local layout helpers — co-located with the card so we can iterate freely.
-// Once the pattern stabilizes across all profile cards we can promote them
-// into a shared module.
-function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
-  return (
-    <section>
-      <div className="mb-3">
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
-        {description && (
-          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{description}</p>
-        )}
-      </div>
-      <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function Field({
-  label,
-  help,
-  helpTone = 'muted',
-  width,
-  children,
-}: {
-  label: React.ReactNode;
-  help?: React.ReactNode;
-  helpTone?: 'muted' | 'success';
-  width?: 'age';
-  children: React.ReactNode;
-}) {
-  const helpClass =
-    helpTone === 'success'
-      ? 'text-green-600 dark:text-green-400 font-medium'
-      : 'text-gray-500 dark:text-gray-400';
-  // width="age" fixes the wrapper to a consistent column width so fields don't
-  // shift based on help-text length
-  const wrapperClass = width === 'age' ? 'shrink-0 w-56' : '';
-  return (
-    <div className={wrapperClass}>
-      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">{label}</label>
-      {children}
-      {help && <p className={`mt-1 text-[11px] ${helpClass}`}>{help}</p>}
     </div>
   );
 }

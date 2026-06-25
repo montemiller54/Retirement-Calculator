@@ -3,7 +3,7 @@ import { useScenario } from '../../context/ScenarioContext';
 import { ACCOUNT_LABELS, ACCOUNT_TYPES, type AccountType, type Job } from '../../types';
 import { CurrencyInput } from './CurrencyInput';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
-import { PctSlider } from './shared';
+import { PctSlider, Section, Field } from './shared';
 import { InfoTip } from './InfoTip';
 import { ACCOUNT_DESCRIPTIONS } from '../../constants/descriptions';
 
@@ -11,22 +11,9 @@ const ALLOCATION_ACCOUNTS: AccountType[] = [
   'traditional401k', 'roth401k', 'traditionalIRA', 'rothIRA', 'taxable', 'hsa', 'cashAccount', 'otherAssets',
 ];
 
-function DollarInput({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
-  return (
-    <div>
-      <label className="input-label">{label}</label>
-      <div className="relative">
-        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
-        <CurrencyInput value={value} onChange={onChange} />
-      </div>
-    </div>
-  );
-}
-
 export function EarningsCard({ validationErrors }: CardProps) {
   const { scenario, setField } = useScenario();
   const ve = validationErrors;
-  const [showDetails, setShowDetails] = useState(false);
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
 
   const jobs = scenario.jobs ?? [];
@@ -63,7 +50,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
   const addJob = () => {
     const newJob: Job = {
       id: crypto.randomUUID(),
-      name: `Job ${jobs.length + 1}`,
+      name: '',
       monthlyPay: 5000,
       startAge: scenario.retirementAge,
       endAge: scenario.retirementAge + 5,
@@ -91,58 +78,96 @@ export function EarningsCard({ validationErrors }: CardProps) {
   // Total current monthly income from active jobs
   const activeJobs = jobs.filter(j => scenario.currentAge >= j.startAge && scenario.currentAge <= j.endAge);
   const totalMonthly = activeJobs.reduce((sum, j) => sum + j.monthlyPay, 0);
+  const totalYearly = totalMonthly * 12;
 
   return (
-    <div className="space-y-4">
-      <div>
-        <p className="text-[10px] text-gray-400 mb-3">Your jobs, income, and how you save it.</p>
-
-        {/* Jobs list */}
-        <div className="space-y-2">
+    <div className="space-y-8">
+      <Section
+        title="Jobs"
+        description="One row per income source. Each can have its own 401(k) and employer match."
+        trailing={totalYearly > 0 ? <span className="font-medium text-gray-700 dark:text-gray-300">${totalYearly.toLocaleString()}/yr</span> : undefined}
+      >
+        <div className="space-y-3">
           {jobs.map(job => {
             const isActive = scenario.currentAge >= job.startAge && scenario.currentAge <= job.endAge;
             return (
-              <div key={job.id} className={`p-2 rounded border text-xs space-y-1.5 ${isActive ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-                <div className="flex items-center gap-1">
+              <div
+                key={job.id}
+                className={`relative rounded-md border bg-white dark:bg-gray-900/40 p-3 ${
+                  isActive
+                    ? 'border-gray-200 dark:border-gray-700 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[2px] before:bg-primary-400 before:rounded-r'
+                    : 'border-gray-200 dark:border-gray-700'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-3">
                   <input
-                    className="input-field flex-1 text-xs py-0.5"
+                    className="input-field flex-1 text-sm font-medium"
                     value={job.name}
+                    placeholder="e.g., Acme Corp"
                     onChange={e => updateJob(job.id, 'name', e.target.value)}
                   />
                   {isActive && (
-                    <span className="text-[9px] text-green-600 dark:text-green-400 font-medium px-1">Active</span>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded">
+                      Active
+                    </span>
                   )}
-                  <button className="text-red-400 hover:text-red-600 px-1" onClick={() => removeJob(job.id)}>✕</button>
+                  <button
+                    type="button"
+                    className="text-gray-400 hover:text-red-500 text-sm px-1"
+                    onClick={() => removeJob(job.id)}
+                    aria-label="Remove job"
+                    title="Remove job"
+                  >
+                    ✕
+                  </button>
                 </div>
-                <div className="grid grid-cols-3 gap-1">
-                  <DollarInput label="$/mo" value={job.monthlyPay} onChange={v => updateJob(job.id, 'monthlyPay', v)} />
-                  <div>
-                    <label className="input-label">Start Age</label>
-                    <input type="number" className={`input-field text-center ${fieldErrorClass(ve, `job.${job.id}.startAge`)}`} value={job.startAge} onChange={e => updateJob(job.id, 'startAge', parseInt(e.target.value) || 0)} />
-                  </div>
-                  <div>
-                    <label className="input-label">End Age</label>
-                    <input type="number" className={`input-field text-center ${fieldErrorClass(ve, `job.${job.id}.startAge`)}`} value={job.endAge} onChange={e => updateJob(job.id, 'endAge', parseInt(e.target.value) || 0)} />
-                  </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <Field label="Monthly pay">
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
+                      <CurrencyInput value={job.monthlyPay} onChange={v => updateJob(job.id, 'monthlyPay', v)} />
+                    </div>
+                  </Field>
+                  <Field label="Start age">
+                    <input
+                      type="number"
+                      className={`input-field text-center ${fieldErrorClass(ve, `job.${job.id}.startAge`)}`}
+                      value={job.startAge}
+                      onChange={e => updateJob(job.id, 'startAge', parseInt(e.target.value) || 0)}
+                    />
+                  </Field>
+                  <Field label="End age">
+                    <input
+                      type="number"
+                      className={`input-field text-center ${fieldErrorClass(ve, `job.${job.id}.endAge`)}`}
+                      value={job.endAge}
+                      onChange={e => updateJob(job.id, 'endAge', parseInt(e.target.value) || 0)}
+                    />
+                  </Field>
                 </div>
                 <FieldError errors={ve} field={`job.${job.id}`} />
 
-                {/* 401(k) — always visible */}
-                <div className="pt-1.5 border-t border-gray-200 dark:border-gray-600 space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <label className="text-[11px] font-medium text-gray-700 dark:text-gray-300">401(k)</label>
-                    <input type="checkbox" checked={job.has401k} onChange={e => updateJob(job.id, 'has401k', e.target.checked)} />
+                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/50 space-y-2">
+                  <label className="inline-flex items-center gap-2 text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={job.has401k}
+                      onChange={e => updateJob(job.id, 'has401k', e.target.checked)}
+                    />
+                    Offers a 401(k)
                     {job.has401k && job.employerMatchRate > 0 && job.employerMatchCapPct > 0 && (
-                      <span className="text-[10px] text-green-600 dark:text-green-400 font-medium ml-auto">
+                      <span className="text-[11px] text-green-600 dark:text-green-400 font-medium ml-2">
                         ✓ {Math.round(job.employerMatchRate * 100)}% match on {(job.employerMatchCapPct * 100).toFixed(1)}%
                       </span>
                     )}
-                  </div>
+                  </label>
+
                   {job.has401k && (
-                    <div className="space-y-1">
-                      <div className="grid grid-cols-2 gap-2">
+                    <div className="pl-6 space-y-2">
+                      <div className="grid grid-cols-2 gap-4">
                         <PctSlider
-                          label="Match Rate"
+                          label="Match rate"
                           value={job.employerMatchRate * 100}
                           onChange={v => updateJob(job.id, 'employerMatchRate', v / 100)}
                           min={0} max={200} step={5}
@@ -155,25 +180,27 @@ export function EarningsCard({ validationErrors }: CardProps) {
                         />
                       </div>
                       {job.monthlyPay > 0 && job.employerMatchRate > 0 && job.employerMatchCapPct > 0 && (
-                        <p className="text-[10px] text-primary-600 dark:text-primary-400 font-medium">
+                        <p className="text-[11px] text-primary-600 dark:text-primary-400 font-medium">
                           ≈ Employer contributes ${Math.round(job.monthlyPay * 12 * job.employerMatchCapPct * job.employerMatchRate).toLocaleString()}/yr
                         </p>
                       )}
                       <button
-                        className="text-[10px] text-gray-400 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                        type="button"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
                         onClick={() => setExpandedJobId(expandedJobId === job.id ? null : job.id)}
                       >
-                        {expandedJobId === job.id ? '▾ Hide Roth match option' : '▸ Roth match option'}
+                        <span className="text-sm leading-none">{expandedJobId === job.id ? '−' : '+'}</span>
+                        Roth match option
                       </button>
                       {expandedJobId === job.id && (
-                        <div className="pl-2">
+                        <div className="pl-1">
                           <PctSlider
                             label="Match → Roth 401(k)"
                             value={job.employerRothPct ?? 0}
                             onChange={v => updateJob(job.id, 'employerRothPct', Math.round(v))}
                             min={0} max={100} step={10}
                           />
-                          <p className="text-[9px] text-gray-400 dark:text-gray-500 mt-0.5">
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
                             SECURE 2.0: % of employer match deposited to Roth 401(k). Most plans use 0%.
                           </p>
                         </div>
@@ -185,72 +212,71 @@ export function EarningsCard({ validationErrors }: CardProps) {
             );
           })}
         </div>
-        <button className="mt-2 text-xs text-primary-600 dark:text-primary-400 hover:underline" onClick={addJob}>
-          + Add Job
-        </button>
-        {totalMonthly > 0 && (
-          <div className="mt-1 text-[10px] text-gray-400 text-right">
-            ${(totalMonthly * 12).toLocaleString()}/yr current income
-          </div>
-        )}
-      </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <PctSlider
-          label="Salary Growth"
-          value={scenario.salaryGrowthRate * 100}
-          onChange={v => setField('salaryGrowthRate', v / 100)}
-          min={0} max={10} step={0.5}
-        />
-
-        <PctSlider
-          label="Savings Rate"
-          value={scenario.totalSavingsRate * 100}
-          onChange={v => setField('totalSavingsRate', v / 100)}
-          min={0} max={60} step={1}
-        />
-      </div>
-
-      {/* Contribution allocation — collapsible */}
-      <button
-        className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-md border transition-colors ${
-          showDetails
-            ? 'bg-primary-50 dark:bg-primary-900/50 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300 font-medium'
-            : 'bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/60'
-        }`}
-        onClick={() => setShowDetails(!showDetails)}
-      >
-        <span>Contribution Allocation</span>
-        <svg
-          className={`w-4 h-4 transition-transform duration-200 ${showDetails ? 'rotate-180' : ''} ${showDetails ? 'text-primary-500' : 'text-gray-400'}`}
-          fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
+        <button
+          type="button"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+          onClick={addJob}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-        </svg>
-      </button>
+          <span className="text-base leading-none">+</span> Add job
+        </button>
+      </Section>
 
-      {showDetails && (
-        <div className="space-y-3">
-          {/* Allocation */}
+      <Section
+        title="Salary growth & savings rate"
+        description="How much pay rises each year, and how much of it you save."
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+          <Field
+            label="Salary growth"
+            help="Annual raise rate, before promotions. 1–3% is typical."
+          >
+            <PctSlider
+              label=""
+              value={scenario.salaryGrowthRate * 100}
+              onChange={v => setField('salaryGrowthRate', v / 100)}
+              min={0} max={10} step={0.5}
+            />
+          </Field>
+          <Field
+            label="Savings rate"
+            help="Portion of pay saved each month. Split across accounts below."
+          >
+            <PctSlider
+              label=""
+              value={scenario.totalSavingsRate * 100}
+              onChange={v => setField('totalSavingsRate', v / 100)}
+              min={0} max={60} step={1}
+            />
+          </Field>
+        </div>
+      </Section>
+
+      <Section
+        title="Contribution allocation"
+        description="How your monthly savings are split across account types."
+        collapsible
+        defaultOpen={false}
+        trailing={
+          <span className={allocSum === 100 ? 'text-green-600 dark:text-green-400 font-medium' : 'text-red-500 font-medium'}>
+            {allocSum}% of 100%{allocSum !== 100 && (allocSum < 100 ? ` — need ${100 - allocSum}% more` : ` — ${allocSum - 100}% over`)}
+          </span>
+        }
+      >
+        <div className="space-y-4">
+          {/* Preset buttons */}
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="input-label mb-0">Allocation
-                <InfoTip text="How your savings are split across different account types. Each account has different tax rules. The percentages must add up to 100%." />
-              </label>
-              <span className={`text-[10px] font-medium ${allocSum === 100 ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
-                {allocSum}% of 100%{allocSum !== 100 && (allocSum < 100 ? ` — need ${100 - allocSum}% more` : ` — ${allocSum - 100}% over`)}
-              </span>
-            </div>
-            {/* Preset buttons */}
-            <div className="flex gap-1 mb-2">
+            <p className="text-[11px] uppercase tracking-wider font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Quick presets</p>
+            <div className="flex flex-wrap gap-2">
               {[
                 { label: '100% Trad 401(k)', alloc: { traditional401k: 100, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 } },
                 { label: '100% Roth 401(k)', alloc: { traditional401k: 0, roth401k: 100, traditionalIRA: 0, rothIRA: 0, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 } },
-                { label: '50/50 Split', alloc: { traditional401k: 50, roth401k: 50, traditionalIRA: 0, rothIRA: 0, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 } },
+                { label: '50/50 split', alloc: { traditional401k: 50, roth401k: 50, traditionalIRA: 0, rothIRA: 0, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 } },
               ].map(preset => (
                 <button
                   key={preset.label}
-                  className="flex-1 text-[10px] py-1 rounded border border-gray-300 dark:border-gray-600 hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
+                  type="button"
+                  className="text-xs px-2.5 py-1 rounded border border-gray-300 dark:border-gray-600 hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
                   onClick={() => {
                     ALLOCATION_ACCOUNTS.forEach(acct => {
                       setField(`contributionAllocation.${acct}`, (preset.alloc as Record<string, number>)[acct] ?? 0);
@@ -261,49 +287,56 @@ export function EarningsCard({ validationErrors }: CardProps) {
                 </button>
               ))}
             </div>
-            <FieldError errors={ve} field="contributionAllocation" />
-            <div className="space-y-1">
-              {visibleAccounts.map(acct => (
-                <div key={acct} className="flex items-center gap-2">
-                  <span className="text-[11px] w-28 truncate text-gray-600 dark:text-gray-400" title={ACCOUNT_LABELS[acct]}>
-                    {ACCOUNT_LABELS[acct]}
-                    <InfoTip text={ACCOUNT_DESCRIPTIONS[acct]} />
-                  </span>
-                  <div className="flex items-center gap-0.5">
-                    <input
-                      type="number"
-                      className={`input-field w-14 text-right text-[11px] py-0.5 px-1.5 ${allocSum !== 100 ? 'border-red-300 dark:border-red-700' : ''}`}
-                      min={0} max={100}
-                      value={scenario.contributionAllocation[acct]}
-                      onChange={e => handleAllocChange(acct, parseInt(e.target.value) || 0)}
-                    />
-                    <span className="text-[10px] text-gray-400">%</span>
-                  </div>
-                  <button
-                    className="text-red-400 hover:text-red-600 text-xs px-0.5"
-                    onClick={() => removeAccount(acct)}
-                    title={`Remove ${ACCOUNT_LABELS[acct]}`}
-                  >✕</button>
-                </div>
-              ))}
-            </div>
-            {hiddenAccounts.length > 0 && (
-              <div className="mt-2">
-                <select
-                  className="input-field text-[11px] py-1"
-                  value=""
-                  onChange={e => { if (e.target.value) addAccount(e.target.value as AccountType); }}
-                >
-                  <option value="">+ Add account type...</option>
-                  {hiddenAccounts.map(acct => (
-                    <option key={acct} value={acct}>{ACCOUNT_LABELS[acct]}</option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
+
+          <FieldError errors={ve} field="contributionAllocation" />
+
+          <div className="space-y-1.5">
+            {visibleAccounts.map(acct => (
+              <div key={acct} className="flex items-center gap-3 py-1">
+                <span className="text-sm flex-1 text-gray-700 dark:text-gray-200">
+                  {ACCOUNT_LABELS[acct]}
+                  <InfoTip text={ACCOUNT_DESCRIPTIONS[acct]} />
+                </span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    className={`input-field w-20 text-right text-sm ${allocSum !== 100 ? 'border-red-300 dark:border-red-700' : ''}`}
+                    min={0} max={100}
+                    value={scenario.contributionAllocation[acct]}
+                    onChange={e => handleAllocChange(acct, parseInt(e.target.value) || 0)}
+                  />
+                  <span className="text-xs text-gray-400 w-3">%</span>
+                </div>
+                <button
+                  type="button"
+                  className="text-gray-400 hover:text-red-500 text-sm px-1"
+                  onClick={() => removeAccount(acct)}
+                  title={`Remove ${ACCOUNT_LABELS[acct]}`}
+                  aria-label={`Remove ${ACCOUNT_LABELS[acct]}`}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {hiddenAccounts.length > 0 && (
+            <div>
+              <select
+                className="input-field text-sm"
+                value=""
+                onChange={e => { if (e.target.value) addAccount(e.target.value as AccountType); }}
+              >
+                <option value="">+ Add account type…</option>
+                {hiddenAccounts.map(acct => (
+                  <option key={acct} value={acct}>{ACCOUNT_LABELS[acct]}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
-      )}
+      </Section>
     </div>
   );
 }
