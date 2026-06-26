@@ -1,22 +1,53 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true">
   <defs>
-    <radialGradient id="silverLeaves" cx="50%" cy="40%" r="60%">
+    <radialGradient id="silverLeaves" cx="50%" cy="30%" r="70%">
       <stop offset="0%" stop-color="#F5F5F5" />
       <stop offset="55%" stop-color="#C0C0C0" />
-      <stop offset="100%" stop-color="#8A8A8A" />
+      <stop offset="100%" stop-color="#7A7A7A" />
     </radialGradient>
-    <radialGradient id="goldLeaves" cx="50%" cy="40%" r="60%">
+    <radialGradient id="goldLeaves" cx="50%" cy="30%" r="70%">
       <stop offset="0%" stop-color="#FFE680" />
       <stop offset="55%" stop-color="#D4AF37" />
       <stop offset="100%" stop-color="#8C6B14" />
     </radialGradient>
   </defs>
+
   <!-- Ground line -->
-  <line x1="4" y1="58" x2="60" y2="58" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" opacity="0.5" />
-  <!-- Left tree: silver -->
-  <rect x="16" y="40" width="4" height="18" rx="1.2" fill="#6B4423" />
-  <circle cx="18" cy="32" r="12" fill="url(#silverLeaves)" stroke="#6B6B6B" stroke-width="0.75" />
-  <!-- Right tree: gold -->
-  <rect x="44" y="40" width="4" height="18" rx="1.2" fill="#6B4423" />
-  <circle cx="46" cy="32" r="12" fill="url(#goldLeaves)" stroke="#8C6B14" stroke-width="0.75" />
+  <line x1="3" y1="58" x2="61" y2="58" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" opacity="0.5" />
+
+  <!-- ─── Left tree: silver oak ─── -->
+  <!-- Trunk (extends up under canopy for overlap) -->
+  <rect x="16" y="24" width="4" height="34" rx="1.2" fill="#6B4423" />
+  <!-- Oak canopy: wide, full, deeply lobed silhouette -->
+  <path d="
+    M 18 36
+    C 12 36, 7 33, 6 28
+    C 3 27, 3 22, 6 21
+    C 5 17, 9 14, 13 15
+    C 14 11, 19 10, 22 13
+    C 25 9, 31 11, 31 16
+    C 34 16, 35 21, 32 23
+    C 35 26, 32 30, 28 29
+    C 29 33, 24 36, 21 34
+    C 21 36, 19 36, 18 36 Z
+  " fill="url(#silverLeaves)" stroke="#6B6B6B" stroke-width="0.6" stroke-linejoin="round" />
+
+  <!-- ─── Right tree: gold oak ─── -->
+  <!-- Trunk (extends up under canopy for overlap) -->
+  <rect x="44" y="24" width="4" height="34" rx="1.2" fill="#6B4423" />
+  <!-- Oak canopy (mirrored/translated from left) -->
+  <path d="
+    M 46 36
+    C 40 36, 35 33, 34 28
+    C 31 27, 31 22, 34 21
+    C 33 17, 37 14, 41 15
+    C 42 11, 47 10, 50 13
+    C 53 9, 59 11, 59 16
+    C 62 16, 63 21, 60 23
+    C 63 26, 60 30, 56 29
+    C 57 33, 52 36, 49 34
+    C 49 36, 47 36, 46 36 Z
+  " fill="url(#goldLeaves)" stroke="#8C6B14" stroke-width="0.6" stroke-linejoin="round" />
 </svg>
+
+
