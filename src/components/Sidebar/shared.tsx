@@ -43,7 +43,9 @@ export function PctSlider({ value, onChange, label, min = 0, max = 10, step = 0.
 
 // ---- Canvas layout primitives -------------------------------------------------
 // Section: a card-style group with a heading + optional description, used inside
-// the canvas profile pages. Set `collapsible` for sections users can fold away.
+// the canvas profile pages. Title / description / trailing slot all live inside
+// the bordered surface so the trailing element visually belongs to the card.
+// Set `collapsible` for sections users can fold away.
 export function Section({
   title,
   description,
@@ -62,8 +64,8 @@ export function Section({
   const [open, setOpen] = useState(defaultOpen);
   const showBody = !collapsible || open;
   return (
-    <section>
-      <div className="mb-3 flex items-end justify-between gap-3">
+    <section className="w-[40rem] max-w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-3">
         <div className="min-w-0">
           {collapsible ? (
             <button
@@ -85,7 +87,7 @@ export function Section({
         {trailing && <div className="shrink-0 text-xs text-gray-500 dark:text-gray-400">{trailing}</div>}
       </div>
       {showBody && (
-        <div className="w-fit min-w-[24rem] rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+        <div className="px-5 pb-5 pt-1 border-t border-gray-100 dark:border-gray-700/60">
           {children}
         </div>
       )}
