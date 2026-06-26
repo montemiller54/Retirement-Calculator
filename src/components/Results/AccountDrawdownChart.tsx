@@ -74,7 +74,12 @@ export function AccountDrawdownChart({ data, retirementAge, currentAge }: Accoun
           />
           <Legend
             wrapperStyle={{ fontSize: 15 }}
-            formatter={(value: string) => ACCOUNT_LABELS[value as keyof typeof ACCOUNT_LABELS] ?? value}
+            iconSize={12}
+            formatter={(value: string) => (
+              <span style={{ marginRight: 16 }}>
+                {ACCOUNT_LABELS[value as keyof typeof ACCOUNT_LABELS] ?? value}
+              </span>
+            )}
           />
           <ReferenceLine
             x={retirementAge}
