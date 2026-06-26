@@ -38,9 +38,9 @@ function AppInner() {
       <header className="flex items-center px-5 py-2.5 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
         <div className="flex items-center gap-4 shrink-0">
           <a href="/" className="flex items-center gap-2 group">
-            <PlainsightMark className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+            <img src="/two-trees.svg" alt="" className="w-6 h-6" />
             <span className="text-[0.9375rem] font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-              Plainsight
+              Two Trees Planner
             </span>
           </a>
           <PrivacyBadge />
@@ -124,17 +124,6 @@ export default function App() {
     <ScenarioProvider>
       <AppInner />
     </ScenarioProvider>
-  );
-}
-
-// Plainsight mark: a horizon baseline and an ascending median line — the
-// two shapes our fan chart actually shows.
-function PlainsightMark({ className = '' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-      <path d="M3 18 Q 12 14 21 6" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" />
-      <line x1="3" y1="20" x2="21" y2="20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.35" />
-    </svg>
   );
 }
 

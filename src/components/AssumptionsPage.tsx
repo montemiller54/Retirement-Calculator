@@ -4,7 +4,7 @@ export function AssumptionsPage() {
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <h2 className="text-xl font-bold">How this works</h2>
       <p className="text-xs text-gray-500 dark:text-gray-400">
-        Plainsight runs a year-by-year Monte Carlo simulation of your retirement portfolio. This page explains every calculation, assumption, and limitation so you can judge the results for yourself.
+        Two Trees Planner runs a year-by-year Monte Carlo simulation of your retirement portfolio. This page explains every calculation, assumption, and limitation so you can judge the results for yourself.
       </p>
 
       {/* ── Monte Carlo Simulation ── */}
@@ -82,7 +82,7 @@ export function AssumptionsPage() {
           <li><strong>Hard cap on bear duration</strong>: no more than 4 consecutive bear years are allowed, matching the historical worst case (1929–32 for a 75/25 portfolio).</li>
           <li><strong>Post-bear recovery</strong>: the first one or two bull years after exiting a bear regime get an elevated mean (year 1 base +22%, year 2 base +18%), scaled by bear duration. This reflects historical snapbacks (1933 +50%, 1954 +53%, 1975 +37%, 2003 +29%, 2009 +26%).</li>
           <li>The <strong>"Bear Market Frequency" slider</strong> controls the long-run share of bear-market years: slider 1 = 5% (rare), default 5.5 = 17.5% (historical average), slider 10 = 30% (very frequent).</li>
-          <li>At default frequency, crash incidence matches history: a −20% year roughly every 11 years, −30% every 20, −40% every 42, −50% every 104.</li>
+          <li>At default frequency, the rate of <strong>calendar-year</strong> losses (Jan-to-Jan) matches history: a −20% year roughly every 11 years, −30% every 20, −40% every 42, −50% every 104. Note that peak-to-trough drawdowns within a year are not modeled — only annual returns — so the headline "the market dropped 20%" you read about mid-year happens more often than these calendar-year figures suggest.</li>
           <li>Returns are clamped at −100% (an asset cannot lose more than its full value).</li>
           <li><strong>Regime-dependent correlations</strong>: in bear markets, stock-bond correlation strengthens to −0.35 (flight to quality) and stock-crypto correlation tightens from 0.30 to 0.50 (risk-off selling). Bonds also receive a mean boost in bear years (6.5% vs 4.0%) reflecting rate cuts.</li>
           <li>Regime switching applies only to stocks and crypto. Bonds and cash always use Gaussian distributions (vol 6% and 1% respectively).</li>

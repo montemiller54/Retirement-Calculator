@@ -1,4 +1,4 @@
-# Retirement Planner
+# Two Trees Planner
 
 A privacy-first, client-side-only retirement planning web application with Monte Carlo simulation. All calculations run in your browser — no data leaves your device.
 

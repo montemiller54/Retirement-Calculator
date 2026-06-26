@@ -1,5 +1,5 @@
 /**
- * Retirement Planner – Benchmark Comparison
+ * Two Trees Planner – Benchmark Comparison
  *
  * Runs our Monte Carlo engine with standardised inputs that match common
  * benchmarks published by FireCalc, cFIREsim, Fidelity, and the Trinity Study.
@@ -317,7 +317,7 @@ const features = [
 
 // ── Run ──────────────────────────────────────────────────────────────
 console.log('═══════════════════════════════════════════════════════════════');
-console.log('  RETIREMENT PLANNER – BENCHMARK COMPARISON');
+console.log('  TWO TREES PLANNER – BENCHMARK COMPARISON');
 console.log('  10,000 Monte Carlo simulations per scenario');
   console.log('  Markov regime-switching returns with post-bear recovery');
 console.log('═══════════════════════════════════════════════════════════════\n');
