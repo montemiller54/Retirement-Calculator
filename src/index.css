@@ -141,3 +141,19 @@
 .section-body select,
 .section-body textarea              { font-size: 0.7rem; }
 .section-body [class*="text-["]     { font-size: 0.8em; }
+
+/* Shrink the header scenario pill by 20%. */
+.scenario-pill                      { font-size: 0.8rem; padding: 0.15rem 0.5rem; gap: 0.4rem; }
+.scenario-pill .text-xs             { font-size: 0.6rem; }
+.scenario-pill .text-sm             { font-size: 0.7rem; }
+.scenario-pill .text-base           { font-size: 0.8rem; }
+.scenario-pill input,
+.scenario-pill button               { font-size: 0.8rem; }
+.scenario-pill svg                  { width: 0.8em; height: 0.8em; }
+.scenario-pill [class*="text-["]    { font-size: 0.8em; }
+
+/* Compact variant of the CTA button: 20% smaller. */
+.btn-cta--compact {
+  font-size: 0.7rem;
+  padding: 0.4rem 0.8rem;
+}

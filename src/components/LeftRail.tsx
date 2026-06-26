@@ -57,7 +57,7 @@ export function LeftRail({
 
         <div className="mt-1 px-3 py-2">
           <button
-            className="btn-cta"
+            className="btn-cta btn-cta--compact"
             onClick={onRun}
             disabled={isRunning || validationErrors.length > 0}
             title={validationErrors.length > 0 ? 'Fix validation errors first' : undefined}
