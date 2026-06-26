@@ -13,6 +13,7 @@ import { SafeSpendingSection } from './SafeSpendingSection';
 import { WorstCaseSummary } from './WorstCaseSummary';
 import { TrajectoryTable } from './TrajectoryTable';
 import { PlanStatusStrip } from './PlanStatusStrip';
+import { NextStepCards } from './NextStepCards';
 
 interface ResultsPanelProps {
   result: SimulationResult | null;
@@ -145,18 +146,9 @@ export function ResultsPanel({
               retirementAge={retirementAge}
               currentAge={currentAge}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
               <SuccessGauge rate={result.successRate} numSimulations={result.endingBalances.length} />
-              <div className="card flex flex-col justify-center">
-                <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-                  What's next
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                  Explore the other tabs to see how your portfolio holds up under volatility,
-                  where your income comes from each year, what you'll pay in taxes, and which
-                  accounts get spent first.
-                </p>
-              </div>
+              <NextStepCards setActiveTab={setActiveTab} />
             </div>
           </>
         )}
