@@ -115,3 +115,16 @@
     @apply rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm;
   }
 }
+
+@keyframes tabPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.45); color: rgb(37 99 235); }
+  50%  { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); color: rgb(37 99 235); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+.tab-pulse {
+  animation: tabPulse 1.1s ease-out 3;
+  border-radius: 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tab-pulse { animation: none; }
+}

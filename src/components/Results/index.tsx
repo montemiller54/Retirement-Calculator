@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { SimulationResult, ScenarioInput } from '../../types';
 import type { ValidationError } from '../../utils/validation';
 import type { ResultsSectionId } from '../../navigation';
@@ -13,7 +13,6 @@ import { SafeSpendingSection } from './SafeSpendingSection';
 import { WorstCaseSummary } from './WorstCaseSummary';
 import { TrajectoryTable } from './TrajectoryTable';
 import { PlanStatusStrip } from './PlanStatusStrip';
-import { NextStepCards } from './NextStepCards';
 
 interface ResultsPanelProps {
   result: SimulationResult | null;
@@ -35,6 +34,16 @@ export function ResultsPanel({
   result, scenario, retirementAge, currentAge, isRunning, progress, error, validationErrors,
   activeTab, setActiveTab, lastRunScenario, lastRunAt, onRun,
 }: ResultsPanelProps) {
+  const [pulse, setPulse] = useState(false);
+  const lastSeenRunRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (lastRunAt && lastRunAt !== lastSeenRunRef.current) {
+      lastSeenRunRef.current = lastRunAt;
+      setPulse(true);
+      const t = window.setTimeout(() => setPulse(false), 3200);
+      return () => window.clearTimeout(t);
+    }
+  }, [lastRunAt]);
   if (validationErrors.length > 0) {
     return (
       <div className="flex items-center justify-center h-full p-8">
@@ -119,15 +128,17 @@ export function ResultsPanel({
         <div className="flex items-center gap-1 px-4 overflow-x-auto">
           {RESULTS_SECTIONS.map(({ id, label }) => {
             const active = activeTab === id;
+            const shouldPulse = pulse && !active;
             return (
               <button
                 key={id}
                 type="button"
                 onClick={() => setActiveTab(id)}
                 className={
-                  active
+                  (active
                     ? 'relative px-3 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 border-b-2 border-primary-500 -mb-px'
                     : 'relative px-3 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border-b-2 border-transparent -mb-px'
+                  ) + (shouldPulse ? ' tab-pulse' : '')
                 }
               >
                 {label}
@@ -146,9 +157,8 @@ export function ResultsPanel({
               retirementAge={retirementAge}
               currentAge={currentAge}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            <div className="max-w-md mx-auto w-full">
               <SuccessGauge rate={result.successRate} numSimulations={result.endingBalances.length} />
-              <NextStepCards setActiveTab={setActiveTab} />
             </div>
           </>
         )}
