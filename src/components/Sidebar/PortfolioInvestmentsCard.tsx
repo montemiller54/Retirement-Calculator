@@ -147,11 +147,13 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
           ))}
         </div>
 
-        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Portfolio</span>
-          <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">
+        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2">
+          <span className="text-sm font-medium w-44 shrink-0 text-gray-600 dark:text-gray-400">Total Portfolio</span>
+          <span className="text-sm text-transparent select-none" aria-hidden="true">$</span>
+          <span className="w-36 text-right text-sm font-semibold text-primary-600 dark:text-primary-400 tabular-nums">
             ${totalBalance.toLocaleString()}
           </span>
+          <span className="text-sm px-1 invisible" aria-hidden="true">✕</span>
         </div>
 
         {hiddenAccounts.length > 0 && (

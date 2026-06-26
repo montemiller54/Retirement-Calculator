@@ -89,7 +89,7 @@ export function ScenarioManager() {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 px-3 py-1 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <span className="text-xs font-bold tracking-wider uppercase text-gray-400 dark:text-gray-500 shrink-0">
           Plan
         </span>

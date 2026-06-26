@@ -34,7 +34,7 @@ export function ProfileCanvas({ sectionId, validationErrors, setView, onRun, isR
           <Component validationErrors={sectionErrors} />
         </div>
 
-        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between gap-3">
+        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between gap-3 w-[40rem] max-w-full">
           <div>
             {previous && (
               <button

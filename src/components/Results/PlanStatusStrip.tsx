@@ -83,19 +83,15 @@ function isDirty(current: ScenarioInput, snapshot: ScenarioInput | null): boolea
 
 function headline(result: SimulationResult, scenario: ScenarioInput): string {
   const pct = Math.round(result.successRate * 100);
+  const failurePct = 100 - pct;
   const depletions = result.depletionAges.filter((a): a is number => a !== null);
-  if (pct >= 95) {
-    return `Plan likely lasts through age ${scenario.endAge}`;
-  }
   if (depletions.length === 0) {
     return `Plan lasts through age ${scenario.endAge} in every simulation`;
   }
-  const sorted = [...depletions].sort((a, b) => a - b);
-  const median = sorted[Math.floor(sorted.length / 2)];
-  if (pct >= 80) {
-    return `In failing runs, money typically lasts to age ${median}`;
+  if (pct >= 95) {
+    return `Plan lasts through age ${scenario.endAge}`;
   }
-  return `Money runs out around age ${median} in ${100 - pct}% of runs`;
+  return `Fails in ${failurePct}% of runs`;
 }
 
 function timeAgo(ts: number): string {
