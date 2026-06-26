@@ -2,9 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { calculateTaxes, calcSSTaxablePortion, calcFICA, type TaxInput } from '../engine/tax';
 import {
   STANDARD_DEDUCTION_HOH,
-  FEDERAL_BRACKETS_HOH,
-  LTCG_BRACKETS_HOH,
-  NIIT_THRESHOLD,
 } from '../constants/tax';
 import { STATE_TAX_DATA } from '../constants/state-tax';
 

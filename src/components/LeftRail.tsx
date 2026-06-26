@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { ValidationError } from '../utils/validation';
 import type { AppView, ProfileSectionId, ResultsSectionId } from '../navigation';
 import { PROFILE_SECTIONS, RESULTS_SECTIONS } from '../navigation';

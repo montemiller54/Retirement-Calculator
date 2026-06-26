@@ -1,4 +1,3 @@
-import React from 'react';
 import { useScenario } from '../../context/ScenarioContext';
 import type { IncomeSource } from '../../types';
 import { CurrencyInput } from './CurrencyInput';

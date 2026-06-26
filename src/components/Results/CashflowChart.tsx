@@ -1,6 +1,5 @@
-import React from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   Legend, Line, ComposedChart,
 } from 'recharts';
 import type { YearResult } from '../../types';

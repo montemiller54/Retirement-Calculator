@@ -1,4 +1,3 @@
-import React from 'react';
 import { useScenario } from '../../context/ScenarioContext';
 import { WITHDRAWAL_STRATEGY_LABELS, type WithdrawalStrategy, type RothConversionStrategy, type GuardrailTier } from '../../types';
 import { CurrencyInput } from './CurrencyInput';

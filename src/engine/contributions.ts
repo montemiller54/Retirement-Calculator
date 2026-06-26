@@ -1,4 +1,4 @@
-import type { AccountType, ContributionAllocation, AccountBalances } from '../types';
+import type { ContributionAllocation, AccountBalances } from '../types';
 import { CATCHUP_AGE, SUPER_CATCHUP_START_AGE, SUPER_CATCHUP_END_AGE, DEFAULT_HSA_SELF_ONLY, DEFAULT_401K_CATCHUP, DEFAULT_401K_SUPER_CATCHUP, DEFAULT_IRA_CATCHUP } from '../constants/contribution-limits';
 
 export interface ContributionInput {

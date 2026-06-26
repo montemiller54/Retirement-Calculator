@@ -62,7 +62,6 @@ describe('Cash buffer strategy', () => {
 
     // After some years with up markets, cashAccount should have been refilled
     // Target = 2 years × $3000/mo × 12 = $72,000
-    const lastYear = result.medianPath[result.medianPath.length - 1];
     // Cash account should have some balance from refills (not necessarily full target due to withdrawals)
     const anyYearHasCash = result.medianPath.some(yr => yr.balances.cashAccount > 0);
     expect(anyYearHasCash).toBe(true);
@@ -90,10 +89,9 @@ describe('Cash buffer strategy', () => {
     });
 
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });
-    const targetAnnual = 3000 * 12; // $36,000
 
     // Cash account should not be refilled beyond target (100k > 36k already)
-    for (const yr of result.medianPath) {
+    for (const _yr of result.medianPath) {
       // Since income covers spending and cash starts above target,
       // cash should not grow due to refills (only due to returns on cash allocation)
       // The refill deficit would be negative, so no refill occurs

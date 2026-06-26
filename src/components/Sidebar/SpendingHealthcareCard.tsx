@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useScenario } from '../../context/ScenarioContext';
 import type { OneTimeExpense } from '../../types';
 import { CurrencyInput } from './CurrencyInput';

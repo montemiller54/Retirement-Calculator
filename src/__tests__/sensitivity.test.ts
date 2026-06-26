@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { runSimulation } from '../engine/simulation';
 import { DEFAULT_SCENARIO } from '../constants/defaults';
-import { makeUniformAllocations, RISK_PROFILES } from '../constants/asset-classes';
+import { makeUniformAllocations } from '../constants/asset-classes';
 import type { ScenarioInput } from '../types';
-import { ACCOUNT_TYPES } from '../types';
 
 /**
  * Sensitivity tests: for each tunable parameter, run the simulation with two

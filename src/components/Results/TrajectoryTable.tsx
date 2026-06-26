@@ -1,4 +1,3 @@
-import React from 'react';
 import type { YearResult } from '../../types';
 import { formatCurrency } from '../../utils/format';
 

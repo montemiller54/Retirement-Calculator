@@ -3,7 +3,6 @@ import { runSimulation } from '../engine/simulation';
 import { DEFAULT_SCENARIO } from '../constants/defaults';
 import { makeUniformAllocations } from '../constants/asset-classes';
 import type { ScenarioInput } from '../types';
-import { ACCOUNT_TYPES } from '../types';
 
 /**
  * Comprehensive sensitivity tests covering ALL user-configurable parameters,

@@ -19,9 +19,6 @@ export interface WithdrawalResult {
   excessRMD: number;     // RMD amount exceeding spending need (reinvested to taxable)
 }
 
-const PRE_TAX_ACCOUNTS: AccountType[] = ['traditional401k', 'traditionalIRA'];
-const ROTH_ACCOUNTS: AccountType[] = ['roth401k', 'rothIRA'];
-
 // Withdrawal order for each strategy
 const STRATEGY_ORDER: Record<WithdrawalStrategy, AccountType[]> = {
   taxEfficient: ['cashAccount', 'otherAssets', 'taxable', 'hsa', 'traditional401k', 'traditionalIRA', 'roth401k', 'rothIRA'],

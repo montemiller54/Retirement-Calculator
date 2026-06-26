@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { ScenarioInput, SafeSpendingResult as SafeSpendingResultType } from '../../types';
 import { useSafeSpending } from '../../hooks/useSafeSpending';
 import { formatCurrency } from '../../utils/format';

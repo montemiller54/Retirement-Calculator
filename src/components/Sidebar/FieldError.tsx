@@ -1,4 +1,3 @@
-import React from 'react';
 import type { ValidationError } from '../../utils/validation';
 
 interface FieldErrorProps {

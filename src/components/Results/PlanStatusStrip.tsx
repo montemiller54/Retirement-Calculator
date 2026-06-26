@@ -1,4 +1,3 @@
-import React from 'react';
 import type { ScenarioInput, SimulationResult } from '../../types';
 
 interface PlanStatusStripProps {

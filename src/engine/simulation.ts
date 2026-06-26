@@ -1,6 +1,6 @@
 import type {
   ScenarioInput, SimulationPath, YearResult,
-  AccountBalances, AccountType, AssetClass,
+  AccountBalances, AccountType,
   SimulationResult, PercentileBand, SimulationParams,
   SafeSpendingResult,
 } from '../types';
@@ -767,7 +767,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
 }
 
 // ── Aggregate results across all simulations ──
-function aggregateResults(paths: SimulationPath[], scenario: ScenarioInput): SimulationResult {
+function aggregateResults(paths: SimulationPath[], _scenario: ScenarioInput): SimulationResult {
   const n = paths.length;
   const successCount = paths.filter(p => p.success).length;
   const numYears = paths[0].years.length;

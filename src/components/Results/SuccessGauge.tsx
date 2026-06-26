@@ -1,4 +1,3 @@
-import React from 'react';
 
 interface SuccessGaugeProps {
   rate: number; // 0-1

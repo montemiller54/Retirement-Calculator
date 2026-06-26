@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ScenarioProvider, useScenario } from './context/ScenarioContext';
 import { ResultsPanel } from './components/Results';
 import { ScenarioManager } from './components/ScenarioManager';

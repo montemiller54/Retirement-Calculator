@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { calculateRMD } from '../engine/rmd';
 import { executeWithdrawals, type WithdrawalInput } from '../engine/withdrawals';
-import { UNIFORM_LIFETIME_TABLE, RMD_START_AGE } from '../constants/rmd-table';
+import { RMD_START_AGE } from '../constants/rmd-table';
 import { ACCOUNT_TYPES } from '../types';
 
 // ───── RMD CALCULATIONS ─────

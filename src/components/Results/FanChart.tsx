@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   ReferenceLine,
@@ -7,7 +6,7 @@ import type { PercentileBand } from '../../types';
 import { formatCompact } from '../../utils/format';
 import {
   GRID_STROKE, AXIS_TICK_FILL, RETIREMENT_MARKER_STROKE, RETIREMENT_MARKER_FILL,
-  FAN_BAND_COLOR, FAN_BAND_OUTER_OPACITY, FAN_BAND_INNER_OPACITY, FAN_BAND_WORST_OPACITY,
+  FAN_BAND_COLOR, FAN_BAND_INNER_OPACITY, FAN_BAND_WORST_OPACITY,
   FAN_MEDIAN_STROKE, TOOLTIP_STYLE,
 } from './chartTheme';
 

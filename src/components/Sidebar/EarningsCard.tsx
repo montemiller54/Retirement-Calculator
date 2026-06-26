@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useScenario } from '../../context/ScenarioContext';
 import { ACCOUNT_LABELS, ACCOUNT_TYPES, type AccountType, type Job } from '../../types';
 import { CurrencyInput } from './CurrencyInput';

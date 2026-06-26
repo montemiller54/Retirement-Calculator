@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useScenario } from '../../context/ScenarioContext';
 import { FILING_STATUS_LABELS, type FilingStatus } from '../../types';
 import { STATE_TAX_DATA, STATE_CODES } from '../../constants/state-tax';

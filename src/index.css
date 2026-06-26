@@ -119,17 +119,6 @@
   }
 }
 
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.tab-hint {
-  animation: fadeInDown 250ms ease-out;
-}
-@media (prefers-reduced-motion: reduce) {
-  .tab-hint { animation: none; }
-}
-
 /* Shrink body text inside Profile cards by 20% — titles/description above the
    border-top keep their original size. */
 .section-body                       { font-size: 0.8rem; }
