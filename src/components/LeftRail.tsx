@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { ValidationError } from '../utils/validation';
 import type { AppView, ProfileSectionId } from '../navigation';
-import { PROFILE_SECTIONS, RESULTS_SECTIONS } from '../navigation';
+import { PROFILE_SECTIONS } from '../navigation';
 
 interface LeftRailProps {
   view: AppView;
@@ -17,7 +17,6 @@ export function LeftRail({
   view, setView, validationErrors, onRun, isRunning, progress, hasResults,
 }: LeftRailProps) {
   const [profileOpen, setProfileOpen] = useState(true);
-  const [resultsOpen, setResultsOpen] = useState(true);
 
   return (
     <aside className="w-[220px] shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
@@ -47,29 +46,14 @@ export function LeftRail({
           </ul>
         )}
 
-        <GroupHeader
-          label="Results"
-          open={resultsOpen}
-          onToggle={() => setResultsOpen(o => !o)}
-        />
-        {resultsOpen && (
-          <ul className="mb-2">
-            {RESULTS_SECTIONS.map(({ id, label }) => {
-              const active = view.kind === 'results' && view.sectionId === id;
-              const disabled = !hasResults;
-              return (
-                <li key={id}>
-                  <RailButton
-                    label={label}
-                    active={active}
-                    disabled={disabled}
-                    onClick={() => setView({ kind: 'results', sectionId: id })}
-                  />
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <div className="mt-2 px-3 pt-2 border-t border-gray-200 dark:border-gray-800">
+          <RailButton
+            label="Results"
+            active={view.kind === 'results'}
+            disabled={!hasResults}
+            onClick={() => setView({ kind: 'results', sectionId: 'plan' })}
+          />
+        </div>
 
         <div className="mt-1 px-3 py-2">
           <button
