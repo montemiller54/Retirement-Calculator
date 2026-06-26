@@ -1,11 +1,14 @@
-// 2026 IRS contribution limits (defaults)
-export const DEFAULT_401K_LIMIT = 24500;
-export const DEFAULT_401K_CATCHUP = 7500; // additional for age 50+
-export const DEFAULT_401K_SUPER_CATCHUP = 11250; // SECURE 2.0: ages 60-63
-export const DEFAULT_IRA_LIMIT = 7500;
-export const DEFAULT_IRA_CATCHUP = 1000;
-export const DEFAULT_HSA_SELF_ONLY = 4400;
+// Contribution limits — re-exported from the central IRS tax-year file.
+// To update for a new tax year, edit src/constants/irs-2026.ts.
 
-export const CATCHUP_AGE = 50;
-export const SUPER_CATCHUP_START_AGE = 60;
-export const SUPER_CATCHUP_END_AGE = 63;
+export {
+  CONTRIB_401K_LIMIT         as DEFAULT_401K_LIMIT,
+  CONTRIB_401K_CATCHUP       as DEFAULT_401K_CATCHUP,
+  CONTRIB_401K_SUPER_CATCHUP as DEFAULT_401K_SUPER_CATCHUP,
+  CONTRIB_IRA_LIMIT          as DEFAULT_IRA_LIMIT,
+  CONTRIB_IRA_CATCHUP        as DEFAULT_IRA_CATCHUP,
+  CONTRIB_HSA_SELF_ONLY      as DEFAULT_HSA_SELF_ONLY,
+  CATCHUP_AGE,
+  SUPER_CATCHUP_START_AGE,
+  SUPER_CATCHUP_END_AGE,
+} from './irs-2026';

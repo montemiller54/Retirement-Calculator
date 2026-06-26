@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { runSimulation } from '../engine/simulation';
 import { DEFAULT_SCENARIO } from '../constants/defaults';
+import { FEDERAL_BRACKETS_MFJ, STANDARD_DEDUCTION_MFJ } from '../constants/tax';
 import type { ScenarioInput, RothConversion } from '../types';
+
+const MFJ_12PCT_CEILING = FEDERAL_BRACKETS_MFJ[1].max + STANDARD_DEDUCTION_MFJ;
 
 function makeScenario(overrides: Partial<ScenarioInput> = {}): ScenarioInput {
   return { ...DEFAULT_SCENARIO, ...overrides };
@@ -157,9 +160,8 @@ describe('Roth conversions', () => {
   });
 
   it('fillBracket computes correct bracket room for MFJ 12%', () => {
-    // MFJ: 12% bracket top = $96,950 taxable. Std deduction = $30,750.
-    // Gross ceiling = 96950 + 30750 = 127700
-    // With zero other income, should convert up to ~$127,700
+    // MFJ 12% bracket top + standard deduction = gross conversion ceiling
+    // when other income is zero (see constants/irs-2026.ts).
     const rc: RothConversion = {
       enabled: true,
       strategy: 'fillBracket',
@@ -185,8 +187,8 @@ describe('Roth conversions', () => {
 
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });
     const yr = result.medianPath.find(y => y.age === 65)!;
-    // MFJ 12% bracket: top at $96,950 + $30,750 deduction = $127,700 gross ceiling
-    expect(yr.rothConversionAmount).toBeCloseTo(127700, -2);
+    // MFJ 12% bracket top + std deduction = gross conversion ceiling
+    expect(yr.rothConversionAmount).toBeCloseTo(MFJ_12PCT_CEILING, -2);
   });
 
   it('fillBracket subtracts existing income from bracket room', () => {
@@ -217,13 +219,8 @@ describe('Roth conversions', () => {
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });
     const yr = result.medianPath.find(y => y.age === 67)!;
     // SS = $24K. Provisional income = $12K → below MFJ $32K threshold → 0% SS taxable.
-    // Existing ordinary = $0 (no wages, pension, other) + $0 SS taxable = $0
-    // But wait — the bracket room calculation includes SS taxable portion estimation.
-    // With only $24K SS and no other income: provisional = 12K < 32K (MFJ) → 0 SS taxable
-    // Bracket room = 127,700 - 0 = 127,700
-    // But SS is still income even if not taxable — it doesn't reduce bracket room directly.
-    // The conversion amount should still be ~127,700
-    expect(yr.rothConversionAmount).toBeCloseTo(127700, -2);
+    // Bracket room is not reduced by non-taxable SS, so conversion fills the full bracket.
+    expect(yr.rothConversionAmount).toBeCloseTo(MFJ_12PCT_CEILING, -2);
   });
 
   it('only converts during specified age window', () => {
@@ -323,9 +320,8 @@ describe('Roth conversions', () => {
 
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });
     const yr = result.medianPath.find(y => y.age === 65)!;
-    // Full bracket room = $127,700. Spending withdrawal ~$60K from Traditional.
-    // Conversion should be ~$127,700 - $60,000 = ~$67,700
-    expect(yr.rothConversionAmount).toBeCloseTo(67700, -3);
+    // Full bracket room minus ~$60K spending withdrawal from Traditional
+    expect(yr.rothConversionAmount).toBeCloseTo(MFJ_12PCT_CEILING - 60000, -3);
   });
 
   it('fillBracket uses full room when non-trad accounts cover spending', () => {
@@ -358,8 +354,8 @@ describe('Roth conversions', () => {
 
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });
     const yr = result.medianPath.find(y => y.age === 65)!;
-    // Taxable covers spending, so full $127,700 should be available for conversion
-    expect(yr.rothConversionAmount).toBeCloseTo(127700, -2);
+    // Taxable covers spending, so full bracket room is available for conversion
+    expect(yr.rothConversionAmount).toBeCloseTo(MFJ_12PCT_CEILING, -2);
   });
 
   it('conversion tax is funded even when income covers spending', () => {

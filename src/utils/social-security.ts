@@ -2,12 +2,11 @@
 // Estimates monthly SS benefit from salary using SSA's PIA formula,
 // bend-point thresholds, and early/late claiming adjustments.
 
-// 2025 bend points (published by SSA, indexed to Average Wage Index)
-const BEND_POINT_1 = 1_174;   // 90% of first $1,174 of AIME
-const BEND_POINT_2 = 7_078;   // 32% of AIME between bend points
-
-// 2025 maximum taxable earnings
-const SS_WAGE_CAP = 176_100;
+import {
+  SS_BEND_POINT_1 as BEND_POINT_1,
+  SS_BEND_POINT_2 as BEND_POINT_2,
+  FICA_SS_WAGE_BASE as SS_WAGE_CAP,
+} from '../constants/irs-2026';
 
 // ── PIA from AIME ──
 function computePIA(aime: number): number {

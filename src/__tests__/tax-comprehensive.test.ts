@@ -2,6 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { calculateTaxes, calcSSTaxablePortion, calcFICA, type TaxInput } from '../engine/tax';
 import {
   STANDARD_DEDUCTION_HOH,
+  STANDARD_DEDUCTION_MFJ,
+  FICA_SS_WAGE_BASE,
+  FEDERAL_BRACKETS_HOH,
+  FEDERAL_BRACKETS_MFJ,
+  LTCG_BRACKETS_HOH,
 } from '../constants/tax';
 import { STATE_TAX_DATA } from '../constants/state-tax';
 
@@ -30,21 +35,25 @@ describe('Federal bracket boundaries (HoH)', () => {
     expect(result.federal).toBeCloseTo(1655 + 0.12, 0);
   });
 
-  it('22% bracket entry: $63,100 taxable ordinary', () => {
-    const input: TaxInput = { ...ZERO_INPUT, traditionalWithdrawals: 24150 + 63100 };
+  it('22% bracket entry: top of 12% bracket', () => {
+    const top10 = FEDERAL_BRACKETS_HOH[0].max;
+    const top12 = FEDERAL_BRACKETS_HOH[1].max;
+    const input: TaxInput = { ...ZERO_INPUT, traditionalWithdrawals: STANDARD_DEDUCTION_HOH + top12 };
     const result = calculateTaxes(input);
-    // 16550*0.10 + (63100-16550)*0.12
-    const expected = 16550 * 0.10 + (63100 - 16550) * 0.12;
+    const expected = top10 * 0.10 + (top12 - top10) * 0.12;
     expect(result.federal).toBeCloseTo(expected, 0);
   });
 
-  it('24% bracket entry: $100,500 taxable ordinary', () => {
-    const input: TaxInput = { ...ZERO_INPUT, traditionalWithdrawals: 24150 + 100500 };
+  it('24% bracket entry: top of 22% bracket', () => {
+    const top10 = FEDERAL_BRACKETS_HOH[0].max;
+    const top12 = FEDERAL_BRACKETS_HOH[1].max;
+    const top22 = FEDERAL_BRACKETS_HOH[2].max;
+    const input: TaxInput = { ...ZERO_INPUT, traditionalWithdrawals: STANDARD_DEDUCTION_HOH + top22 };
     const result = calculateTaxes(input);
     const expected =
-      16550 * 0.10 +
-      (63100 - 16550) * 0.12 +
-      (100500 - 63100) * 0.22;
+      top10 * 0.10 +
+      (top12 - top10) * 0.12 +
+      (top22 - top12) * 0.22;
     expect(result.federal).toBeCloseTo(expected, 0);
   });
 });
@@ -112,39 +121,42 @@ describe('Social Security taxation (provisional income method)', () => {
 // ───── 4. LTCG STACKING ─────
 
 describe('LTCG tax with ordinary income stacking', () => {
-  it('0% bracket: zero ordinary + LTCG within $63K', () => {
+  it('0% bracket: zero ordinary + LTCG within 0% bracket', () => {
     const input: TaxInput = { ...ZERO_INPUT, capitalGains: 50000 };
     const result = calculateTaxes(input);
     expect(result.federal).toBe(0); // entirely in 0% LTCG bracket
   });
 
-  it('0% bracket: LTCG exactly at $63K boundary', () => {
-    const input: TaxInput = { ...ZERO_INPUT, capitalGains: 63000 };
+  it('0% bracket: LTCG exactly at 0% boundary', () => {
+    const ltcgZeroTop = LTCG_BRACKETS_HOH[0].max;
+    const input: TaxInput = { ...ZERO_INPUT, capitalGains: ltcgZeroTop };
     const result = calculateTaxes(input);
     expect(result.federal).toBe(0);
   });
 
-  it('15% bracket: LTCG past $63K boundary', () => {
-    const input: TaxInput = { ...ZERO_INPUT, capitalGains: 100000 };
+  it('15% bracket: LTCG past 0% boundary', () => {
+    const ltcgZeroTop = LTCG_BRACKETS_HOH[0].max;
+    const capitalGains = ltcgZeroTop + 37000;
+    const input: TaxInput = { ...ZERO_INPUT, capitalGains };
     const result = calculateTaxes(input);
-    // 0% on first 63K, 15% on remaining 37K = 5550
-    expect(result.federal).toBeCloseTo(5550, 0);
+    expect(result.federal).toBeCloseTo(37000 * 0.15, 0);
   });
 
   it('ordinary income fills lower brackets, pushes LTCG into 15%', () => {
-    // $60K ordinary after deduction = taxable ordinary of 60000-24150 = 35850
-    // But LTCG brackets look at taxableOrdinary = 35850
-    // LTCG bracket: 0% up to 63000, so available 0% space = 63000-35850 = 27150
+    const top10 = FEDERAL_BRACKETS_HOH[0].max;
+    const ltcgZeroTop = LTCG_BRACKETS_HOH[0].max;
+    const ordinaryWithdrawal = 60000;
+    const taxableOrdinary = ordinaryWithdrawal - STANDARD_DEDUCTION_HOH;
+    const capitalGains = 50000;
     const input: TaxInput = {
       ...ZERO_INPUT,
-      traditionalWithdrawals: 60000,
-      capitalGains: 50000,
+      traditionalWithdrawals: ordinaryWithdrawal,
+      capitalGains,
     };
     const result = calculateTaxes(input);
-    const ordinaryTax =
-      16550 * 0.10 +
-      (35850 - 16550) * 0.12;
-    const ltcgTax = (50000 - 27150) * 0.15; // 22850 * 0.15 = 3427.50
+    const ordinaryTax = top10 * 0.10 + (taxableOrdinary - top10) * 0.12;
+    const zeroLtcgRoom = Math.max(0, ltcgZeroTop - taxableOrdinary);
+    const ltcgTax = (capitalGains - zeroLtcgRoom) * 0.15;
     expect(result.federal).toBeCloseTo(ordinaryTax + ltcgTax, 0);
   });
 });
@@ -178,14 +190,14 @@ describe('Net Investment Income Tax', () => {
 
 describe('FICA detailed', () => {
   it('wages at exact SS wage base → no surtax', () => {
-    const result = calcFICA(176100);
-    const expected = 176100 * 0.062 + 176100 * 0.0145;
+    const result = calcFICA(FICA_SS_WAGE_BASE);
+    const expected = FICA_SS_WAGE_BASE * 0.062 + FICA_SS_WAGE_BASE * 0.0145;
     expect(result).toBeCloseTo(expected, 0);
   });
 
   it('wages at $200,001 → $1 of surtax', () => {
     const result = calcFICA(200001);
-    const ss = 176100 * 0.062;
+    const ss = FICA_SS_WAGE_BASE * 0.062;
     const medicare = 200001 * 0.0145;
     const surtax = 1 * 0.009;
     expect(result).toBeCloseTo(ss + medicare + surtax, 0);
@@ -329,25 +341,25 @@ describe('Tax invariants', () => {
 // ───── 9. FILING STATUS: MFJ ─────
 
 describe('Filing status: Married Filing Jointly', () => {
-  it('MFJ standard deduction is $30,750', () => {
+  it('MFJ standard deduction yields $0 federal tax at exactly the deduction', () => {
     // Income exactly at MFJ deduction → $0 federal income tax
-    const input: TaxInput = { ...ZERO_INPUT, traditionalWithdrawals: 30750, filingStatus: 'mfj' };
+    const input: TaxInput = { ...ZERO_INPUT, traditionalWithdrawals: STANDARD_DEDUCTION_MFJ, filingStatus: 'mfj' };
     const result = calculateTaxes(input);
     expect(result.federal).toBe(0);
   });
 
   it('MFJ $1 above deduction → taxed at 10%', () => {
-    const input: TaxInput = { ...ZERO_INPUT, traditionalWithdrawals: 30751, filingStatus: 'mfj' };
+    const input: TaxInput = { ...ZERO_INPUT, traditionalWithdrawals: STANDARD_DEDUCTION_MFJ + 1, filingStatus: 'mfj' };
     const result = calculateTaxes(input);
     expect(result.federal).toBeCloseTo(0.10, 2);
   });
 
-  it('MFJ has wider 10% bracket ($23,630 vs HOH $16,550)', () => {
-    // MFJ: 10% bracket goes to $23,630
-    const taxableAmount = 23630; // exactly fills 10% bracket
-    const input: TaxInput = { ...ZERO_INPUT, traditionalWithdrawals: 30750 + taxableAmount, filingStatus: 'mfj' };
+  it('MFJ 10% bracket is wider than HOH 10% bracket', () => {
+    // Withdraw enough to fill MFJ 10% bracket exactly (top of 10% = bracket index 0 max)
+    const tenPctTop = FEDERAL_BRACKETS_MFJ[0].max;
+    const input: TaxInput = { ...ZERO_INPUT, traditionalWithdrawals: STANDARD_DEDUCTION_MFJ + tenPctTop, filingStatus: 'mfj' };
     const result = calculateTaxes(input);
-    expect(result.federal).toBeCloseTo(23630 * 0.10, 0);
+    expect(result.federal).toBeCloseTo(tenPctTop * 0.10, 0);
   });
 
   it('MFJ pays less tax than HOH on same income', () => {

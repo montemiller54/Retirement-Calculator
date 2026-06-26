@@ -170,6 +170,9 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
                 </Field>
               </div>
               <FieldError errors={ve} field="rothConversion.startAge" />
+              <p className="text-[0.6875rem] text-gray-500 dark:text-gray-400 italic leading-snug">
+                Bracket-fill estimate. Doesn't account for Medicare IRMAA, ACA subsidies, NIIT, capital-gains bracket interactions, or state tax differences — see methodology for details.
+              </p>
             </div>
           )}
         </div>

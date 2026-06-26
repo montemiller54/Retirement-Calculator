@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { allocateContributions, type ContributionInput } from '../engine/contributions';
+import { DEFAULT_401K_LIMIT, DEFAULT_401K_CATCHUP } from '../constants/contribution-limits';
 
 describe('allocateContributions', () => {
   const baseInput: ContributionInput = {
@@ -93,8 +94,8 @@ describe('allocateContributions', () => {
       enable401kCatchUp: true,
     };
     const result = allocateContributions(input);
-    // Limit = 24500 + 7500 = 32000
-    expect(result.contributions.traditional401k).toBeCloseTo(32000);
-    expect(result.spilloverToTaxable).toBeCloseTo(3000);
+    const limit = DEFAULT_401K_LIMIT + DEFAULT_401K_CATCHUP;
+    expect(result.contributions.traditional401k).toBeCloseTo(limit);
+    expect(result.spilloverToTaxable).toBeCloseTo(35000 - limit);
   });
 });

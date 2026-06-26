@@ -76,11 +76,11 @@ describe('estimateSSBenefit', () => {
 
   it('returns a reasonable estimate for $100K salary at FRA', () => {
     // $100K/yr = $8,333/mo salary → AIME = $8,333
-    // PIA = 90% × 1174 + 32% × (7078-1174) + 15% × (8333-7078)
-    //     = 1056.60 + 1889.28 + 188.25 = $3,134.13 → truncated to dime, rounded to dollar
+    // PIA = 90% of bend-point-1 + 32% of (bend-point-2 − bend-point-1) + 15% of (AIME − bend-point-2)
+    //   (bend points published by SSA each year — see constants/irs-2026.ts)
     const benefit = estimateSSBenefit(8333, 67, 35, 2026);
     expect(benefit).toBeGreaterThan(3000);
-    expect(benefit).toBeLessThan(3200);
+    expect(benefit).toBeLessThan(3400);
   });
 
   it('returns a lower benefit for early claiming at 62', () => {

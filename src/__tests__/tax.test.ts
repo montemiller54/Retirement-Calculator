@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { calculateTaxes, calcSSTaxablePortion, calcFICA, type TaxInput } from '../engine/tax';
-import { STANDARD_DEDUCTION_HOH } from '../constants/tax';
+import {
+  STANDARD_DEDUCTION_HOH,
+  FICA_SS_WAGE_BASE,
+  FEDERAL_BRACKETS_HOH,
+  LTCG_BRACKETS_HOH,
+} from '../constants/tax';
 
 describe('calcSSTaxablePortion', () => {
   it('returns 0 when provisional income is below low threshold', () => {
@@ -36,10 +41,10 @@ describe('calcFICA', () => {
 
   it('caps SS tax at wage base', () => {
     const result = calcFICA(250000);
-    // SS: 176100 * 0.062 = 10918.2
-    // Medicare: 250000 * 0.0145 = 3625
-    // Surtax: (250000 - 200000) * 0.009 = 450
-    expect(result).toBeCloseTo(10918.2 + 3625 + 450, 0);
+    const ss = FICA_SS_WAGE_BASE * 0.062;
+    const medicare = 250000 * 0.0145;
+    const surtax = (250000 - 200000) * 0.009;
+    expect(result).toBeCloseTo(ss + medicare + surtax, 0);
   });
 });
 
@@ -91,10 +96,11 @@ describe('calculateTaxes', () => {
       age: 70,
     };
     const result = calculateTaxes(input);
-    // 50000 - 24150 = 25850 taxable
-    // 10% on first 16550 = 1655
-    // 12% on remaining 9300 = 1116
-    expect(result.federal).toBeCloseTo(1655 + 1116, 0);
+    // 50000 - STANDARD_DEDUCTION_HOH = taxable, then progressive brackets
+    const taxable = 50000 - STANDARD_DEDUCTION_HOH;
+    const top10 = FEDERAL_BRACKETS_HOH[0].max;
+    const expected = top10 * 0.10 + (taxable - top10) * 0.12;
+    expect(result.federal).toBeCloseTo(expected, 0);
   });
 
   it('exempts retirement income for Iowa age 55+', () => {
@@ -130,8 +136,10 @@ describe('calculateTaxes', () => {
       age: 70,
     };
     const result = calculateTaxes(input);
-    // With 0 ordinary, first $63K of LTCG at 0%, rest at 15%
-    // 0% on 63000, 15% on 37000 = 5550
-    expect(result.federal).toBeCloseTo(5550, 0);
+    // With 0 ordinary income, the 0% LTCG bracket absorbs the first portion,
+    // and the rest is taxed at 15%.
+    const zeroBracketTop = LTCG_BRACKETS_HOH[0].max;
+    const taxedAt15 = Math.max(0, 100000 - zeroBracketTop);
+    expect(result.federal).toBeCloseTo(taxedAt15 * 0.15, 0);
   });
 });
