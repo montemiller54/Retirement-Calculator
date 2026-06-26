@@ -204,15 +204,14 @@ export function ResultsPanel({
         )}
 
         {activeTab === 'cashflow' && (
-          <CashflowChart
-            data={result.expectedPath}
-            retirementAge={retirementAge}
-            currentAge={currentAge}
-          />
-        )}
-
-        {activeTab === 'taxes' && (
-          <TaxChart data={result.expectedPath} currentAge={currentAge} />
+          <>
+            <CashflowChart
+              data={result.expectedPath}
+              retirementAge={retirementAge}
+              currentAge={currentAge}
+            />
+            <TaxChart data={result.expectedPath} currentAge={currentAge} />
+          </>
         )}
 
         {activeTab === 'accounts' && (

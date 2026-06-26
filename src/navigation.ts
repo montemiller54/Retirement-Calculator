@@ -27,7 +27,7 @@ export const PROFILE_SECTIONS: ProfileSectionDef[] = [
 ];
 
 // Results tabs — one chart group per tab.
-export type ResultsSectionId = 'plan' | 'outcomes' | 'cashflow' | 'taxes' | 'accounts';
+export type ResultsSectionId = 'plan' | 'outcomes' | 'cashflow' | 'accounts';
 
 export interface ResultsSectionDef {
   id: ResultsSectionId;
@@ -38,7 +38,6 @@ export const RESULTS_SECTIONS: ResultsSectionDef[] = [
   { id: 'plan',     label: 'Plan' },
   { id: 'outcomes', label: 'Outcomes' },
   { id: 'cashflow', label: 'Cashflow' },
-  { id: 'taxes',    label: 'Taxes' },
   { id: 'accounts', label: 'Accounts' },
 ];
 

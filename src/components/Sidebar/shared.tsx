@@ -87,7 +87,7 @@ export function Section({
         {trailing && <div className="shrink-0 text-xs text-gray-500 dark:text-gray-400">{trailing}</div>}
       </div>
       {showBody && (
-        <div className="px-5 pb-5 pt-1 border-t border-gray-100 dark:border-gray-700/60">
+        <div className="section-body px-5 pb-5 pt-1 border-t border-gray-100 dark:border-gray-700/60">
           {children}
         </div>
       )}

@@ -157,7 +157,7 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
         </span>
       </div>
       <ResponsiveContainer width="100%" height={320}>
-        <ComposedChart data={chartData} margin={{ top: 24, right: 20, left: 10, bottom: 5 }}>
+        <ComposedChart data={chartData} margin={{ top: 24, right: 20, left: 30, bottom: 5 }}>
           <defs>
             <linearGradient id="journeyFill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={JOURNEY_FILL} stopOpacity={0.22} />
@@ -173,12 +173,12 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
           <YAxis
             tickFormatter={formatCompact}
             tick={{ fontSize: 15, fill: AXIS_TICK_FILL, stroke: 'none' }}
-            width={60}
+            width={70}
             label={{
               value: 'Projected portfolio balance',
               angle: -90,
               position: 'insideLeft',
-              offset: 10,
+              offset: -15,
               style: { fontSize: 15, fill: AXIS_TICK_FILL, textAnchor: 'middle' },
             }}
           />
