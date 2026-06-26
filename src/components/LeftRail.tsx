@@ -82,15 +82,6 @@ export function LeftRail({
             {isRunning ? `Running ${progress}%` : 'Run Simulation'}
           </button>
         </div>
-
-        <div className="mt-1 px-3 pt-2 border-t border-gray-200 dark:border-gray-800">
-          <RailButton
-            label="Methodology"
-            compact
-            active={view.kind === 'methodology'}
-            onClick={() => setView({ kind: 'methodology' })}
-          />
-        </div>
       </nav>
     </aside>
   );
