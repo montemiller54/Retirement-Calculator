@@ -88,9 +88,9 @@ export function SuccessGauge({ rate, numSimulations }: SuccessGaugeProps) {
         </svg>
       </div>
       <div className={`text-sm font-semibold -mt-1 ${labelClass}`}>{qualLabel}</div>
-      <div className="text-[11px] text-gray-400 mt-1">of {numSimulations.toLocaleString()} simulations</div>
+      <div className="text-[0.6875rem] text-gray-400 mt-1">of {numSimulations.toLocaleString()} simulations</div>
       {pct < 80 && (
-        <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-2 text-center max-w-[260px]">
+        <p className="text-[0.6875rem] text-amber-600 dark:text-amber-400 mt-2 text-center max-w-[260px]">
           To improve: increase savings, delay retirement, or reduce spending.
         </p>
       )}

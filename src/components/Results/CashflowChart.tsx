@@ -84,7 +84,7 @@ export function CashflowChart({ data, retirementAge, currentAge }: CashflowChart
           />
         </ComposedChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">Smooth projection using average market returns. Shows where your retirement income comes from each year. The dashed red line is your total spending.</p>
+      <p className="text-[0.625rem] text-gray-400 mt-2 px-1">Smooth projection using average market returns. Shows where your retirement income comes from each year. The dashed red line is your total spending.</p>
     </div>
   );
 }

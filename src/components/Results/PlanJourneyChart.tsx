@@ -125,7 +125,7 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
         </div>
         {d.events.length > 0 && (
           <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-            <div className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5">Events</div>
+            <div className="text-[0.625rem] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5">Events</div>
             <div className="space-y-1">
               {d.events.map((e: JourneyEvent, i: number) => (
                 <div
@@ -135,7 +135,7 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
                   <span className="text-base leading-none mt-0.5">{e.icon}</span>
                   <div className="min-w-0">
                     <div className="text-xs font-semibold">{e.label}</div>
-                    <div className="text-[11px] text-gray-600 dark:text-gray-400 leading-snug">{e.description}</div>
+                    <div className="text-[0.6875rem] text-gray-600 dark:text-gray-400 leading-snug">{e.description}</div>
                   </div>
                 </div>
               ))}
@@ -152,7 +152,7 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
         <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400">
           Portfolio Over Time
         </h4>
-        <span className="text-[10px] text-gray-500 dark:text-gray-400">
+        <span className="text-[0.625rem] text-gray-500 dark:text-gray-400">
           Median outcome · Hover for details
         </span>
       </div>
@@ -212,7 +212,7 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
           />
         </ComposedChart>
       </ResponsiveContainer>
-      <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-2 px-1">
+      <p className="text-[0.6875rem] text-gray-500 dark:text-gray-400 mt-2 px-1">
         This is the typical outcome — half of simulated scenarios do better, half do worse.
       </p>
     </div>

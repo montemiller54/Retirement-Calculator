@@ -43,7 +43,7 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
 
   return (
     <div className="space-y-4">
-      <p className="text-[10px] text-gray-400 mb-1">How you draw down your portfolio in retirement.</p>
+      <p className="text-[0.625rem] text-gray-400 mb-1">How you draw down your portfolio in retirement.</p>
 
       {/* Withdrawal order */}
       <div className="space-y-2">
@@ -52,7 +52,7 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
           {STRATEGIES.map(s => (
             <button
               key={s}
-              className={`flex-1 text-[11px] py-1.5 rounded border relative ${
+              className={`flex-1 text-[0.6875rem] py-1.5 rounded border relative ${
                 scenario.withdrawalStrategy === s
                   ? 'border-primary-500 bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
                   : 'border-gray-300 dark:border-gray-600'
@@ -61,12 +61,12 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
             >
               {WITHDRAWAL_STRATEGY_LABELS[s]}
               {s === 'taxEfficient' && (
-                <span className="block text-[9px] font-normal text-green-600 dark:text-green-400">Recommended</span>
+                <span className="block text-[0.5625rem] font-normal text-green-600 dark:text-green-400">Recommended</span>
               )}
             </button>
           ))}
         </div>
-        <p className="text-[10px] text-gray-400">
+        <p className="text-[0.625rem] text-gray-400">
           {scenario.withdrawalStrategy === 'taxEfficient' && 'Brokerage first → 401(k)/IRA next → Roth last'}
           {scenario.withdrawalStrategy === 'rothPreserving' && 'Brokerage first → 401(k)/IRA next to preserve Roth'}
           {scenario.withdrawalStrategy === 'proRata' && 'Withdraw proportionally from all accounts'}
@@ -77,7 +77,7 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
       {/* Early withdrawal rules */}
       <div className="pt-3 border-t border-gray-100 dark:border-gray-700 space-y-2">
         <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Early Withdrawal Rules</label>
-        <p className="text-[10px] text-gray-400">A 10% penalty applies to retirement account withdrawals before age 59½, with some exceptions.</p>
+        <p className="text-[0.625rem] text-gray-400">A 10% penalty applies to retirement account withdrawals before age 59½, with some exceptions.</p>
 
         <div className="flex items-center gap-1">
           <label className="flex items-center gap-2 cursor-pointer">
@@ -121,7 +121,7 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
               {(['fillBracket', 'fixedAmount'] as RothConversionStrategy[]).map(s => (
                 <button
                   key={s}
-                  className={`flex-1 text-[11px] py-1 rounded border ${
+                  className={`flex-1 text-[0.6875rem] py-1 rounded border ${
                     rc.strategy === s
                       ? 'border-primary-500 bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
                       : 'border-gray-300 dark:border-gray-600'
@@ -167,7 +167,7 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
               </div>
             </div>
             <FieldError errors={ve} field="rothConversion.startAge" />
-            <p className="text-[10px] text-gray-400">Typically retirement through age 72 (before required withdrawals begin at 73).</p>
+            <p className="text-[0.625rem] text-gray-400">Typically retirement through age 72 (before required withdrawals begin at 73).</p>
           </div>
         )}
       </div>
@@ -185,7 +185,7 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
 
         {g.enabled && (
           <div className="space-y-2">
-            <p className="text-[10px] text-gray-400">If your portfolio drops from its highest value by the percentage on the left, reduce spending by the percentage on the right.</p>
+            <p className="text-[0.625rem] text-gray-400">If your portfolio drops from its highest value by the percentage on the left, reduce spending by the percentage on the right.</p>
 
             {g.tiers.map((tier: GuardrailTier, idx: number) => (
               <div key={idx}>
@@ -222,7 +222,7 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
 
         {cb.enabled && (
           <div className="space-y-2">
-            <p className="text-[10px] text-gray-400">Keep a cash reserve so you don't have to sell investments when the market is down.</p>
+            <p className="text-[0.625rem] text-gray-400">Keep a cash reserve so you don't have to sell investments when the market is down.</p>
 
             <div className="flex items-center justify-between text-xs">
               <span>Years of expenses</span>

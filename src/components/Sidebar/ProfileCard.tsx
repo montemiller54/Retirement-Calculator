@@ -113,7 +113,7 @@ export function ProfileCard({ validationErrors }: CardProps) {
                 <button
                   type="button"
                   onClick={() => setField('spouse.enabled', false)}
-                  className="text-[11px] text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+                  className="text-[0.6875rem] text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
                 >
                   Remove
                 </button>
@@ -139,7 +139,7 @@ export function ProfileCard({ validationErrors }: CardProps) {
               >
                 <span className="text-base leading-none">+</span> Add spouse
               </button>
-              <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-[0.6875rem] text-gray-500 dark:text-gray-400">
                 Models joint income, joint Social Security, and joint expenses.
               </p>
             </div>

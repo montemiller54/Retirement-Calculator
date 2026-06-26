@@ -94,7 +94,7 @@ export function SafeSpendingSection({ scenario }: SafeSpendingSectionProps) {
       )}
 
       {!result && !isRunning && !error && (
-        <p className="text-[11px] text-gray-400 dark:text-gray-500 italic">
+        <p className="text-[0.6875rem] text-gray-400 dark:text-gray-500 italic">
           Select a confidence level and click Calculate.
         </p>
       )}
@@ -119,7 +119,7 @@ function SafeSpendingDisplay({ result }: SafeSpendingDisplayProps) {
         <div>
           Confidence: {Math.round(result.achievedSuccessRate * 100)}% of simulations sustained this spending
         </div>
-        <div className="text-[10px] text-gray-400 mt-1">
+        <div className="text-[0.625rem] text-gray-400 mt-1">
           Based on 5,000 simulations · fixed spending (no guardrails)
         </div>
       </div>

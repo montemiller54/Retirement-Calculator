@@ -38,7 +38,7 @@ export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
         <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400">
           Portfolio Value Over Time (Simulated)
         </h4>
-        <div className="flex items-center gap-3 text-[10px] text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-3 text-[0.625rem] text-gray-500 dark:text-gray-400">
           <LegendSwatch color={FAN_MEDIAN_STROKE} kind="line" label="Median" />
           <LegendSwatch color={FAN_BAND_COLOR} kind="band" opacity={FAN_BAND_INNER_OPACITY} label="25th–75th" />
           <LegendSwatch color={FAN_BAND_COLOR} kind="band" opacity={FAN_BAND_WORST_OPACITY} label="10th–25th" />
@@ -84,7 +84,7 @@ export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
           <Line type="monotone" dataKey="p50" stroke={FAN_MEDIAN_STROKE} strokeWidth={2.5} dot={false} name="p50" />
         </ComposedChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">Range of outcomes across 5,000 simulations. The solid line is the median (typical outcome). The lighter band covers the middle 50% of outcomes (25th–75th percentile); the lower band extends down to the 10th percentile (worst 10%).</p>
+      <p className="text-[0.625rem] text-gray-400 mt-2 px-1">Range of outcomes across 5,000 simulations. The solid line is the median (typical outcome). The lighter band covers the middle 50% of outcomes (25th–75th percentile); the lower band extends down to the 10th percentile (worst 10%).</p>
     </div>
   );
 }

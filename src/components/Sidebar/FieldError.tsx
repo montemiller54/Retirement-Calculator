@@ -9,7 +9,7 @@ interface FieldErrorProps {
 export function FieldError({ errors, field }: FieldErrorProps) {
   const match = errors.find(e => e.field === field || e.field.startsWith(field + '.'));
   if (!match) return null;
-  return <p className="text-[10px] text-red-500 mt-0.5">{match.message}</p>;
+  return <p className="text-[0.625rem] text-red-500 mt-0.5">{match.message}</p>;
 }
 
 export function fieldErrorClass(errors: ValidationError[], field: string): string {

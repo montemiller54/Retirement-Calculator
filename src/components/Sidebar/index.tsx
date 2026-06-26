@@ -59,7 +59,7 @@ export function Sidebar({ validationErrors, onRun, isRunning, progress }: Sideba
                 <span className="flex items-center gap-1.5">
                   {label}
                   {hasErrors && (
-                    <span className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                    <span className="inline-flex items-center justify-center w-4 h-4 text-[0.625rem] font-bold text-white bg-red-500 rounded-full">
                       {cardErrors.length}
                     </span>
                   )}

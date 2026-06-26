@@ -19,8 +19,8 @@ export function LeftRail({
   const [profileOpen, setProfileOpen] = useState(true);
 
   return (
-    <aside className="w-[220px] shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
-      <nav className="flex-1 overflow-y-auto py-2 text-[13px]">
+    <aside className="w-[15rem] shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
+      <nav className="flex-1 overflow-y-auto py-2 text-[0.8125rem]">
         <GroupHeader
           label="Profile"
           open={profileOpen}
@@ -84,7 +84,7 @@ function GroupHeader({ label, open, onToggle }: { label: string; open: boolean; 
     <button
       type="button"
       onClick={onToggle}
-      className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+      className="w-full flex items-center justify-between px-3 py-1.5 text-[0.625rem] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
       aria-expanded={open}
     >
       <span>{label}</span>
@@ -122,7 +122,7 @@ interface RailButtonProps {
 
 function RailButton({ label, active, disabled, badge, badgeKind, compact, onClick }: RailButtonProps) {
   const base = compact
-    ? 'w-full text-left px-1 py-1.5 text-[12px] rounded transition-colors'
+    ? 'w-full text-left px-1 py-1.5 text-[0.75rem] rounded transition-colors'
     : 'relative w-full text-left pl-5 pr-3 py-1.5 transition-colors';
   const stateClasses = disabled
     ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
@@ -148,7 +148,7 @@ function RailButton({ label, active, disabled, badge, badgeKind, compact, onClic
       <span className="flex items-center justify-between gap-2">
         <span className="truncate">{label}</span>
         {badge !== undefined && (
-          <span className={`inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold text-white rounded-full ${
+          <span className={`inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[0.625rem] font-bold text-white rounded-full ${
             badgeKind === 'error' ? 'bg-red-500' : 'bg-gray-400'
           }`}>
             {badge}

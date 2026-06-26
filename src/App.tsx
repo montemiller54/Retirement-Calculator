@@ -39,11 +39,11 @@ function AppInner() {
         <div className="flex items-center gap-4 shrink-0">
           <a href="/" className="flex items-center gap-2 group">
             <PlainsightMark className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-            <span className="text-[15px] font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+            <span className="text-[0.9375rem] font-semibold tracking-tight text-gray-900 dark:text-gray-100">
               Plainsight
             </span>
           </a>
-          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-[11px] font-medium text-gray-600 dark:text-gray-300"
+          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-[0.6875rem] font-medium text-gray-600 dark:text-gray-300"
                 title="All data is stored in your browser's localStorage. Nothing is sent to any server.">
             <LockIcon className="w-3 h-3" />
             100% private

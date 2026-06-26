@@ -226,7 +226,7 @@ export function ResultsPanel({
           </>
         )}
 
-        <p className="text-[11px] text-gray-500 dark:text-gray-400 px-1">
+        <p className="text-[0.6875rem] text-gray-500 dark:text-gray-400 px-1">
           Charts labeled <span className="font-medium">Simulated</span> come from 5,000 Monte Carlo runs with real market volatility. Charts labeled <span className="font-medium">Average</span> use a smooth average-return projection.
         </p>
       </div>

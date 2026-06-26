@@ -108,7 +108,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
                   />
                   <div className="flex-1" />
                   {isActive && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded">
+                    <span className="inline-flex items-center gap-1 text-[0.625rem] font-medium uppercase tracking-wider text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded">
                       Active
                     </span>
                   )}
@@ -158,7 +158,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
                     />
                     Offers a 401(k)
                     {job.has401k && job.employerMatchRate > 0 && job.employerMatchCapPct > 0 && (
-                      <span className="text-[11px] text-green-600 dark:text-green-400 font-medium ml-2">
+                      <span className="text-[0.6875rem] text-green-600 dark:text-green-400 font-medium ml-2">
                         ✓ {Math.round(job.employerMatchRate * 100)}% match on {(job.employerMatchCapPct * 100).toFixed(1)}%
                       </span>
                     )}
@@ -181,7 +181,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
                         />
                       </div>
                       {job.monthlyPay > 0 && job.employerMatchRate > 0 && job.employerMatchCapPct > 0 && (
-                        <p className="text-[11px] text-primary-600 dark:text-primary-400 font-medium">
+                        <p className="text-[0.6875rem] text-primary-600 dark:text-primary-400 font-medium">
                           ≈ Employer contributes ${Math.round(job.monthlyPay * 12 * job.employerMatchCapPct * job.employerMatchRate).toLocaleString()}/yr
                         </p>
                       )}
@@ -201,7 +201,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
                             onChange={v => updateJob(job.id, 'employerRothPct', Math.round(v))}
                             min={0} max={100} step={10}
                           />
-                          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                          <p className="text-[0.6875rem] text-gray-500 dark:text-gray-400 mt-1">
                             SECURE 2.0: % of employer match deposited to Roth 401(k). Most plans use 0%.
                           </p>
                         </div>
@@ -235,7 +235,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
               onChange={v => setField('salaryGrowthRate', v / 100)}
               min={0} max={10} step={0.5}
             />
-            <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">Annual raise rate, before promotions. 1–3% is typical.</p>
+            <p className="mt-1 text-[0.6875rem] text-gray-500 dark:text-gray-400">Annual raise rate, before promotions. 1–3% is typical.</p>
           </div>
           <div>
             <PctSlider
@@ -244,7 +244,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
               onChange={v => setField('totalSavingsRate', v / 100)}
               min={0} max={60} step={1}
             />
-            <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">Portion of pay saved each month. Split across accounts below.</p>
+            <p className="mt-1 text-[0.6875rem] text-gray-500 dark:text-gray-400">Portion of pay saved each month. Split across accounts below.</p>
           </div>
         </div>
       </Section>
@@ -263,7 +263,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
         <div className="space-y-4">
           {/* Preset buttons */}
           <div>
-            <p className="text-[11px] uppercase tracking-wider font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Quick presets</p>
+            <p className="text-[0.6875rem] uppercase tracking-wider font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Quick presets</p>
             <div className="flex flex-wrap gap-2">
               {[
                 { label: '100% Trad 401(k)', alloc: { traditional401k: 100, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 } },

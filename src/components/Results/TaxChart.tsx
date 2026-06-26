@@ -38,7 +38,7 @@ export function TaxChart({ data, currentAge }: TaxChartProps) {
           <Bar dataKey="fica" stackId="1" fill="#f59e0b" name="SS & Medicare Tax" />
         </BarChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">Smooth projection using average market returns. Includes federal, state, and payroll taxes.</p>
+      <p className="text-[0.625rem] text-gray-400 mt-2 px-1">Smooth projection using average market returns. Includes federal, state, and payroll taxes.</p>
     </div>
   );
 }

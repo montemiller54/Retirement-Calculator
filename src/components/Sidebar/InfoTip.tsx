@@ -30,7 +30,7 @@ export function InfoTip({ text }: InfoTipProps) {
         </svg>
       </button>
       {show && (
-        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-56 p-2 rounded-lg shadow-lg bg-gray-800 dark:bg-gray-700 text-[11px] leading-relaxed text-gray-100 border border-gray-600">
+        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-56 p-2 rounded-lg shadow-lg bg-gray-800 dark:bg-gray-700 text-[0.6875rem] leading-relaxed text-gray-100 border border-gray-600">
           {text}
           <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-2 h-2 rotate-45 bg-gray-800 dark:bg-gray-700 border-r border-b border-gray-600" />
         </div>

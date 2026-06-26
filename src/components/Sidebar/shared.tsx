@@ -119,7 +119,7 @@ export function Field({
     <div className={wrapperClass}>
       <label className="input-label">{label}</label>
       {children}
-      {help && <p className={`mt-1 text-[11px] ${helpClass}`}>{help}</p>}
+      {help && <p className={`mt-1 text-[0.6875rem] ${helpClass}`}>{help}</p>}
     </div>
   );
 }

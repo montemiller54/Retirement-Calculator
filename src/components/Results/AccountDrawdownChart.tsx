@@ -96,7 +96,7 @@ export function AccountDrawdownChart({ data, retirementAge, currentAge }: Accoun
           ))}
         </AreaChart>
       </ResponsiveContainer>
-      <p className="text-[10px] text-gray-400 mt-2 px-1">A representative path from 5,000 simulations — includes market volatility and guardrail spending adjustments. Different colors represent different account types.</p>
+      <p className="text-[0.625rem] text-gray-400 mt-2 px-1">A representative path from 5,000 simulations — includes market volatility and guardrail spending adjustments. Different colors represent different account types.</p>
     </div>
   );
 }

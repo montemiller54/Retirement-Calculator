@@ -141,7 +141,7 @@ export function ScenarioManager() {
                 <>
                   <div className="border-t border-gray-100 dark:border-gray-800" />
                   <div className="py-1 max-h-64 overflow-y-auto">
-                    <div className="px-3 py-1 text-[10px] font-semibold tracking-wider uppercase text-gray-400 dark:text-gray-500">
+                    <div className="px-3 py-1 text-[0.625rem] font-semibold tracking-wider uppercase text-gray-400 dark:text-gray-500">
                       Saved plans
                     </div>
                     {saved.map(s => {
@@ -161,7 +161,7 @@ export function ScenarioManager() {
                             {isActive && <span className="block w-1.5 h-1.5 rounded-full bg-primary-500" />}
                           </span>
                           <span className="flex-1 truncate font-medium">{s.name}</span>
-                          <span className="text-[10px] text-gray-400">
+                          <span className="text-[0.625rem] text-gray-400">
                             {new Date(s.savedAt).toLocaleDateString()}
                           </span>
                           <button
@@ -219,7 +219,7 @@ export function ScenarioManager() {
 function SavedIndicator({ status, hasActivePlan }: { status: 'idle' | 'saved'; hasActivePlan: boolean }) {
   return (
     <span
-      className={`shrink-0 w-20 text-[11px] text-right tabular-nums transition-opacity duration-500 ${
+      className={`shrink-0 w-20 text-[0.6875rem] text-right tabular-nums transition-opacity duration-500 ${
         status === 'saved' ? 'opacity-100 text-green-600 dark:text-green-400' : 'opacity-0'
       }`}
       aria-live="polite"
