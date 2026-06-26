@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { ValidationError } from '../utils/validation';
-import type { AppView, ProfileSectionId } from '../navigation';
-import { PROFILE_SECTIONS } from '../navigation';
+import type { AppView, ProfileSectionId, ResultsSectionId } from '../navigation';
+import { PROFILE_SECTIONS, RESULTS_SECTIONS } from '../navigation';
 
 interface LeftRailProps {
   view: AppView;
@@ -17,6 +17,7 @@ export function LeftRail({
   view, setView, validationErrors, onRun, isRunning, progress, hasResults,
 }: LeftRailProps) {
   const [profileOpen, setProfileOpen] = useState(true);
+  const [resultsOpen, setResultsOpen] = useState(true);
 
   return (
     <aside className="w-[15rem] shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
@@ -46,13 +47,29 @@ export function LeftRail({
           </ul>
         )}
 
-        <div className="mt-2 px-3 pt-2 border-t border-gray-200 dark:border-gray-800">
-          <RailButton
+        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-800">
+          <GroupHeader
             label="Results"
-            active={view.kind === 'results'}
+            open={resultsOpen}
+            onToggle={() => setResultsOpen(o => !o)}
             disabled={!hasResults}
-            onClick={() => setView({ kind: 'results', sectionId: 'plan' })}
           />
+          {resultsOpen && hasResults && (
+            <ul className="mb-2">
+              {RESULTS_SECTIONS.map(({ id, label }) => {
+                const active = view.kind === 'results' && view.sectionId === id;
+                return (
+                  <li key={id}>
+                    <RailButton
+                      label={label}
+                      active={active}
+                      onClick={() => setView({ kind: 'results', sectionId: id as ResultsSectionId })}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
 
         <div className="mt-1 px-3 py-2">
@@ -79,16 +96,21 @@ export function LeftRail({
   );
 }
 
-function GroupHeader({ label, open, onToggle }: { label: string; open: boolean; onToggle: () => void }) {
+function GroupHeader({ label, open, onToggle, disabled }: { label: string; open: boolean; onToggle: () => void; disabled?: boolean }) {
   return (
     <button
       type="button"
-      onClick={onToggle}
-      className="w-full flex items-center justify-between px-3 py-1.5 text-[0.625rem] font-semibold tracking-wider uppercase text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+      onClick={disabled ? undefined : onToggle}
+      disabled={disabled}
+      className={`w-full flex items-center justify-between px-3 py-1.5 text-[0.625rem] font-semibold tracking-wider uppercase ${
+        disabled
+          ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed'
+          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+      }`}
       aria-expanded={open}
     >
       <span>{label}</span>
-      <Chevron open={open} />
+      {!disabled && <Chevron open={open} />}
     </button>
   );
 }

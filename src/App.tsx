@@ -98,7 +98,6 @@ function AppInner() {
                 error={error}
                 validationErrors={validationErrors}
                 activeTab={view.sectionId}
-                setActiveTab={(id) => setView({ kind: 'results', sectionId: id })}
                 lastRunScenario={lastRunScenario}
                 lastRunAt={lastRunAt}
                 onRun={handleRun}
