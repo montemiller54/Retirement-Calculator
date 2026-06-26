@@ -95,12 +95,12 @@ export function ScenarioManager() {
         </span>
 
         <input
-          className="w-auto min-w-[5rem] max-w-xs bg-transparent border-0 border-b border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-primary-500 focus:outline-none focus:ring-0 px-1 py-0.5 text-base font-semibold text-gray-900 dark:text-gray-100 transition-colors"
+          className="bg-transparent border-0 border-b border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-primary-500 focus:outline-none focus:ring-0 px-1 py-0.5 text-base font-semibold text-gray-900 dark:text-gray-100 transition-colors"
           value={scenario.name}
           onChange={e => setField('name', e.target.value)}
           placeholder="Untitled plan"
           aria-label="Plan name"
-          size={Math.max((scenario.name || '').length, 8)}
+          style={{ width: `${Math.max((scenario.name || '').length, 4) + 1}ch` }}
         />
 
         <div className="relative shrink-0">
