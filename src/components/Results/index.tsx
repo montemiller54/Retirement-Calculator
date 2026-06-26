@@ -8,7 +8,6 @@ import { AccountDrawdownChart } from './AccountDrawdownChart';
 import { CashflowChart } from './CashflowChart';
 import { TaxChart } from './TaxChart';
 import { SafeSpendingSection } from './SafeSpendingSection';
-import { WorstCaseSummary } from './WorstCaseSummary';
 import { TrajectoryTable } from './TrajectoryTable';
 import { PlanStatusStrip } from './PlanStatusStrip';
 
@@ -132,10 +131,6 @@ export function ResultsPanel({
               data={result.percentileBands}
               retirementAge={retirementAge}
               currentAge={currentAge}
-            />
-            <WorstCaseSummary
-              depletionAges={result.depletionAges}
-              successRate={result.successRate}
             />
             <SafeSpendingSection scenario={scenario} />
           </>
