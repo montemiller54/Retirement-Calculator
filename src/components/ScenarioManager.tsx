@@ -89,7 +89,8 @@ export function ScenarioManager() {
   };
 
   return (
-    <div className="scenario-pill flex items-center gap-2 px-3 py-1 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+    <div className="flex items-center gap-2">
+      <div className="scenario-pill flex items-center gap-2 px-3 py-1 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <span className="text-xs font-bold tracking-wider uppercase text-gray-400 dark:text-gray-500 shrink-0">
           Plan
         </span>
@@ -202,8 +203,9 @@ export function ScenarioManager() {
             </div>
           )}
         </div>
+      </div>
 
-        <SavedIndicator status={saveStatus} hasActivePlan={!!activePlanId} />
+      <SavedIndicator status={saveStatus} hasActivePlan={!!activePlanId} />
 
       <input
         ref={fileInputRef}
@@ -219,7 +221,7 @@ export function ScenarioManager() {
 function SavedIndicator({ status, hasActivePlan }: { status: 'idle' | 'saved'; hasActivePlan: boolean }) {
   return (
     <span
-      className={`shrink-0 w-20 text-[0.6875rem] text-right tabular-nums transition-opacity duration-500 ${
+      className={`shrink-0 text-[0.6875rem] tabular-nums transition-opacity duration-500 ${
         status === 'saved' ? 'opacity-100 text-green-600 dark:text-green-400' : 'opacity-0'
       }`}
       aria-live="polite"
