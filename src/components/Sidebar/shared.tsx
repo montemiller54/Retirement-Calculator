@@ -9,7 +9,7 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       >
         <div
           className="absolute w-4 h-4 rounded-full bg-white shadow-sm transition-transform"
-          style={{ top: '50%', transform: `translateY(-50%) translateX(${checked ? '18px' : '2px'})` }}
+          style={{ top: '50%', transform: `translateY(-50%) translateX(${checked ? '1.125rem' : '0.125rem'})` }}
         />
       </div>
       <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{label}</span>
