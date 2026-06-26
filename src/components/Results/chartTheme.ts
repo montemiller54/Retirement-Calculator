@@ -15,7 +15,7 @@ export const FAN_MEDIAN_STROKE = '#f59e0b';
 export const FAILURE_BAR_FILL = '#f47c79';
 
 export const TOOLTIP_STYLE: React.CSSProperties = {
-  fontSize: 11,
+  fontSize: 17,
   background: 'rgba(255,255,255,0.98)',
   border: '1px solid rgba(100,116,139,0.25)',
   borderRadius: 6,

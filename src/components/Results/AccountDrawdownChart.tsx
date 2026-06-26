@@ -56,13 +56,13 @@ export function AccountDrawdownChart({ data, retirementAge, currentAge }: Accoun
           <CartesianGrid stroke={GRID_STROKE} vertical={false} />
           <XAxis
             dataKey="age"
-            tick={{ fontSize: 10, fill: AXIS_TICK_FILL, stroke: 'none' }}
+            tick={{ fontSize: 15, fill: AXIS_TICK_FILL, stroke: 'none' }}
             minTickGap={20}
-            label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fontSize: 11, fill: AXIS_TICK_FILL }}
+            label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fontSize: 17, fill: AXIS_TICK_FILL }}
           />
           <YAxis
             tickFormatter={formatCompact}
-            tick={{ fontSize: 10, fill: AXIS_TICK_FILL, stroke: 'none' }}
+            tick={{ fontSize: 15, fill: AXIS_TICK_FILL, stroke: 'none' }}
             width={55}
           />
           <Tooltip
@@ -73,14 +73,14 @@ export function AccountDrawdownChart({ data, retirementAge, currentAge }: Accoun
             itemStyle={{ color: '#374151' }}
           />
           <Legend
-            wrapperStyle={{ fontSize: 10 }}
+            wrapperStyle={{ fontSize: 15 }}
             formatter={(value: string) => ACCOUNT_LABELS[value as keyof typeof ACCOUNT_LABELS] ?? value}
           />
           <ReferenceLine
             x={retirementAge}
             stroke={RETIREMENT_MARKER_STROKE}
             strokeDasharray="4 4"
-            label={{ value: 'Retire', position: 'top', fontSize: 10, fill: RETIREMENT_MARKER_FILL }}
+            label={{ value: 'Retire', position: 'top', fontSize: 15, fill: RETIREMENT_MARKER_FILL }}
           />
           {visibleAccounts.map((acct) => (
             <Area

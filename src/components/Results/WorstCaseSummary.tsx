@@ -50,14 +50,14 @@ export function WorstCaseSummary({ depletionAges, successRate }: WorstCaseSummar
             <CartesianGrid stroke={GRID_STROKE} vertical={false} />
             <XAxis
               dataKey="age"
-              tick={{ fill: AXIS_TICK_FILL, fontSize: 11 }}
+              tick={{ fill: AXIS_TICK_FILL, fontSize: 17 }}
               tickLine={false}
               minTickGap={20}
               axisLine={{ stroke: AXIS_LINE_STROKE }}
-              label={{ value: 'Age', position: 'insideBottom', offset: -2, fill: AXIS_TICK_FILL, fontSize: 10 }}
+              label={{ value: 'Age', position: 'insideBottom', offset: -2, fill: AXIS_TICK_FILL, fontSize: 15 }}
             />
             <YAxis
-              tick={{ fill: AXIS_TICK_FILL, fontSize: 11 }}
+              tick={{ fill: AXIS_TICK_FILL, fontSize: 17 }}
               tickLine={false}
               axisLine={false}
               allowDecimals={false}

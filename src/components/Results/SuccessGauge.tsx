@@ -81,7 +81,7 @@ export function SuccessGauge({ rate, numSimulations }: SuccessGaugeProps) {
             y={90}
             textAnchor="middle"
             className="fill-gray-900 dark:fill-gray-100"
-            style={{ fontSize: 30, fontWeight: 700 }}
+            style={{ fontSize: 45, fontWeight: 700 }}
           >
             {pct}%
           </text>

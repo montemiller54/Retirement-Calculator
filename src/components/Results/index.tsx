@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { SimulationResult, ScenarioInput } from '../../types';
 import type { ValidationError } from '../../utils/validation';
 import type { ResultsSectionId } from '../../navigation';
@@ -13,6 +13,8 @@ import { SafeSpendingSection } from './SafeSpendingSection';
 import { WorstCaseSummary } from './WorstCaseSummary';
 import { TrajectoryTable } from './TrajectoryTable';
 import { PlanStatusStrip } from './PlanStatusStrip';
+
+let hintShownThisSession = false;
 
 interface ResultsPanelProps {
   result: SimulationResult | null;
@@ -34,13 +36,12 @@ export function ResultsPanel({
   result, scenario, retirementAge, currentAge, isRunning, progress, error, validationErrors,
   activeTab, setActiveTab, lastRunScenario, lastRunAt, onRun,
 }: ResultsPanelProps) {
-  const [pulse, setPulse] = useState(false);
-  const lastSeenRunRef = useRef<number | null>(null);
+  const [showHint, setShowHint] = useState(false);
   useEffect(() => {
-    if (lastRunAt && lastRunAt !== lastSeenRunRef.current) {
-      lastSeenRunRef.current = lastRunAt;
-      setPulse(true);
-      const t = window.setTimeout(() => setPulse(false), 3200);
+    if (lastRunAt && !hintShownThisSession) {
+      hintShownThisSession = true;
+      setShowHint(true);
+      const t = window.setTimeout(() => setShowHint(false), 6000);
       return () => window.clearTimeout(t);
     }
   }, [lastRunAt]);
@@ -125,26 +126,50 @@ export function ResultsPanel({
       />
 
       <div className="sticky top-[49px] z-10 bg-gray-50 dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center gap-1 px-4 overflow-x-auto">
-          {RESULTS_SECTIONS.map(({ id, label }) => {
-            const active = activeTab === id;
-            const shouldPulse = pulse && !active;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setActiveTab(id)}
-                className={
-                  (active
-                    ? 'relative px-3 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 border-b-2 border-primary-500 -mb-px'
-                    : 'relative px-3 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border-b-2 border-transparent -mb-px'
-                  ) + (shouldPulse ? ' tab-pulse' : '')
-                }
-              >
-                {label}
-              </button>
-            );
-          })}
+        <div className="relative">
+          <div className="flex items-center gap-1 px-4 overflow-x-auto">
+            {RESULTS_SECTIONS.map(({ id, label }) => {
+              const active = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setActiveTab(id)}
+                  className={
+                    active
+                      ? 'relative px-3 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 border-b-2 border-primary-500 -mb-px'
+                      : 'relative px-3 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border-b-2 border-transparent -mb-px'
+                  }
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          {showHint && (
+            <div className="tab-hint absolute left-0 right-0 top-full pointer-events-none z-20">
+              <div className="flex items-start gap-1 px-4 pt-1">
+                {RESULTS_SECTIONS.map(({ id, label }) => {
+                  const active = activeTab === id;
+                  return (
+                    <div key={id} className="relative px-3 py-1 text-sm font-medium">
+                      <span className="invisible">{label}</span>
+                      {!active && (
+                        <span className="absolute inset-0 flex items-center justify-center text-primary-600 dark:text-primary-400" aria-hidden="true">
+                          ▲
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-center">
+                <div className="rounded-lg bg-primary-600 text-white text-sm font-medium px-4 py-2 shadow-lg">
+                  Click these tabs for additional information
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

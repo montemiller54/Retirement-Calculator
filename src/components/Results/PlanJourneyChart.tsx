@@ -120,7 +120,7 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
           </span>
         </div>
         <div className="flex items-center justify-between text-xs border-t border-gray-200 dark:border-gray-700 pt-2">
-          <span className="text-gray-600 dark:text-gray-400">Net worth</span>
+          <span className="text-gray-600 dark:text-gray-400">Portfolio balance</span>
           <span className="font-semibold">{formatCompact(d.netWorth)}</span>
         </div>
         {d.events.length > 0 && (
@@ -150,7 +150,7 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
     <div className="card">
       <div className="flex items-center justify-between mb-2 gap-3 flex-wrap">
         <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400">
-          Your Financial Journey
+          Portfolio Over Time
         </h4>
         <span className="text-[10px] text-gray-500 dark:text-gray-400">
           Median outcome · Hover for details
@@ -167,19 +167,19 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
           <CartesianGrid stroke={GRID_STROKE} vertical={false} strokeDasharray="3 3" />
           <XAxis
             dataKey="year"
-            tick={{ fontSize: 10, fill: AXIS_TICK_FILL, stroke: 'none' }}
+            tick={{ fontSize: 15, fill: AXIS_TICK_FILL, stroke: 'none' }}
             minTickGap={30}
           />
           <YAxis
             tickFormatter={formatCompact}
-            tick={{ fontSize: 10, fill: AXIS_TICK_FILL, stroke: 'none' }}
+            tick={{ fontSize: 15, fill: AXIS_TICK_FILL, stroke: 'none' }}
             width={60}
             label={{
-              value: 'Projected net worth',
+              value: 'Projected portfolio balance',
               angle: -90,
               position: 'insideLeft',
               offset: 10,
-              style: { fontSize: 10, fill: AXIS_TICK_FILL, textAnchor: 'middle' },
+              style: { fontSize: 15, fill: AXIS_TICK_FILL, textAnchor: 'middle' },
             }}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#9ca3af', strokeDasharray: '3 3' }} />
@@ -190,7 +190,7 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
             label={{
               value: 'Retirement',
               position: 'top',
-              fontSize: 10,
+              fontSize: 15,
               fill: AXIS_TICK_FILL,
             }}
           />
