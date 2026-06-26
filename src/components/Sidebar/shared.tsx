@@ -23,7 +23,7 @@ export function PctSlider({ value, onChange, label, min = 0, max = 10, step = 0.
   tooltip?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col max-w-[50%]">
       <div className="flex items-center justify-between mb-1">
         <label className="input-label mb-0">{label}{tooltip}</label>
         <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">{value.toFixed(step < 1 ? 1 : 0)}{suffix}</span>
