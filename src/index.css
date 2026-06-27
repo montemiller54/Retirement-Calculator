@@ -12,6 +12,11 @@
   html {
     font-size: 150%;
   }
+  @media (max-width: 767px) {
+    html {
+      font-size: 100%;
+    }
+  }
   body {
     @apply antialiased;
   }

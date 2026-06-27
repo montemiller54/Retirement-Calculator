@@ -11,16 +11,36 @@ interface LeftRailProps {
   isRunning: boolean;
   progress: number;
   hasResults: boolean;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 export function LeftRail({
   view, setView, validationErrors, onRun, isRunning, progress, hasResults,
+  mobileOpen = false, onMobileClose,
 }: LeftRailProps) {
   const [profileOpen, setProfileOpen] = useState(true);
   const [resultsOpen, setResultsOpen] = useState(true);
 
+  const navigate = (v: AppView) => {
+    setView(v);
+    onMobileClose?.();
+  };
+
   return (
-    <aside className="w-[15rem] shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
+    <>
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          onClick={onMobileClose}
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        className={`w-[15rem] shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-col overflow-hidden ${
+          mobileOpen ? 'fixed inset-y-0 left-0 z-50 flex' : 'hidden'
+        } md:static md:flex md:z-auto`}
+      >
       <nav className="flex-1 overflow-y-auto py-2 text-[0.8125rem]">
         <GroupHeader
           label="Profile"
@@ -39,7 +59,7 @@ export function LeftRail({
                     active={active}
                     badge={errs > 0 ? errs : undefined}
                     badgeKind="error"
-                    onClick={() => setView({ kind: 'profile', sectionId: id as ProfileSectionId })}
+                    onClick={() => navigate({ kind: 'profile', sectionId: id as ProfileSectionId })}
                   />
                 </li>
               );
@@ -63,7 +83,7 @@ export function LeftRail({
                     <RailButton
                       label={label}
                       active={active}
-                      onClick={() => setView({ kind: 'results', sectionId: id as ResultsSectionId })}
+                      onClick={() => navigate({ kind: 'results', sectionId: id as ResultsSectionId })}
                     />
                   </li>
                 );
@@ -75,7 +95,7 @@ export function LeftRail({
         <div className="mt-1 px-3 py-2">
           <button
             className="btn-cta btn-cta--compact"
-            onClick={onRun}
+            onClick={() => { onRun(); onMobileClose?.(); }}
             disabled={isRunning || validationErrors.length > 0}
             title={validationErrors.length > 0 ? 'Fix validation errors first' : undefined}
           >
@@ -83,7 +103,8 @@ export function LeftRail({
           </button>
         </div>
       </nav>
-    </aside>
+      </aside>
+    </>
   );
 }
 

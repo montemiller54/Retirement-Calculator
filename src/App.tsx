@@ -15,6 +15,7 @@ function AppInner() {
   const { result, progress, isRunning, error, lastRunScenario, lastRunAt, run } = useSimulation();
   const { dark, toggleDark } = useTheme();
   const [view, setView] = useState<AppView>({ kind: 'profile', sectionId: 'profile' });
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const validationErrors = validateScenario(scenario);
 
@@ -36,7 +37,19 @@ function AppInner() {
     <div className="h-screen flex flex-col">
       {/* Top bar */}
       <header className="flex items-center px-5 py-2.5 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(true)}
+            className="md:hidden p-2 -ml-1 rounded text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+            aria-label="Open navigation"
+          >
+            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="4" y1="6" x2="20" y2="6" />
+              <line x1="4" y1="12" x2="20" y2="12" />
+              <line x1="4" y1="18" x2="20" y2="18" />
+            </svg>
+          </button>
           <a href="/" className="flex items-center gap-2 group">
             <img src="/two-trees.svg" alt="" className="w-6 h-6" />
             <span className="text-[0.9375rem] font-semibold tracking-tight text-gray-900 dark:text-gray-100">
@@ -58,12 +71,16 @@ function AppInner() {
             <QuestionMarkIcon className="w-4 h-4" />
           </button>
           <button
-            className="text-sm p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
+            className={`text-xs px-2.5 py-1 rounded font-medium transition-colors ${
+              dark
+                ? 'bg-gray-300 text-gray-800 hover:bg-gray-200'
+                : 'bg-gray-700 text-gray-100 hover:bg-gray-600'
+            }`}
             onClick={toggleDark}
             title="Toggle theme"
             aria-label="Toggle theme"
           >
-            {dark ? '☀️' : '🌙'}
+            {dark ? 'Light Mode' : 'Dark Mode'}
           </button>
         </div>
       </header>
@@ -78,6 +95,8 @@ function AppInner() {
           isRunning={isRunning}
           progress={progress}
           hasResults={result !== null}
+          mobileOpen={mobileNavOpen}
+          onMobileClose={() => setMobileNavOpen(false)}
         />
 
         <main className="flex-1 bg-gray-50 dark:bg-gray-950 flex flex-col overflow-hidden">
