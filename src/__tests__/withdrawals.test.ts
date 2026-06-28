@@ -47,11 +47,13 @@ describe('executeWithdrawals', () => {
       age: 65, // no RMDs
     };
     const result = executeWithdrawals(input);
-    const totalBal = 500000 + 200000 + 100000 + 300000 + 10000;
+    // HSA is excluded (reserved for medical); pro-rata divides across remaining accounts
+    const totalBal = 500000 + 200000 + 100000 + 300000;
     const frac = 50000 / totalBal;
     // Each account should withdraw proportionally
     expect(result.withdrawals.taxable).toBeCloseTo(300000 * frac, 0);
     expect(result.withdrawals.traditional401k).toBeCloseTo(500000 * frac, 0);
+    expect(result.withdrawals.hsa).toBe(0);
   });
 
   it('calculates capital gains from taxable withdrawals', () => {
@@ -67,9 +69,10 @@ describe('executeWithdrawals', () => {
       age: 65,
     };
     const result = executeWithdrawals(input);
-    // Should withdraw everything available
+    // Should withdraw everything available EXCEPT HSA (reserved for medical)
     const totalWithdrawn = Object.values(result.withdrawals).reduce((a, b) => a + b, 0);
     const totalBalance = Object.values(input.balances).reduce((a, b) => a + b, 0);
-    expect(totalWithdrawn).toBeCloseTo(totalBalance, 0);
+    expect(totalWithdrawn).toBeCloseTo(totalBalance - input.balances.hsa, 0);
+    expect(result.withdrawals.hsa).toBe(0);
   });
 });

@@ -19,11 +19,13 @@ export interface WithdrawalResult {
   excessRMD: number;     // RMD amount exceeding spending need (reinvested to taxable)
 }
 
-// Withdrawal order for each strategy
+// Withdrawal order for each strategy.
+// HSA is intentionally excluded: it is reserved for qualified medical expenses
+// and is consumed by the healthcare-cost block in simulation.ts, not by general spending.
 const STRATEGY_ORDER: Record<WithdrawalStrategy, AccountType[]> = {
-  taxEfficient: ['cashAccount', 'otherAssets', 'taxable', 'hsa', 'traditional401k', 'traditionalIRA', 'roth401k', 'rothIRA'],
-  rothPreserving: ['cashAccount', 'otherAssets', 'taxable', 'hsa', 'traditional401k', 'traditionalIRA', 'roth401k', 'rothIRA'],
-  proRata: ['cashAccount', 'otherAssets', 'taxable', 'traditional401k', 'roth401k', 'traditionalIRA', 'rothIRA', 'hsa'],
+  taxEfficient: ['cashAccount', 'otherAssets', 'taxable', 'traditional401k', 'traditionalIRA', 'roth401k', 'rothIRA'],
+  rothPreserving: ['cashAccount', 'otherAssets', 'taxable', 'traditional401k', 'traditionalIRA', 'roth401k', 'rothIRA'],
+  proRata: ['cashAccount', 'otherAssets', 'taxable', 'traditional401k', 'roth401k', 'traditionalIRA', 'rothIRA'],
 };
 
 export function executeWithdrawals(input: WithdrawalInput): WithdrawalResult {
@@ -78,7 +80,7 @@ export function executeWithdrawals(input: WithdrawalInput): WithdrawalResult {
   } else {
     // Sequential withdrawal
     const order = strategy === 'rothPreserving'
-      ? ['cashAccount', 'otherAssets', 'taxable', 'hsa', 'traditional401k', 'traditionalIRA', 'roth401k', 'rothIRA'] as AccountType[]
+      ? ['cashAccount', 'otherAssets', 'taxable', 'traditional401k', 'traditionalIRA', 'roth401k', 'rothIRA'] as AccountType[]
       : STRATEGY_ORDER.taxEfficient;
 
     for (const acct of order) {

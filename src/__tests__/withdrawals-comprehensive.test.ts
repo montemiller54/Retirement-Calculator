@@ -87,9 +87,9 @@ describe('Withdrawal strategies — comprehensive', () => {
     expect(r.withdrawals.rothIRA).toBe(0);
   });
 
-  it('tax-efficient: taxable exhausted, moves to HSA then traditional', () => {
+  it('tax-efficient: taxable exhausted, skips HSA and moves to traditional', () => {
     const input = makeWithdrawalInput({
-      cashNeed: 320000, // 300K taxable + 10K HSA + 10K from traditional
+      cashNeed: 320000, // 300K taxable + 20K from traditional (HSA reserved for medical)
       balances: {
         traditional401k: 500_000, roth401k: 0, traditionalIRA: 200_000,
         rothIRA: 100_000, taxable: 300_000, hsa: 10_000,
@@ -98,14 +98,14 @@ describe('Withdrawal strategies — comprehensive', () => {
     });
     const r = executeWithdrawals(input);
     expect(r.withdrawals.taxable).toBe(300_000);
-    expect(r.withdrawals.hsa).toBe(10_000);
-    expect(r.withdrawals.traditional401k).toBe(10_000);
+    expect(r.withdrawals.hsa).toBe(0);
+    expect(r.withdrawals.traditional401k).toBe(20_000);
     expect(r.withdrawals.rothIRA).toBe(0);
   });
 
-  it('tax-efficient: draws roth last', () => {
+  it('tax-efficient: draws roth last, never touches HSA', () => {
     const input = makeWithdrawalInput({
-      cashNeed: 1_200_000, // needs everything
+      cashNeed: 1_200_000, // needs everything except HSA
       balances: {
         traditional401k: 500_000, roth401k: 0, traditionalIRA: 200_000,
         rothIRA: 100_000, taxable: 300_000, hsa: 10_000,
@@ -113,12 +113,12 @@ describe('Withdrawal strategies — comprehensive', () => {
       },
     });
     const r = executeWithdrawals(input);
-    // Everything should be withdrawn
+    // Everything except HSA should be withdrawn (HSA reserved for medical)
     expect(r.withdrawals.taxable).toBe(300_000);
     expect(r.withdrawals.traditional401k).toBe(500_000);
     expect(r.withdrawals.traditionalIRA).toBe(200_000);
     expect(r.withdrawals.rothIRA).toBe(100_000);
-    expect(r.withdrawals.hsa).toBe(10_000);
+    expect(r.withdrawals.hsa).toBe(0);
   });
 
   // ── Pro-rata ──
@@ -185,12 +185,14 @@ describe('Withdrawal strategies — comprehensive', () => {
   });
 
   // ── Depletion handling ──
-  it('cash need exceeds total balance → withdraws all, no negative balances', () => {
+  it('cash need exceeds total balance → withdraws all (except HSA), no negative balances', () => {
     const input = makeWithdrawalInput({ cashNeed: 5_000_000 });
     const r = executeWithdrawals(input);
     const totalWithdrawn = ACCOUNT_TYPES.reduce((s, a) => s + r.withdrawals[a], 0);
     const totalBalance = ACCOUNT_TYPES.reduce((s, a) => s + input.balances[a], 0);
-    expect(totalWithdrawn).toBeCloseTo(totalBalance, 0);
+    // HSA is reserved for medical and excluded from general withdrawals
+    expect(totalWithdrawn).toBeCloseTo(totalBalance - input.balances.hsa, 0);
+    expect(r.withdrawals.hsa).toBe(0);
   });
 
   it('all accounts empty → zero withdrawals', () => {

@@ -547,6 +547,14 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
         }
         // Inflate from current age (today's dollars) by medical inflation
         annualHealthcare *= Math.pow(1 + hc.inflationRate, yearsFromNow);
+
+        // Pay healthcare from HSA first (tax-free qualified medical use), then portfolio
+        if (balances.hsa > 0 && annualHealthcare > 0) {
+          const hsaUsed = Math.min(balances.hsa, annualHealthcare);
+          balances.hsa -= hsaUsed;
+          withdrawals.hsa += hsaUsed;
+          annualHealthcare -= hsaUsed;
+        }
         spending += annualHealthcare;
       }
 
