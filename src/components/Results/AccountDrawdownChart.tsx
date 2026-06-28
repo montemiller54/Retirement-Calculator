@@ -73,7 +73,9 @@ export function AccountDrawdownChart({ data, retirementAge, currentAge }: Accoun
             itemStyle={{ color: '#374151' }}
           />
           <Legend
-            wrapperStyle={{ fontSize: 15 }}
+            verticalAlign="top"
+            align="center"
+            wrapperStyle={{ fontSize: 15, paddingBottom: 8 }}
             iconSize={12}
             formatter={(value: string) => (
               <span style={{ marginRight: 16 }}>
