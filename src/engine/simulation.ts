@@ -27,6 +27,12 @@ function sumBalances(b: AccountBalances): number {
   return ACCOUNT_TYPES.reduce((s, k) => s + b[k], 0);
 }
 
+// Spendable balance excludes HSA, which is reserved for qualified medical expenses
+// only and never funds general spending. A path with only HSA left is considered depleted.
+function sumSpendableBalances(b: AccountBalances): number {
+  return ACCOUNT_TYPES.reduce((s, k) => s + (k === 'hsa' ? 0 : b[k]), 0);
+}
+
 function cloneBalances(b: AccountBalances): AccountBalances {
   return { ...b };
 }
@@ -724,18 +730,21 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     const totalBal = sumBalances(balances);
     if (!isRetired) highWaterMark = totalBal;
 
-    // Check depletion — also treat near-zero balances as depleted
-    // (guardrails can keep balance barely positive indefinitely)
-    if (isRetired && totalBal < 100 && !depleted) {
+    // Check depletion against spendable balance (excludes HSA, which can only be
+    // used for qualified medical expenses). A path with $0 spendable is failed even
+    // if HSA still has a balance.
+    const spendableBal = sumSpendableBalances(balances);
+    if (isRetired && spendableBal < 100 && !depleted) {
       depleted = true;
       depletionAge = age;
-      // Zero out remaining balances
+      // Zero out remaining balances (including HSA, since the household has no
+      // way to fund living expenses regardless of HSA balance)
       for (const acct of ACCOUNT_TYPES) balances[acct] = 0;
     }
 
     years.push({
       age,
-      totalBalance: totalBal,
+      totalBalance: sumBalances(balances),
       balances: cloneBalances(balances),
       income: {
         salary,
