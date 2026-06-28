@@ -50,9 +50,9 @@ export function AccountDrawdownChart({ data, retirementAge, currentAge }: Accoun
       <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
         Account Balances Over Time (Simulated)
       </h4>
-      <div style={{ width: '100%', height: 300 }}>
+      <div style={{ width: '100%', height: 320 }}>
       <ResponsiveContainer width="100%" height="100%" debounce={50}>
-        <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
+        <AreaChart data={chartData} margin={{ top: 30, right: 10, left: 10, bottom: 20 }}>
           <CartesianGrid stroke={GRID_STROKE} vertical={false} />
           <XAxis
             dataKey="age"
