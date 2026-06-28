@@ -16,14 +16,14 @@ interface AccountDrawdownChartProps {
 }
 
 const ACCOUNT_COLORS: Record<string, string> = {
-  traditional401k: '#3b82f6',
-  roth401k: '#8b5cf6',
-  traditionalIRA: '#06b6d4',
-  rothIRA: '#10b981',
-  taxable: '#f59e0b',
-  hsa: '#ec4899',
-  cashAccount: '#6366f1',
-  otherAssets: '#a3a3a3',
+  traditional401k: '#f97316', // orange — pre-tax (warm)
+  traditionalIRA: '#f59e0b',  // amber — pre-tax (warm)
+  roth401k: '#10b981',        // emerald — tax-free (cool)
+  rothIRA: '#14b8a6',         // teal — tax-free (cool)
+  taxable: '#0ea5e9',         // sky — taxable brokerage
+  hsa: '#ec4899',             // pink — HSA
+  cashAccount: '#64748b',     // slate — cash/low-risk
+  otherAssets: '#8b5cf6',     // violet — other
 };
 
 export function AccountDrawdownChart({ data, retirementAge, currentAge }: AccountDrawdownChartProps) {
