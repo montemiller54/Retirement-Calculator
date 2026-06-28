@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import {
   PROFILE_SECTIONS,
   getAdjacentProfileSections,
@@ -20,9 +21,14 @@ export function ProfileCanvas({ sectionId, validationErrors, setView, onRun, isR
   const sectionErrors = validationErrors.filter(e => e.card === section.id);
   const { previous, next, isLast } = getAdjacentProfileSections(section.id);
   const hasAnyErrors = validationErrors.length > 0;
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [sectionId]);
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div ref={scrollRef} className="h-full overflow-y-auto">
       <div className="max-w-4xl mx-auto px-6 py-6">
         <header className="mb-5">
           <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{section.label}</h1>

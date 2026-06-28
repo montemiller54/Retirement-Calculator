@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { SimulationResult, ScenarioInput } from '../../types';
 import type { ValidationError } from '../../utils/validation';
 import type { ResultsSectionId } from '../../navigation';
@@ -30,6 +31,10 @@ export function ResultsPanel({
   result, scenario, retirementAge, currentAge, isRunning, progress, error, validationErrors,
   activeTab, lastRunScenario, lastRunAt, onRun,
 }: ResultsPanelProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [activeTab]);
   if (validationErrors.length > 0) {
     return (
       <div className="flex items-center justify-center h-full p-8">
@@ -99,7 +104,7 @@ export function ResultsPanel({
   }
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div ref={scrollRef} className="h-full overflow-y-auto">
       <PlanStatusStrip
         result={result}
         scenario={scenario}
