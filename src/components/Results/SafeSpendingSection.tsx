@@ -44,15 +44,15 @@ export function SafeSpendingSection({ scenario }: SafeSpendingSectionProps) {
         </p>
       )}
 
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
         <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
           Confidence:
         </label>
-        <div className="flex rounded-md overflow-hidden border border-gray-300 dark:border-gray-600">
+        <div className="flex flex-wrap rounded-md overflow-hidden border border-gray-300 dark:border-gray-600">
           {TARGET_OPTIONS.map((opt) => (
             <button
               key={opt.value}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`px-2 sm:px-3 py-1.5 text-xs font-medium transition-colors ${
                 targetRate === opt.value
                   ? 'bg-primary-600 text-white'
                   : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -61,7 +61,7 @@ export function SafeSpendingSection({ scenario }: SafeSpendingSectionProps) {
               disabled={isRunning}
             >
               <span>{opt.label}</span>
-              <span className="ml-1 opacity-70">({opt.pct})</span>
+              <span className="ml-1 opacity-70 hidden sm:inline">({opt.pct})</span>
             </button>
           ))}
         </div>
