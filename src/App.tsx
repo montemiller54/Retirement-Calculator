@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ScenarioProvider, useScenario } from './context/ScenarioContext';
 import { ResultsPanel } from './components/Results';
+import { PlanStatusStrip } from './components/Results/PlanStatusStrip';
 import { ScenarioManager } from './components/ScenarioManager';
 import { AssumptionsPage } from './components/AssumptionsPage';
 import { LeftRail } from './components/LeftRail';
@@ -106,6 +107,17 @@ function AppInner() {
         />
 
         <main className="flex-1 bg-gray-50 dark:bg-gray-950 flex flex-col overflow-hidden">
+          {result && view.kind !== 'methodology' && (
+            <PlanStatusStrip
+              result={result}
+              scenario={scenario}
+              lastRunScenario={lastRunScenario}
+              lastRunAt={lastRunAt}
+              isRunning={isRunning}
+              onRun={handleRun}
+              canRun={validationErrors.length === 0}
+            />
+          )}
           <div className="flex-1 overflow-hidden">
             {view.kind === 'profile' && (
               <ProfileCanvas
@@ -127,9 +139,6 @@ function AppInner() {
                 error={error}
                 validationErrors={validationErrors}
                 activeTab={view.sectionId}
-                lastRunScenario={lastRunScenario}
-                lastRunAt={lastRunAt}
-                onRun={handleRun}
               />
             )}
             {view.kind === 'methodology' && (

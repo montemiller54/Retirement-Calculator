@@ -10,7 +10,6 @@ import { CashflowChart } from './CashflowChart';
 import { TaxChart } from './TaxChart';
 import { SafeSpendingSection } from './SafeSpendingSection';
 import { TrajectoryTable } from './TrajectoryTable';
-import { PlanStatusStrip } from './PlanStatusStrip';
 
 interface ResultsPanelProps {
   result: SimulationResult | null;
@@ -22,14 +21,11 @@ interface ResultsPanelProps {
   error: string | null;
   validationErrors: ValidationError[];
   activeTab: ResultsSectionId;
-  lastRunScenario: ScenarioInput | null;
-  lastRunAt: number | null;
-  onRun: () => void;
 }
 
 export function ResultsPanel({
   result, scenario, retirementAge, currentAge, isRunning, progress, error, validationErrors,
-  activeTab, lastRunScenario, lastRunAt, onRun,
+  activeTab,
 }: ResultsPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -105,16 +101,6 @@ export function ResultsPanel({
 
   return (
     <div ref={scrollRef} className="h-full overflow-y-auto">
-      <PlanStatusStrip
-        result={result}
-        scenario={scenario}
-        lastRunScenario={lastRunScenario}
-        lastRunAt={lastRunAt}
-        isRunning={isRunning}
-        onRun={onRun}
-        canRun={validationErrors.length === 0}
-      />
-
       <div className="p-4 space-y-4">
         {activeTab === 'plan' && (
           <>
