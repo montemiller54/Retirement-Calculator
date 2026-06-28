@@ -135,7 +135,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
 
           {hc.enabled && (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 items-end">
                 <Field
                   label={<>Pre-<input type="number" className={`inline-input w-8 ${fieldErrorClass(ve, 'healthcare.medicareStartAge')}`} value={hc.medicareStartAge} onChange={e => setField('healthcare.medicareStartAge', parseInt(e.target.value) || 65)} /> $/mo</>}
                   help={`age ${scenario.retirementAge}–${hc.medicareStartAge - 1}`}
@@ -190,9 +190,9 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
           <div className="space-y-3">
             {scenario.oneTimeExpenses.map(exp => (
               <div key={exp.id} className="rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-3 space-y-2">
-                <div className="flex gap-2 items-start">
+                <div className="flex flex-wrap gap-2 items-start">
                   <input
-                    className="input-field w-48 text-sm"
+                    className="input-field flex-1 min-w-[10rem] text-sm"
                     value={exp.name}
                     onChange={e => updateExpense(exp.id, 'name', e.target.value)}
                     placeholder="Expense name"

@@ -354,7 +354,8 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                 </div>
               )}
 
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto -mx-1 px-1">
+              <table className="w-full text-sm min-w-[26rem]">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-gray-700">
                     <th className="text-left py-1.5 text-xs font-medium text-gray-500 w-36">Account</th>
@@ -388,6 +389,7 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                   })}
                 </tbody>
               </table>
+              </div>
               {ve.filter(e => e.field.startsWith(phase === 'pre' ? 'investments.preRetirement' : 'investments.postRetirement')).map((err, i) => (
                 <p key={i} className="text-xs text-red-500 mt-1">{err.message}</p>
               ))}
@@ -479,11 +481,13 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
                   return (
                     <div key={ac} className="grid grid-cols-[80px_1fr] gap-2 items-center">
                       <span className="text-sm text-gray-700 dark:text-gray-300">{ASSET_CLASS_LABELS[ac]}</span>
-                      <PercentInput
-                        className="input-field w-20 text-center text-sm"
-                        value={ret?.mean ?? 0}
-                        onChange={v => setField(`investments.assetClassReturns.${ac}.mean`, v)}
-                      />
+                      <div className="flex justify-center">
+                        <PercentInput
+                          className="input-field w-20 text-center text-sm"
+                          value={ret?.mean ?? 0}
+                          onChange={v => setField(`investments.assetClassReturns.${ac}.mean`, v)}
+                        />
+                      </div>
                     </div>
                   );
                 })}

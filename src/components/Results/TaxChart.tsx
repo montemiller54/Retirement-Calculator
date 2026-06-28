@@ -25,7 +25,8 @@ export function TaxChart({ data, currentAge }: TaxChartProps) {
       <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
         Taxes Over Time (Average)
       </h4>
-      <ResponsiveContainer width="100%" height={200}>
+      <div style={{ width: '100%', height: 200 }}>
+      <ResponsiveContainer width="100%" height="100%" debounce={50}>
         <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
           <CartesianGrid stroke={GRID_STROKE} vertical={false} />
           <XAxis dataKey="age" tick={{ fontSize: 15, fill: AXIS_TICK_FILL, stroke: 'none' }} minTickGap={20} />
@@ -37,6 +38,7 @@ export function TaxChart({ data, currentAge }: TaxChartProps) {
           <Bar dataKey="fica" stackId="1" fill="#f59e0b" name="SS & Medicare Tax" />
         </BarChart>
       </ResponsiveContainer>
+      </div>
       <p className="text-[0.625rem] text-gray-400 mt-2 px-1">Smooth projection using average market returns. Includes federal, state, and payroll taxes.</p>
     </div>
   );

@@ -123,7 +123,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 max-w-[80%]">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 items-end max-w-full sm:max-w-[80%]">
                   <Field label="Monthly pay">
                     <div className="relative">
                       <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>

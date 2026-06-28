@@ -43,14 +43,15 @@ export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
           <LegendSwatch color={FAN_BAND_COLOR} kind="band" opacity={FAN_BAND_WORST_OPACITY} label="10th–25th" />
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={300}>
-        <ComposedChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+      <div style={{ width: '100%', height: 300 }}>
+      <ResponsiveContainer width="100%" height="100%" debounce={50}>
+        <ComposedChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
           <CartesianGrid stroke={GRID_STROKE} vertical={false} />
           <XAxis
             dataKey="age"
             tick={{ fontSize: 15, fill: AXIS_TICK_FILL, stroke: 'none' }}
             minTickGap={20}
-            label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fontSize: 17, fill: AXIS_TICK_FILL }}
+            label={{ value: 'Age', position: 'insideBottom', offset: -15, fontSize: 17, fill: AXIS_TICK_FILL }}
           />
           <YAxis
             tickFormatter={formatCompact}
@@ -83,6 +84,7 @@ export function FanChart({ data, retirementAge, currentAge }: FanChartProps) {
           <Line type="monotone" dataKey="p50" stroke={FAN_MEDIAN_STROKE} strokeWidth={2.5} dot={false} name="p50" />
         </ComposedChart>
       </ResponsiveContainer>
+      </div>
       <p className="text-[0.625rem] text-gray-400 mt-2 px-1">Range of outcomes across 5,000 simulations. The solid line is the median (typical outcome). The lighter band covers the middle 50% of outcomes (25th–75th percentile); the lower band extends down to the 10th percentile (worst 10%).</p>
     </div>
   );

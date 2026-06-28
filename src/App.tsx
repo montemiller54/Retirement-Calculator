@@ -58,7 +58,7 @@ function AppInner() {
           </a>
           <PrivacyBadge />
         </div>
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center min-w-0 mx-2">
           <ScenarioManager />
         </div>
         <div className="flex items-center gap-1 shrink-0">

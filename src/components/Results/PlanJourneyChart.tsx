@@ -155,7 +155,8 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
           Median outcome · Hover for details
         </span>
       </div>
-      <ResponsiveContainer width="100%" height={320}>
+      <div style={{ width: '100%', height: 320 }}>
+      <ResponsiveContainer width="100%" height="100%" debounce={50}>
         <ComposedChart data={chartData} margin={{ top: 24, right: 20, left: 30, bottom: 5 }}>
           <defs>
             <linearGradient id="journeyFill" x1="0" y1="0" x2="0" y2="1">
@@ -211,6 +212,7 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
           />
         </ComposedChart>
       </ResponsiveContainer>
+      </div>
       <p className="text-[0.6875rem] text-gray-500 dark:text-gray-400 mt-2 px-1">
         This is the typical outcome — half of simulated scenarios do better, half do worse.
       </p>

@@ -50,14 +50,15 @@ export function AccountDrawdownChart({ data, retirementAge, currentAge }: Accoun
       <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
         Account Balances Over Time (Simulated)
       </h4>
-      <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+      <div style={{ width: '100%', height: 300 }}>
+      <ResponsiveContainer width="100%" height="100%" debounce={50}>
+        <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
           <CartesianGrid stroke={GRID_STROKE} vertical={false} />
           <XAxis
             dataKey="age"
             tick={{ fontSize: 15, fill: AXIS_TICK_FILL, stroke: 'none' }}
             minTickGap={20}
-            label={{ value: 'Age', position: 'insideBottomRight', offset: -5, fontSize: 17, fill: AXIS_TICK_FILL }}
+            label={{ value: 'Age', position: 'insideBottom', offset: -15, fontSize: 17, fill: AXIS_TICK_FILL }}
           />
           <YAxis
             tickFormatter={formatCompact}
@@ -100,6 +101,7 @@ export function AccountDrawdownChart({ data, retirementAge, currentAge }: Accoun
           ))}
         </AreaChart>
       </ResponsiveContainer>
+      </div>
       <p className="text-[0.625rem] text-gray-400 mt-2 px-1">A representative path from 5,000 simulations — includes market volatility and guardrail spending adjustments. Different colors represent different account types.</p>
     </div>
   );
