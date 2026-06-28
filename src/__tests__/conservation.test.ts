@@ -182,3 +182,66 @@ describe('Closed-form regression', () => {
     }
   });
 });
+
+describe('Depletion invariant', () => {
+  // If a path retains a positive totalBalance but the only money left is in
+  // accounts that cannot fund living expenses (HSA), the engine must mark the
+  // path as depleted. Otherwise the success rate is inflated by households
+  // that have no spendable cash. Regression test for the HSA-reservation bug.
+  it('a path with only HSA balance left must be marked depleted', () => {
+    const scenario: ScenarioInput = {
+      ...DEFAULT_SCENARIO,
+      currentAge: 65,
+      retirementAge: 65,
+      endAge: 80,
+      filingStatus: 'single',
+      stateCode: 'TX',
+      jobs: [],
+      totalSavingsRate: 0,
+      baseAnnualSpending: 5_000, // $60K/yr — high relative to balance
+      spendingInflationRate: 0,
+      inflationVolatility: 0,
+      taxBracketInflationRate: 0,
+      socialSecurityMode: 'manual',
+      socialSecurityBenefit: 0,
+      pensionAmount: 0,
+      otherIncomeSources: [],
+      oneTimeExpenses: [],
+      healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false }, // HSA never drained for medical
+      guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
+      cashBuffer: { ...DEFAULT_SCENARIO.cashBuffer, enabled: false },
+      rothConversion: { ...DEFAULT_SCENARIO.rothConversion, enabled: false },
+      spouse: { ...DEFAULT_SCENARIO.spouse, enabled: false },
+      housing: { ...DEFAULT_SCENARIO.housing, enabled: false },
+      balances: {
+        ...zeroBalances(),
+        rothIRA: 200_000,
+        hsa: 100_000, // sizable HSA that compounds untouched
+      },
+      investments: {
+        ...DEFAULT_SCENARIO.investments,
+        preRetirement: makeUniformAllocations({ stocks: 0, bonds: 0, cash: 100, crypto: 0 }),
+        postRetirement: makeUniformAllocations({ stocks: 0, bonds: 0, cash: 100, crypto: 0 }),
+        assetClassReturns: flatReturns({ cash: 0.04 }),
+      },
+    };
+
+    const result = runSimulation(scenario, { numSimulations: 1, seed: 1 });
+    const path = result.expectedPath;
+
+    // At some point the spendable (non-HSA) accounts will drain. Once they do,
+    // the engine must flag that year as depleted, regardless of remaining HSA.
+    for (const yr of path) {
+      const spendable = sumBalances(yr.balances) - yr.balances.hsa;
+      if (spendable < 100 && yr.balances.hsa > 100) {
+        expect(yr.depleted,
+          `Age ${yr.age}: spendable=$${spendable.toFixed(0)} HSA=$${yr.balances.hsa.toFixed(0)} — engine must mark this as depleted`
+        ).toBe(true);
+      }
+    }
+
+    // The path must reach a depleted state somewhere in retirement
+    expect(result.depletionAges[0]).not.toBeNull();
+  });
+});
+
