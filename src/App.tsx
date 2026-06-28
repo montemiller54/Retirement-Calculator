@@ -58,9 +58,10 @@ function AppInner() {
           </a>
           <PrivacyBadge />
         </div>
-        <div className="flex-1 flex items-center justify-center min-w-0 mx-2">
+        <div className="hidden md:flex flex-1 items-center justify-center min-w-0 mx-2">
           <ScenarioManager />
         </div>
+        <div className="md:hidden flex-1" />
         <div className="flex items-center gap-1 shrink-0">
           <button
             className="text-sm p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
@@ -84,6 +85,11 @@ function AppInner() {
           </button>
         </div>
       </header>
+
+      {/* Mobile-only scenario row */}
+      <div className="md:hidden flex items-center justify-center px-3 py-2 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
+        <ScenarioManager />
+      </div>
 
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
