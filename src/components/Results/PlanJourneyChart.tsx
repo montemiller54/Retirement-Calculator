@@ -43,6 +43,14 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
     description: 'Your Social Security benefits begin.',
   });
   if (scenario.spouse.enabled) {
+    if (scenario.spouse.retirementAge != null) {
+      events.push({
+        age: scenario.spouse.retirementAge - spouseAgeOffset,
+        icon: '🏖',
+        label: 'Spouse retires',
+        description: "Your spouse's last working year.",
+      });
+    }
     events.push({
       age: scenario.spouse.socialSecurityClaimAge - spouseAgeOffset,
       icon: '👫',

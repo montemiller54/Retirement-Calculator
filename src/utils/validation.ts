@@ -29,6 +29,9 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
     if (!s.spouse.currentAge || s.spouse.currentAge < 18 || s.spouse.currentAge > 99) {
       errors.push({ card: 'profile', field: 'spouse.currentAge', message: "Spouse's current age must be between 18 and 99." });
     }
+    if (!s.spouse.retirementAge || s.spouse.retirementAge < 18 || s.spouse.retirementAge > 99) {
+      errors.push({ card: 'profile', field: 'spouse.retirementAge', message: "Spouse's retirement age must be between 18 and 99." });
+    }
   }
 
   // ── Jobs ──
@@ -41,11 +44,13 @@ export function validateScenario(s: ScenarioInput): ValidationError[] {
         errors.push({ card: 'earnings', field: `job.${job.id}.monthlyPay`, message: `"${job.name || 'Unnamed'}" monthly pay cannot be negative.` });
       }
     }
-    // Check for overlapping job age ranges
+    // Check for overlapping job age ranges — only within the same owner.
+    // Primary and spouse jobs can overlap (they're different people).
     for (let i = 0; i < s.jobs.length; i++) {
       for (let j = i + 1; j < s.jobs.length; j++) {
         const a = s.jobs[i];
         const b = s.jobs[j];
+        if (a.owner !== b.owner) continue;
         if (a.startAge <= b.endAge && b.startAge <= a.endAge) {
           errors.push({ card: 'earnings', field: `job.${b.id}.startAge`, message: `"${a.name || 'Job ' + (i+1)}" (${a.startAge}–${a.endAge}) and "${b.name || 'Job ' + (j+1)}" (${b.startAge}–${b.endAge}) overlap — income will be doubled in those years.` });
         }

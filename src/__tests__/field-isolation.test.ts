@@ -232,21 +232,21 @@ describe('Spouse sub-fields (isolated)', () => {
   };
 
   it('spouse.enabled alone changes outcome (adds SS income + MFJ filing)', () => {
-    const solo = run({ ...spouseBase, spouse: { enabled: false, currentAge: 63, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67 } });
-    const dual = run({ ...spouseBase, spouse: { enabled: true,  currentAge: 63, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67 } });
+    const solo = run({ ...spouseBase, spouse: { enabled: false, currentAge: 63, socialSecurityBenefit: 1500, retirementAge: 65, socialSecurityClaimAge: 67 } });
+    const dual = run({ ...spouseBase, spouse: { enabled: true,  currentAge: 63, socialSecurityBenefit: 1500, retirementAge: 65, socialSecurityClaimAge: 67 } });
     // Spouse adds SS income → higher median ending (direction known)
     expect(dual.medianEnding).toBeGreaterThan(solo.medianEnding + MIN_MEDIAN_MOVE);
   });
 
   it('spouse.socialSecurityBenefit alone moves median', () => {
-    const low = run({ ...spouseBase, spouse: { enabled: true, currentAge: 63, socialSecurityBenefit: 500,  socialSecurityClaimAge: 67 } });
-    const high = run({ ...spouseBase, spouse: { enabled: true, currentAge: 63, socialSecurityBenefit: 3500, socialSecurityClaimAge: 67 } });
+    const low = run({ ...spouseBase, spouse: { enabled: true, currentAge: 63, socialSecurityBenefit: 500,  retirementAge: 65, socialSecurityClaimAge: 67 } });
+    const high = run({ ...spouseBase, spouse: { enabled: true, currentAge: 63, socialSecurityBenefit: 3500, retirementAge: 65, socialSecurityClaimAge: 67 } });
     expect(high.medianEnding).toBeGreaterThan(low.medianEnding + MIN_MEDIAN_MOVE);
   });
 
   it('spouse.socialSecurityClaimAge alone moves median', () => {
-    const early = run({ ...spouseBase, spouse: { enabled: true, currentAge: 63, socialSecurityBenefit: 2000, socialSecurityClaimAge: 62 } });
-    const late  = run({ ...spouseBase, spouse: { enabled: true, currentAge: 63, socialSecurityBenefit: 2000, socialSecurityClaimAge: 70 } });
+    const early = run({ ...spouseBase, spouse: { enabled: true, currentAge: 63, socialSecurityBenefit: 2000, retirementAge: 65, socialSecurityClaimAge: 62 } });
+    const late  = run({ ...spouseBase, spouse: { enabled: true, currentAge: 63, socialSecurityBenefit: 2000, retirementAge: 65, socialSecurityClaimAge: 70 } });
     expect(early.medianEnding).toBeGreaterThan(late.medianEnding + MIN_MEDIAN_MOVE);
   });
 });
@@ -373,7 +373,7 @@ describe('Miscellaneous controls (isolated)', () => {
       currentAge: 50, retirementAge: 50, endAge: 75,
       jobs: [],
       balances: { traditional401k: 0, roth401k: 0, traditionalIRA: 0, rothIRA: 2000000, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      baseAnnualSpending: 5000, socialSecurityBenefit: 2500, socialSecurityClaimAge: 67,
+      baseAnnualSpending: 4000, socialSecurityBenefit: 2000, socialSecurityClaimAge: 67,
       ruleof55Eligible: false,
     };
     const noBasis   = run({ ...early, rothContributionBasis: 0 });

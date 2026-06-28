@@ -149,8 +149,8 @@ describe('Roth Conversions', () => {
 
 describe('Spouse', () => {
   it('enabling spouse changes filing status behavior', () => {
-    const solo = run({ spouse: { enabled: false, currentAge: 33, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67 } });
-    const withSpouse = run({ spouse: { enabled: true, currentAge: 33, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67 } });
+    const solo = run({ spouse: { enabled: false, currentAge: 33, socialSecurityBenefit: 1500, retirementAge: 65, socialSecurityClaimAge: 67 } });
+    const withSpouse = run({ spouse: { enabled: true, currentAge: 33, socialSecurityBenefit: 1500, retirementAge: 65, socialSecurityClaimAge: 67 } });
     // Adding a spouse changes filing status (single → mfj), brackets, std
     // deduction, and adds SS income — must produce a measurably different median.
     expect(Math.abs(withSpouse.medianEnding - solo.medianEnding)).toBeGreaterThan(1000);
@@ -202,7 +202,7 @@ describe('Catch-Up Contributions', () => {
     // Catch-up into Roth 401k avoids tax-drag on traditional withdrawals
     const base: Partial<ScenarioInput> = {
       currentAge: 52, retirementAge: 65, endAge: 85,
-      jobs: [{ id: 'test', name: 'Test Job', monthlyPay: 12000, startAge: 52, endAge: 65, has401k: true, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }],
+      jobs: [{ id: 'test', name: 'Test Job', owner: 'primary', monthlyPay: 12000, startAge: 52, endAge: 65, has401k: true, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }],
       totalSavingsRate: 0.25,
       contributionAllocation: { traditional401k: 0, roth401k: 70, traditionalIRA: 0, rothIRA: 0, taxable: 30, hsa: 0, cashAccount: 0, otherAssets: 0 },
       balances: {
@@ -222,12 +222,12 @@ describe('Catch-Up Contributions', () => {
 describe('Employer Roth Percentage', () => {
   it('employer match to Roth vs Traditional produces different outcomes', () => {
     const base: Partial<ScenarioInput> = {
-      jobs: [{ id: 'test', name: 'Test Job', monthlyPay: 10000, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 1.0, employerMatchCapPct: 0.06, employerRothPct: 0 }],
+      jobs: [{ id: 'test', name: 'Test Job', owner: 'primary', monthlyPay: 10000, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 1.0, employerMatchCapPct: 0.06, employerRothPct: 0 }],
       totalSavingsRate: 0.15,
       contributionAllocation: { traditional401k: 60, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 40, hsa: 0, cashAccount: 0, otherAssets: 0 },
     };
     const allTrad = run({ ...base });
-    const allRoth = run({ ...base, jobs: [{ id: 'test', name: 'Test Job', monthlyPay: 10000, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 1.0, employerMatchCapPct: 0.06, employerRothPct: 100 }] });
+    const allRoth = run({ ...base, jobs: [{ id: 'test', name: 'Test Job', owner: 'primary', monthlyPay: 10000, startAge: DEFAULT_SCENARIO.currentAge, endAge: DEFAULT_SCENARIO.retirementAge, has401k: true, employerMatchRate: 1.0, employerMatchCapPct: 0.06, employerRothPct: 100 }] });
     expect(Math.abs(allTrad.medianEnding - allRoth.medianEnding)).toBeGreaterThan(500);
   });
 });
@@ -363,7 +363,7 @@ describe('Benchmark: Accumulation Phase Growth', () => {
       currentAge: 30,
       retirementAge: 65,
       endAge: 95,
-      jobs: [{ id: 'test', name: 'Test Job', monthlyPay: 10000, startAge: 30, endAge: 65, has401k: true, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }],
+      jobs: [{ id: 'test', name: 'Test Job', owner: 'primary', monthlyPay: 10000, startAge: 30, endAge: 65, has401k: true, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }],
       salaryGrowthRate: 0.03,
       totalSavingsRate: 0.20,     // $24k/yr initially
       balances: { traditional401k: 0, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 },
@@ -511,20 +511,20 @@ describe('Part-Time Income (via jobs)', () => {
 
   it('post-retirement job → higher success rate', () => {
     const without = run({ ...retiredBase });
-    const withPT = run({ ...retiredBase, jobs: [{ id: 'pt', name: 'Part-Time', monthlyPay: 2000, startAge: 60, endAge: 70, has401k: false, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }] });
+    const withPT = run({ ...retiredBase, jobs: [{ id: 'pt', name: 'Part-Time', owner: 'primary', monthlyPay: 2000, startAge: 60, endAge: 70, has401k: false, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }] });
     expect(withPT.successRate).toBeGreaterThanOrEqual(without.successRate);
     expect(withPT.medianEnding).toBeGreaterThan(without.medianEnding);
   });
 
   it('higher part-time monthly amount → higher median ending', () => {
-    const low = run({ ...retiredBase, jobs: [{ id: 'pt', name: 'Part-Time', monthlyPay: 500, startAge: 60, endAge: 72, has401k: false, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }] });
-    const high = run({ ...retiredBase, jobs: [{ id: 'pt', name: 'Part-Time', monthlyPay: 3000, startAge: 60, endAge: 72, has401k: false, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }] });
+    const low = run({ ...retiredBase, jobs: [{ id: 'pt', name: 'Part-Time', owner: 'primary', monthlyPay: 500, startAge: 60, endAge: 72, has401k: false, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }] });
+    const high = run({ ...retiredBase, jobs: [{ id: 'pt', name: 'Part-Time', owner: 'primary', monthlyPay: 3000, startAge: 60, endAge: 72, has401k: false, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }] });
     expect(high.medianEnding).toBeGreaterThan(low.medianEnding);
   });
 
   it('longer part-time duration → higher median ending', () => {
-    const short = run({ ...retiredBase, jobs: [{ id: 'pt', name: 'Part-Time', monthlyPay: 2000, startAge: 60, endAge: 67, has401k: false, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }] });
-    const long = run({ ...retiredBase, jobs: [{ id: 'pt', name: 'Part-Time', monthlyPay: 2000, startAge: 60, endAge: 75, has401k: false, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }] });
+    const short = run({ ...retiredBase, jobs: [{ id: 'pt', name: 'Part-Time', owner: 'primary', monthlyPay: 2000, startAge: 60, endAge: 67, has401k: false, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }] });
+    const long = run({ ...retiredBase, jobs: [{ id: 'pt', name: 'Part-Time', owner: 'primary', monthlyPay: 2000, startAge: 60, endAge: 75, has401k: false, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }] });
     expect(long.medianEnding).toBeGreaterThan(short.medianEnding);
   });
 });
@@ -601,8 +601,8 @@ describe('Early Withdrawal Controls', () => {
 
 describe('Spouse Parameters (isolated)', () => {
   it('spouse enabled vs disabled produces valid simulation', () => {
-    const disabled = run({ spouse: { enabled: false, currentAge: 33, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67 } });
-    const enabled = run({ spouse: { enabled: true, currentAge: 33, socialSecurityBenefit: 1500, socialSecurityClaimAge: 67 } });
+    const disabled = run({ spouse: { enabled: false, currentAge: 33, socialSecurityBenefit: 1500, retirementAge: 65, socialSecurityClaimAge: 67 } });
+    const enabled = run({ spouse: { enabled: true, currentAge: 33, socialSecurityBenefit: 1500, retirementAge: 65, socialSecurityClaimAge: 67 } });
     expect(disabled.successRate).toBeGreaterThanOrEqual(0);
     expect(enabled.successRate).toBeGreaterThanOrEqual(0);
   });

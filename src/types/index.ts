@@ -83,12 +83,15 @@ export const WITHDRAWAL_STRATEGY_LABELS: Record<WithdrawalStrategy, string> = {
 export type ContributionAllocation = Record<AccountType, number>; // percentages summing to 100
 
 // ── Job ──
+export type JobOwner = 'primary' | 'spouse';
+
 export interface Job {
   id: string;
   name: string;
+  owner: JobOwner;           // whose job this is — defaults to 'primary' on legacy data
   monthlyPay: number;       // monthly salary in today's dollars
-  startAge: number;          // age when this job starts
-  endAge: number;            // age when this job ends
+  startAge: number;          // age when this job starts (owner's age)
+  endAge: number;            // age when this job ends (owner's age)
   has401k: boolean;          // does this job offer a 401k?
   employerMatchRate: number; // e.g., 0.50 (50% match)
   employerMatchCapPct: number; // e.g., 0.06 (matches up to 6% of salary)
@@ -148,6 +151,7 @@ export interface CashBufferConfig {
 export interface SpouseConfig {
   enabled: boolean;
   currentAge: number;
+  retirementAge: number;          // spouse's own retirement age
   socialSecurityBenefit: number; // monthly at claim age
   socialSecurityClaimAge: number;
 }

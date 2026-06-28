@@ -129,6 +129,19 @@ export function ProfileCard({ validationErrors }: CardProps) {
                 />
                 <FieldError errors={ve} field="spouse.currentAge" />
               </Field>
+              <div className="mt-4">
+                <Field label="Spouse retirement age" help="Age at which your spouse stops working." width="age">
+                  <input
+                    type="number"
+                    className={`input-field text-center w-full ${fieldErrorClass(ve, 'spouse.retirementAge')}`}
+                    value={scenario.spouse.retirementAge}
+                    min={18}
+                    max={99}
+                    onChange={e => setField('spouse.retirementAge', parseInt(e.target.value) || 65)}
+                  />
+                  <FieldError errors={ve} field="spouse.retirementAge" />
+                </Field>
+              </div>
             </div>
           ) : (
             <div>
