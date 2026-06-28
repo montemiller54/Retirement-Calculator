@@ -96,7 +96,7 @@ export function ScenarioManager() {
         </span>
 
         <input
-          className="bg-transparent border-0 border-b border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-primary-500 focus:outline-none focus:ring-0 px-1 py-0.5 text-base font-semibold text-gray-900 dark:text-gray-100 transition-colors"
+          className="bg-transparent border-0 border-b border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-primary-500 focus:outline-none focus:ring-0 px-1 py-0.5 text-base font-semibold text-gray-900 dark:text-gray-100 transition-colors min-w-0 max-w-[10ch] sm:max-w-none"
           value={scenario.name}
           onChange={e => setField('name', e.target.value)}
           placeholder="Untitled plan"

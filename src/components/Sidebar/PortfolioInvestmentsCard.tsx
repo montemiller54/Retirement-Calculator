@@ -127,13 +127,13 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
         <div className="space-y-2">
           {visibleAccounts.map(acct => (
             <div key={acct} className="flex items-center gap-2 py-1">
-              <span className="text-sm w-44 shrink-0 text-gray-700 dark:text-gray-200" title={ACCOUNT_LABELS[acct]}>
+              <span className="text-sm w-28 sm:w-44 shrink-0 text-gray-700 dark:text-gray-200 truncate" title={ACCOUNT_LABELS[acct]}>
                 {ACCOUNT_LABELS[acct]}
                 <InfoTip text={ACCOUNT_DESCRIPTIONS[acct]} />
               </span>
               <span className="text-sm text-gray-400">$</span>
               <CurrencyInput
-                className="w-36"
+                className="w-28 sm:w-36"
                 value={scenario.balances[acct]}
                 onChange={v => setField(`balances.${acct}`, v)}
               />
@@ -148,9 +148,9 @@ export function PortfolioInvestmentsCard({ validationErrors }: CardProps) {
         </div>
 
         <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2">
-          <span className="text-sm font-medium w-44 shrink-0 text-gray-600 dark:text-gray-400">Total Portfolio</span>
+          <span className="text-sm font-medium w-28 sm:w-44 shrink-0 text-gray-600 dark:text-gray-400">Total Portfolio</span>
           <span className="text-sm text-transparent select-none" aria-hidden="true">$</span>
-          <span className="w-36 text-right text-sm font-semibold text-primary-600 dark:text-primary-400 tabular-nums">
+          <span className="w-28 sm:w-36 text-right text-sm font-semibold text-primary-600 dark:text-primary-400 tabular-nums">
             ${totalBalance.toLocaleString()}
           </span>
           <span className="text-sm px-1 invisible" aria-hidden="true">✕</span>

@@ -209,7 +209,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
                   <div className="flex-1" />
                   <button type="button" className="text-gray-400 hover:text-red-500 text-sm px-1" onClick={() => removeOtherIncome(src.id)} aria-label="Remove income">✕</button>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 items-end">
                   <Field label="Monthly amount">
                     <div className="relative">
                       <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>

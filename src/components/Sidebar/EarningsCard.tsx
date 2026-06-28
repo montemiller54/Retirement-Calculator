@@ -166,7 +166,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
 
                   {job.has401k && (
                     <div className="pl-6 space-y-2">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-2 sm:gap-4 items-end">
                         <PctSlider
                           label="Match rate"
                           value={job.employerMatchRate * 100}
