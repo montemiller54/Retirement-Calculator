@@ -124,7 +124,7 @@ export function ScenarioManager() {
             <div
               ref={popoverRef}
               role="menu"
-              className="absolute z-30 left-0 top-full mt-1 w-72 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg"
+              className="absolute z-30 right-0 top-full mt-1 w-72 max-w-[calc(100vw-1rem)] rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg"
             >
               <div className="py-1">
                 <button
