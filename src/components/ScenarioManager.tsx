@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useScenario } from '../context/ScenarioContext';
-import type { SavedScenario } from '../types';
+import type { SavedScenario, ScenarioInput } from '../types';
 import {
   loadScenarios, saveScenario, deleteScenario,
   exportScenario, importScenario, downloadJSON,
@@ -10,6 +10,7 @@ export function ScenarioManager() {
   const { scenario, setField, loadScenario, activePlanId, setActivePlanId, saveStatus } = useScenario();
   const [saved, setSaved] = useState<SavedScenario[]>(() => loadScenarios());
   const [open, setOpen] = useState(false);
+  const [pendingImport, setPendingImport] = useState<{ imported: ScenarioInput; conflictName: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -57,10 +58,12 @@ export function ScenarioManager() {
     setOpen(false);
   };
 
-  const handleDelete = (e: React.MouseEvent, id: string) => {
+  const handleDelete = (e: React.MouseEvent, s: SavedScenario) => {
     e.stopPropagation();
-    deleteScenario(id);
-    if (activePlanId === id) setActivePlanId(null);
+    const ok = window.confirm(`Delete "${s.name}"? This can't be undone.`);
+    if (!ok) return;
+    deleteScenario(s.id);
+    if (activePlanId === s.id) setActivePlanId(null);
     refreshSaved();
   };
 
@@ -77,15 +80,54 @@ export function ScenarioManager() {
     reader.onload = (ev) => {
       try {
         const imported = importScenario(ev.target?.result as string);
-        // Imported plan becomes active in-memory but isn't auto-bookmarked
-        loadScenario(imported, null);
-        setOpen(false);
+        const name = imported.name?.trim() || 'Imported plan';
+        const normalized = { ...imported, name };
+        const existing = loadScenarios();
+        const conflict = existing.find(s => s.name === name);
+        if (conflict) {
+          // Three-way prompt: Replace / Keep both / Cancel
+          setPendingImport({ imported: normalized, conflictName: name });
+          setOpen(false);
+        } else {
+          // No collision — auto-bookmark and activate so edits persist
+          const newSaved = saveScenario(normalized);
+          loadScenario(normalized, newSaved.id);
+          refreshSaved();
+          setOpen(false);
+        }
       } catch {
         alert('Invalid plan file');
       }
     };
     reader.readAsText(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleImportReplace = () => {
+    if (!pendingImport) return;
+    // saveScenario overwrites by name and preserves the existing id
+    const saved = saveScenario(pendingImport.imported);
+    loadScenario(pendingImport.imported, saved.id);
+    refreshSaved();
+    setPendingImport(null);
+  };
+
+  const handleImportKeepBoth = () => {
+    if (!pendingImport) return;
+    const existingNames = new Set(loadScenarios().map(s => s.name));
+    let name = pendingImport.conflictName;
+    let n = 2;
+    while (existingNames.has(`${name} (${n})`)) n++;
+    name = `${name} (${n})`;
+    const renamed = { ...pendingImport.imported, name };
+    const saved = saveScenario(renamed);
+    loadScenario(renamed, saved.id);
+    refreshSaved();
+    setPendingImport(null);
+  };
+
+  const handleImportCancel = () => {
+    setPendingImport(null);
   };
 
   return (
@@ -150,7 +192,7 @@ export function ScenarioManager() {
                       return (
                         <div
                           key={s.id}
-                          className={`group flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer ${
+                          className={`flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer ${
                             isActive
                               ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
                               : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -167,12 +209,12 @@ export function ScenarioManager() {
                           </span>
                           <button
                             type="button"
-                            onClick={(e) => handleDelete(e, s.id)}
-                            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 px-1"
+                            onClick={(e) => handleDelete(e, s)}
+                            className="text-gray-400 hover:text-red-500 px-1 transition-colors"
                             title="Delete plan"
                             aria-label={`Delete ${s.name}`}
                           >
-                            ✕
+                            <TrashIcon className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       );
@@ -214,6 +256,87 @@ export function ScenarioManager() {
         className="hidden"
         onChange={handleImport}
       />
+
+      {pendingImport && (
+        <ImportConflictDialog
+          name={pendingImport.conflictName}
+          onReplace={handleImportReplace}
+          onKeepBoth={handleImportKeepBoth}
+          onCancel={handleImportCancel}
+        />
+      )}
+    </div>
+  );
+}
+
+function ImportConflictDialog({
+  name, onReplace, onKeepBoth, onCancel,
+}: {
+  name: string;
+  onReplace: () => void;
+  onKeepBoth: () => void;
+  onCancel: () => void;
+}) {
+  const replaceBtnRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    replaceBtnRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onCancel]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="import-conflict-title"
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-md mx-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-5">
+          <h2 id="import-conflict-title" className="text-base font-semibold text-gray-900 dark:text-gray-100">
+            A plan named &ldquo;{name}&rdquo; already exists
+          </h2>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            How do you want to handle the import?
+          </p>
+          <ul className="mt-3 text-xs text-gray-500 dark:text-gray-400 space-y-1.5">
+            <li><strong className="text-gray-700 dark:text-gray-300">Replace</strong> — overwrite the existing plan with the imported data.</li>
+            <li><strong className="text-gray-700 dark:text-gray-300">Keep both</strong> — save the import as &ldquo;{name} (2)&rdquo;.</li>
+            <li><strong className="text-gray-700 dark:text-gray-300">Cancel</strong> — don&rsquo;t import.</li>
+          </ul>
+        </div>
+        <div className="flex flex-wrap gap-2 justify-end px-5 py-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 rounded-b-lg">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-3 py-1.5 text-sm rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onKeepBoth}
+            className="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            Keep both
+          </button>
+          <button
+            ref={replaceBtnRef}
+            type="button"
+            onClick={onReplace}
+            className="px-3 py-1.5 text-sm rounded-md bg-primary-600 text-white font-semibold hover:bg-primary-700"
+          >
+            Replace
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -253,6 +376,18 @@ function PlusIcon({ className = '' }: { className?: string }) {
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <line x1="12" y1="5" x2="12" y2="19" />
       <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
+
+function TrashIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
     </svg>
   );
 }
