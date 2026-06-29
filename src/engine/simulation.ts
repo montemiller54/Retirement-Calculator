@@ -150,14 +150,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
   let cumulativeInflationFactor = 1.0;
 
   for (let age = s.currentAge; age <= s.endAge; age++) {
-    const sp = s.spouse;
-    const spouseAge = sp?.enabled ? sp.currentAge + (age - s.currentAge) : null;
-    const primaryRetired = age >= s.retirementAge;
-    const spouseRetired = sp?.enabled && spouseAge !== null ? spouseAge >= sp.retirementAge : true;
-    // Household drawdown phase tracks the primary's retirement; allocation
-    // phase tracks both — stay pre-retirement until both have stopped working.
-    const isRetired = primaryRetired;
-    const bothRetired = primaryRetired && spouseRetired;
+    const isRetired = age >= s.retirementAge;
     const yearsFromNow = age - s.currentAge;
 
     // ── Generate returns for this year ──
@@ -202,7 +195,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
       for (const acct of ACCOUNT_TYPES) {
         if (acct === 'cashAccount') continue; // exclude the buffer itself
         if (balances[acct] <= 0) continue;
-        const allocPcts = getAllocation(scenario, acct, bothRetired);
+        const allocPcts = getAllocation(scenario, acct, isRetired);
         const ret = blendedReturn(assetReturns, allocPcts);
         portfolioReturnSignal += ret * balances[acct];
         totalWeight += balances[acct];
@@ -224,29 +217,18 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     }
     yearInflationFactor = cumulativeInflationFactor;
 
-    // ── Income from jobs (per owner) ──
-    // Each job is active when its owner's age falls within its own window.
-    // The owner's retirementAge does NOT auto-cap a job — the user controls
-    // each job's endAge directly (so post-retirement gigs work too).
-    let primarySalary = 0;
-    let spouseSalary = 0;
+    // ── Income from jobs ──
+    // Sum salary from all active jobs at this age
+    let totalJobSalary = 0;
     const activeJobs: typeof s.jobs = [];
     for (const job of (s.jobs ?? [])) {
-      let ownerAge: number;
-      if (job.owner === 'spouse') {
-        if (!sp?.enabled || spouseAge === null) continue;
-        ownerAge = spouseAge;
-      } else {
-        ownerAge = age;
-      }
-      if (ownerAge >= job.startAge && ownerAge <= job.endAge) {
+      if (age >= job.startAge && age <= job.endAge) {
         const jobSalary = job.monthlyPay * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
-        if (job.owner === 'spouse') spouseSalary += jobSalary;
-        else primarySalary += jobSalary;
+        totalJobSalary += jobSalary;
         activeJobs.push(job);
       }
     }
-    const salary = primarySalary + spouseSalary;
+    const salary = totalJobSalary;
 
     const ssClaiming = age >= s.socialSecurityClaimAge;
     const ssYears = ssClaiming ? age - s.socialSecurityClaimAge : 0;
@@ -254,16 +236,17 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
       ? s.socialSecurityBenefit * Math.pow(1 + s.socialSecurityCOLA, ssYears)
       : 0;
 
-    // ── Social Security earnings test (per person) ──
+    // ── Social Security earnings test ──
     // Before Full Retirement Age, SS benefits are reduced if earned income exceeds threshold
     const birthYear = new Date().getFullYear() - s.currentAge;
     const fraMonths = getFullRetirementAgeMonths(birthYear);
     const fraAge = Math.ceil(fraMonths / 12);
+    const earnedIncome = salary;
     let ssEarningsTestReduction = 0;
-    if (socialSecurity > 0 && age < fraAge && primarySalary > 0) {
+    if (socialSecurity > 0 && age < fraAge && earnedIncome > 0) {
       // 2026 exempt amount (~$23,400, indexed) — $1 reduction per $2 earned above threshold
       const ssEarningsExempt = 23400 * Math.pow(1 + (s.taxBracketInflationRate ?? 0.02), yearsFromNow);
-      const excessEarnings = Math.max(0, primarySalary - ssEarningsExempt);
+      const excessEarnings = Math.max(0, earnedIncome - ssEarningsExempt);
       ssEarningsTestReduction = Math.min(socialSecurity, excessEarnings * 0.5);
       socialSecurity -= ssEarningsTestReduction;
     }
@@ -294,23 +277,14 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
 
     // ── Spouse Social Security ──
     let spouseSS = 0;
-    if (sp?.enabled && spouseAge !== null) {
+    const sp = s.spouse;
+    if (sp?.enabled) {
+      const spouseAge = sp.currentAge + yearsFromNow;
       const spouseSsClaiming = spouseAge >= sp.socialSecurityClaimAge;
       const spouseSsYears = spouseSsClaiming ? spouseAge - sp.socialSecurityClaimAge : 0;
       spouseSS = spouseSsClaiming
         ? sp.socialSecurityBenefit * Math.pow(1 + s.socialSecurityCOLA, spouseSsYears)
         : 0;
-
-      // Spouse SS earnings test — reduced if spouse still working pre-FRA
-      if (spouseSS > 0 && spouseSalary > 0) {
-        const spouseBirthYear = new Date().getFullYear() - sp.currentAge;
-        const spouseFraAge = Math.ceil(getFullRetirementAgeMonths(spouseBirthYear) / 12);
-        if (spouseAge < spouseFraAge) {
-          const ssEarningsExempt = 23400 * Math.pow(1 + (s.taxBracketInflationRate ?? 0.02), yearsFromNow);
-          const excessEarnings = Math.max(0, spouseSalary - ssEarningsExempt);
-          spouseSS -= Math.min(spouseSS, excessEarnings * 0.5);
-        }
-      }
     }
 
     let otherIncome = 0;
@@ -322,87 +296,77 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
 
     const totalIncome = salary + socialSecurity + spouseSS + pension + otherIncome;
 
-    // ── Contributions (per owner) ──
-    // Each owner gets their own 401k/IRA/HSA limits applied independently;
-    // each pays employer match only from their own jobs.
+    // ── Contributions (from active jobs) ──
     const contributions = emptyBalances();
     let employeePreTax401k = 0; // for wage tax calculation
     let employeeHSA = 0;
     if (activeJobs.length > 0 && salary > 0) {
+      const totalSavings = salary * s.totalSavingsRate;
+
+      // Compute employer match from all jobs that have 401k
+      let totalEmployerMatch = 0;
+      let totalRothMatch = 0;
+      for (const job of activeJobs) {
+        if (job.has401k && job.employerMatchRate > 0 && job.employerMatchCapPct > 0) {
+          const jobSalary = job.monthlyPay * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
+          const desired401k = totalSavings *
+            ((s.contributionAllocation.traditional401k + s.contributionAllocation.roth401k) / 100);
+          const matchableAmount = Math.min(desired401k, jobSalary * job.employerMatchCapPct);
+          const jobMatch = matchableAmount * job.employerMatchRate;
+          totalRothMatch += jobMatch * ((job.employerRothPct ?? 0) / 100);
+          totalEmployerMatch += jobMatch;
+        }
+      }
+      const weightedRothPct = totalEmployerMatch > 0 ? (totalRothMatch / totalEmployerMatch) * 100 : 0;
+
+      // Inflate contribution limits by the same rate as tax brackets (IRS CPI indexing)
       const limIdx = Math.pow(1 + (s.taxBracketInflationRate ?? 0), yearsFromNow);
 
-      const applyOwner = (ownerSalary: number, ownerJobs: typeof s.jobs, ownerAge: number) => {
-        if (ownerSalary <= 0 || ownerJobs.length === 0) return;
-        const totalSavings = ownerSalary * s.totalSavingsRate;
+      // Only allow 401k contributions if at least one active job has 401k
+      const has401k = activeJobs.some(j => j.has401k);
+      const effectiveAllocation = { ...s.contributionAllocation };
+      if (!has401k) {
+        // Redirect 401k allocation to taxable
+        effectiveAllocation.taxable += effectiveAllocation.traditional401k + effectiveAllocation.roth401k;
+        effectiveAllocation.traditional401k = 0;
+        effectiveAllocation.roth401k = 0;
+      }
 
-        let totalEmployerMatch = 0;
-        let totalRothMatch = 0;
-        for (const job of ownerJobs) {
-          if (job.has401k && job.employerMatchRate > 0 && job.employerMatchCapPct > 0) {
-            const jobSalary = job.monthlyPay * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
-            const desired401k = totalSavings *
-              ((s.contributionAllocation.traditional401k + s.contributionAllocation.roth401k) / 100);
-            const matchableAmount = Math.min(desired401k, jobSalary * job.employerMatchCapPct);
-            const jobMatch = matchableAmount * job.employerMatchRate;
-            totalRothMatch += jobMatch * ((job.employerRothPct ?? 0) / 100);
-            totalEmployerMatch += jobMatch;
-          }
-        }
-        const weightedRothPct = totalEmployerMatch > 0 ? (totalRothMatch / totalEmployerMatch) * 100 : 0;
-
-        const has401k = ownerJobs.some(j => j.has401k);
-        const effectiveAllocation = { ...s.contributionAllocation };
-        if (!has401k) {
-          effectiveAllocation.taxable += effectiveAllocation.traditional401k + effectiveAllocation.roth401k;
-          effectiveAllocation.traditional401k = 0;
-          effectiveAllocation.roth401k = 0;
-        }
-
-        const result = allocateContributions({
-          totalSavings,
-          allocation: effectiveAllocation,
-          age: ownerAge,
-          limit401k: s.limit401k * limIdx,
-          limitIRA: s.limitIRA * limIdx,
-          enable401kCatchUp: s.enable401kCatchUp,
-          enableIRACatchUp: s.enableIRACatchUp,
-          employerMatch: totalEmployerMatch,
-          employerRothPct: weightedRothPct,
-          catchUp401k: DEFAULT_401K_CATCHUP * limIdx,
-          superCatchUp401k: DEFAULT_401K_SUPER_CATCHUP * limIdx,
-          catchUpIRA: DEFAULT_IRA_CATCHUP * limIdx,
-          hsaLimit: DEFAULT_HSA_SELF_ONLY * limIdx,
-        });
-
-        employeePreTax401k += result.contributions.traditional401k;
-        employeeHSA += result.contributions.hsa;
-
-        for (const acct of ACCOUNT_TYPES) {
-          contributions[acct] += result.contributions[acct];
-          balances[acct] += result.contributions[acct];
-          if (acct === 'taxable') {
-            taxableCostBasis += result.contributions[acct];
-          }
-        }
-        for (const acct of ACCOUNT_TYPES) {
-          if (result.employerContributions[acct] > 0) {
-            contributions[acct] += result.employerContributions[acct];
-            balances[acct] += result.employerContributions[acct];
-          }
-        }
-      };
-
-      applyOwner(
-        primarySalary,
-        activeJobs.filter(j => j.owner === 'primary'),
+      const result = allocateContributions({
+        totalSavings,
+        allocation: effectiveAllocation,
         age,
-      );
-      if (sp?.enabled && spouseAge !== null) {
-        applyOwner(
-          spouseSalary,
-          activeJobs.filter(j => j.owner === 'spouse'),
-          spouseAge,
-        );
+        limit401k: s.limit401k * limIdx,
+        limitIRA: s.limitIRA * limIdx,
+        enable401kCatchUp: s.enable401kCatchUp,
+        enableIRACatchUp: s.enableIRACatchUp,
+        employerMatch: totalEmployerMatch,
+        employerRothPct: weightedRothPct,
+        catchUp401k: DEFAULT_401K_CATCHUP * limIdx,
+        superCatchUp401k: DEFAULT_401K_SUPER_CATCHUP * limIdx,
+        catchUpIRA: DEFAULT_IRA_CATCHUP * limIdx,
+        hsaLimit: DEFAULT_HSA_SELF_ONLY * limIdx,
+      });
+
+      // Track employee-only pre-tax amounts for wage calculation
+      employeePreTax401k = result.contributions.traditional401k;
+      employeeHSA = result.contributions.hsa;
+
+      // Add employee contributions
+      for (const acct of ACCOUNT_TYPES) {
+        contributions[acct] = result.contributions[acct];
+        balances[acct] += result.contributions[acct];
+        if (acct === 'taxable') {
+          taxableCostBasis += result.contributions[acct];
+        }
+      }
+
+      // Add employer match contributions (separate from employee)
+      for (const acct of ACCOUNT_TYPES) {
+        if (result.employerContributions[acct] > 0) {
+          contributions[acct] += result.employerContributions[acct];
+          balances[acct] += result.employerContributions[acct];
+        }
       }
     }
 
@@ -725,7 +689,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     if (!depleted) {
       for (const acct of ACCOUNT_TYPES) {
         if (balances[acct] <= 0) continue;
-        const allocPcts = getAllocation(scenario, acct, bothRetired);
+        const allocPcts = getAllocation(scenario, acct, isRetired);
         const ret = blendedReturn(assetReturns, allocPcts);
         const gain = balances[acct] * ret;
         balances[acct] += gain;

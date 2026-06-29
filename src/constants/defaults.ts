@@ -31,7 +31,6 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
     {
       id: 'default-job',
       name: 'Primary Job',
-      owner: 'primary',
       monthlyPay: 8333,
       startAge: 35,
       endAge: 65,
@@ -162,7 +161,6 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
   spouse: {
     enabled: false,
     currentAge: 33,
-    retirementAge: 65,
     socialSecurityBenefit: 1500,
     socialSecurityClaimAge: 67,
   },

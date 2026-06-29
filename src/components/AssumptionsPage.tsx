@@ -214,7 +214,7 @@ export function AssumptionsPage() {
           <li><strong>Housing</strong>: mortgage payment added to spending until payoff age. Optional downsizing proceeds deposited at a specified age, appreciating at inflation + 1%.</li>
           <li><strong>Spending safety rules (guardrails)</strong>: configurable spending-cut tiers triggered by portfolio drawdown from peak. Multiple tiers allow graduated responses.</li>
           <li><strong>Cash buffer</strong>: a reserve of N years' expenses in cash, refilled in up markets and spent first in down markets to soften sequence-of-returns risk.</li>
-          <li><strong>Spouse</strong>: separate age, retirement age, and Social Security claim age. Each spouse's jobs are owned by them and contribute their own salary, employer match, and per-person 401(k)/IRA/HSA contribution limits. Spouse's pre-retirement allocation continues until both spouses are retired.</li>
+          <li><strong>Spouse</strong>: separate age, retirement age, salary, Social Security, and pension. Spouse savings flow into the shared taxable account.</li>
           <li><strong>Asset allocation</strong>: separate pre-retirement and post-retirement allocations with an instant transition at retirement. Per-account customization available.</li>
           <li><strong>One-time expenses</strong> at specified ages, optionally inflation-adjusted. Additional income sources with configurable start/end ages.</li>
         </ul>

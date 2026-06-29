@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useScenario } from '../../context/ScenarioContext';
-import { ACCOUNT_LABELS, ACCOUNT_TYPES, type AccountType, type Job, type JobOwner } from '../../types';
+import { ACCOUNT_LABELS, ACCOUNT_TYPES, type AccountType, type Job } from '../../types';
 import { CurrencyInput } from './CurrencyInput';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
 import { PctSlider, Section, Field } from './shared';
@@ -47,17 +47,13 @@ export function EarningsCard({ validationErrors }: CardProps) {
     setField(`contributionAllocation.${changedAcct}`, newValue);
   };
 
-  const addJob = (owner: JobOwner = 'primary') => {
-    const retireAge = owner === 'spouse' && scenario.spouse?.enabled
-      ? scenario.spouse.retirementAge
-      : scenario.retirementAge;
+  const addJob = () => {
     const newJob: Job = {
       id: crypto.randomUUID(),
       name: '',
-      owner,
       monthlyPay: 5000,
-      startAge: retireAge,
-      endAge: retireAge + 5,
+      startAge: scenario.retirementAge,
+      endAge: scenario.retirementAge + 5,
       has401k: false,
       employerMatchRate: 0,
       employerMatchCapPct: 0,
@@ -79,14 +75,8 @@ export function EarningsCard({ validationErrors }: CardProps) {
     );
   };
 
-  // Total current monthly income from active jobs (each job's owner age is checked)
-  const spouseEnabled = scenario.spouse?.enabled ?? false;
-  const spouseAge = spouseEnabled ? scenario.spouse.currentAge : 0;
-  const ownerCurrentAge = (owner: JobOwner) => (owner === 'spouse' ? spouseAge : scenario.currentAge);
-  const activeJobs = jobs.filter(j => {
-    const age = ownerCurrentAge(j.owner);
-    return age >= j.startAge && age <= j.endAge;
-  });
+  // Total current monthly income from active jobs
+  const activeJobs = jobs.filter(j => scenario.currentAge >= j.startAge && scenario.currentAge <= j.endAge);
   const totalMonthly = activeJobs.reduce((sum, j) => sum + j.monthlyPay, 0);
   const totalYearly = totalMonthly * 12;
 
@@ -99,8 +89,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
       >
         <div className="space-y-3">
           {jobs.map(job => {
-            const ownerAge = ownerCurrentAge(job.owner);
-            const isActive = ownerAge >= job.startAge && ownerAge <= job.endAge;
+            const isActive = scenario.currentAge >= job.startAge && scenario.currentAge <= job.endAge;
             return (
               <div
                 key={job.id}
@@ -118,18 +107,6 @@ export function EarningsCard({ validationErrors }: CardProps) {
                     onChange={e => updateJob(job.id, 'name', e.target.value)}
                   />
                   <div className="flex-1" />
-                  {spouseEnabled && (
-                    <select
-                      className="text-[0.625rem] font-medium uppercase tracking-wider bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded border-0 focus:ring-1 focus:ring-primary-500"
-                      value={job.owner}
-                      onChange={e => updateJob(job.id, 'owner', e.target.value as JobOwner)}
-                      aria-label="Job owner"
-                      title="Whose job is this?"
-                    >
-                      <option value="primary">You</option>
-                      <option value="spouse">Spouse</option>
-                    </select>
-                  )}
                   {isActive && (
                     <span className="inline-flex items-center gap-1 text-[0.625rem] font-medium uppercase tracking-wider text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded">
                       Active
@@ -237,33 +214,13 @@ export function EarningsCard({ validationErrors }: CardProps) {
           })}
         </div>
 
-        {spouseEnabled ? (
-          <div className="mt-3 flex items-center gap-2">
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-              onClick={() => addJob('primary')}
-            >
-              <span className="text-base leading-none">+</span> Add your job
-            </button>
-            <span className="text-gray-300 dark:text-gray-600">·</span>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-              onClick={() => addJob('spouse')}
-            >
-              <span className="text-base leading-none">+</span> Add spouse's job
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-            onClick={() => addJob('primary')}
-          >
-            <span className="text-base leading-none">+</span> Add job
-          </button>
-        )}
+        <button
+          type="button"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+          onClick={addJob}
+        >
+          <span className="text-base leading-none">+</span> Add job
+        </button>
       </Section>
 
       <Section

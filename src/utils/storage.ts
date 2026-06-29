@@ -113,7 +113,6 @@ function migrateScenario(s: ScenarioInput): ScenarioInput {
       {
         id: 'migrated-primary',
         name: 'Primary Job',
-        owner: 'primary',
         monthlyPay: oldSalary,
         startAge: s.currentAge,
         endAge: s.retirementAge,
@@ -136,10 +135,6 @@ function migrateScenario(s: ScenarioInput): ScenarioInput {
     for (const job of s.jobs as unknown as Record<string, unknown>[]) {
       if (job.employerRothPct == null) {
         job.employerRothPct = globalRothPct;
-      }
-      // Backfill owner on legacy jobs that predate the per-owner model
-      if (job.owner == null) {
-        job.owner = 'primary';
       }
     }
   }
