@@ -153,11 +153,9 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     const sp = s.spouse;
     const spouseAge = sp?.enabled ? sp.currentAge + (age - s.currentAge) : null;
     const primaryRetired = age >= s.retirementAge;
-    const spouseRetired = sp?.enabled && spouseAge !== null ? spouseAge >= sp.retirementAge : true;
-    // Household drawdown phase tracks the primary's retirement; allocation
-    // phase tracks both — stay pre-retirement until both have stopped working.
+    // Drawdown and allocation phases both track the primary's retirement,
+    // which is when withdrawals begin.
     const isRetired = primaryRetired;
-    const bothRetired = primaryRetired && spouseRetired;
     const yearsFromNow = age - s.currentAge;
 
     // ── Generate returns for this year ──
@@ -202,7 +200,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
       for (const acct of ACCOUNT_TYPES) {
         if (acct === 'cashAccount') continue; // exclude the buffer itself
         if (balances[acct] <= 0) continue;
-        const allocPcts = getAllocation(scenario, acct, bothRetired);
+        const allocPcts = getAllocation(scenario, acct, isRetired);
         const ret = blendedReturn(assetReturns, allocPcts);
         portfolioReturnSignal += ret * balances[acct];
         totalWeight += balances[acct];
@@ -725,7 +723,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     if (!depleted) {
       for (const acct of ACCOUNT_TYPES) {
         if (balances[acct] <= 0) continue;
-        const allocPcts = getAllocation(scenario, acct, bothRetired);
+        const allocPcts = getAllocation(scenario, acct, isRetired);
         const ret = blendedReturn(assetReturns, allocPcts);
         const gain = balances[acct] * ret;
         balances[acct] += gain;
