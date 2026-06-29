@@ -118,18 +118,18 @@ export function ProfileCard({ validationErrors }: CardProps) {
                   Remove
                 </button>
               </div>
-              <div className="flex flex-wrap gap-x-8 gap-y-4">
-                <Field label="Spouse age" help="Spouse today." width="age">
-                  <input
-                    type="number"
-                    className={`input-field text-center w-full ${fieldErrorClass(ve, 'spouse.currentAge')}`}
-                    value={scenario.spouse.currentAge}
-                    min={18}
-                    max={99}
-                    onChange={e => setField('spouse.currentAge', parseInt(e.target.value) || 0)}
-                  />
-                  <FieldError errors={ve} field="spouse.currentAge" />
-                </Field>
+              <Field label="Spouse age" help="Spouse today." width="age">
+                <input
+                  type="number"
+                  className={`input-field text-center w-full ${fieldErrorClass(ve, 'spouse.currentAge')}`}
+                  value={scenario.spouse.currentAge}
+                  min={18}
+                  max={99}
+                  onChange={e => setField('spouse.currentAge', parseInt(e.target.value) || 0)}
+                />
+                <FieldError errors={ve} field="spouse.currentAge" />
+              </Field>
+              <div className="mt-4">
                 <Field label="Spouse retirement age" help="Age at which your spouse stops working." width="age">
                   <input
                     type="number"
