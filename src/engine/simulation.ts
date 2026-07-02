@@ -601,7 +601,10 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
       // ── Iterative tax-aware withdrawal loop ──
       // Withdraw enough to cover spending + taxes on those withdrawals.
       // Tax on traditional withdrawals creates additional cash need; iterate to converge.
-      const incomeFromSources = socialSecurity + spouseSS + pension + otherIncome + salary;
+      // Salary is counted net of the savings-rate portion, which has already been
+      // diverted into contributions above and isn't available to fund spending.
+      const netSalaryCash = salary > 0 ? salary * (1 - s.totalSavingsRate) : 0;
+      const incomeFromSources = socialSecurity + spouseSS + pension + otherIncome + netSalaryCash;
       let totalCashNeed = Math.max(0, spending - incomeFromSources);
 
       if ((totalCashNeed > 0 || rothConversionAmount > 0) && !depleted) {
@@ -707,9 +710,10 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     const taxResult = calculateTaxes(taxInput);
 
     // ── Surplus income reinvestment ──
-    // When retirement income exceeds spending + taxes, reinvest surplus into taxable
+    // When retirement income exceeds spending + taxes, reinvest surplus into taxable.
+    // Use the same net-salary figure the withdrawal loop used so both sides agree.
     if (isRetired && !depleted) {
-      const netSalary = activeJobs.length > 0 ? salary * (1 - s.totalSavingsRate) : salary;
+      const netSalary = salary > 0 ? salary * (1 - s.totalSavingsRate) : 0;
       const retirementIncome = socialSecurity + spouseSS + pension + otherIncome + netSalary;
       const surplus = retirementIncome - spending - taxResult.total;
       if (surplus > 0) {
