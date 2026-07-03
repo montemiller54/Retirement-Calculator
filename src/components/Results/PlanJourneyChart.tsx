@@ -31,10 +31,10 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
 
   const events: JourneyEvent[] = [];
   events.push({
-    age: retirementAge,
+    age: retirementAge - 1,
     icon: '🏖',
     label: 'Retirement',
-    description: "You've reached your retirement age!",
+    description: 'Retirement begins at the end of this year.',
   });
   events.push({
     age: scenario.socialSecurityClaimAge,
@@ -45,10 +45,10 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
   if (scenario.spouse.enabled) {
     if (scenario.spouse.retirementAge != null) {
       events.push({
-        age: scenario.spouse.retirementAge - spouseAgeOffset,
+        age: scenario.spouse.retirementAge - spouseAgeOffset - 1,
         icon: '🏖',
         label: 'Spouse retires',
-        description: "Your spouse's last working year.",
+        description: 'Spouse retirement begins at the end of this year.',
       });
     }
     events.push({
