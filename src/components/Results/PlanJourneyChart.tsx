@@ -192,7 +192,7 @@ export function PlanJourneyChart({ data, scenario, retirementAge, currentAge }: 
           />
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#9ca3af', strokeDasharray: '3 3' }} />
           <ReferenceLine
-            x={birthYear + retirementAge}
+            x={birthYear + retirementAge - 1}
             stroke={RETIREMENT_LINE}
             strokeDasharray="4 4"
             label={{
