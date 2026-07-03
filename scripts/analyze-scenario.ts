@@ -101,7 +101,6 @@ const scenario: ScenarioInput = {
     enabled: false, strategy: 'fixedAmount', targetBracketRate: 0.12,
     fixedAnnualAmount: 50000, startAge: 65, endAge: 72,
   },
-  cashBuffer: { enabled: false, yearsOfExpenses: 1, refillInUpMarkets: true },
   spouse: {
     enabled: true, currentAge: 47, socialSecurityBenefit: 0,
     socialSecurityClaimAge: 62, retirementAge: 62, currentSalary: 0,

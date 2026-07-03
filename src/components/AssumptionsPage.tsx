@@ -36,7 +36,6 @@ export function AssumptionsPage() {
           <li><strong>Calculate and pay taxes</strong> — federal, state, FICA, early-withdrawal penalties, capital gains.</li>
           <li><strong>Reinvest surplus</strong> — if income exceeds spending + taxes, the excess flows into the taxable account.</li>
           <li><strong>Apply investment returns</strong> — each account grows by its blended return (allocation × per-asset return).</li>
-          <li><strong>Refill cash buffer</strong> — if enabled and markets were positive, replenish the reserve toward target.</li>
           <li><strong>Depletion check</strong> — if total balance &lt; $100, the path is marked as failed.</li>
         </ol>
         <p className="text-xs text-gray-400 mt-1">All monthly inputs (salary, spending, etc.) are converted to annual amounts internally. "Today's dollars" inputs are inflated forward from your current age.</p>
@@ -213,7 +212,6 @@ export function AssumptionsPage() {
           <li><strong>Healthcare</strong>: three-tier cost model (pre-Medicare / Medicare / late-life) with its own medical inflation rate (default 5%). Costs are added on top of base spending.</li>
           <li><strong>Housing</strong>: mortgage payment added to spending until payoff age. Optional downsizing proceeds deposited at a specified age, appreciating at inflation + 1%.</li>
           <li><strong>Spending safety rules (guardrails)</strong>: configurable spending-cut tiers triggered by portfolio drawdown from peak. Multiple tiers allow graduated responses.</li>
-          <li><strong>Cash buffer</strong>: a reserve of N years' expenses in cash, refilled in up markets and spent first in down markets to soften sequence-of-returns risk.</li>
           <li><strong>Spouse</strong>: separate age, retirement age, and Social Security claim age. Each spouse's jobs are owned by them and contribute their own salary, employer match, and per-person 401(k)/IRA/HSA contribution limits. Spouse's pre-retirement allocation continues until both spouses are retired.</li>
           <li><strong>Asset allocation</strong>: separate pre-retirement and post-retirement allocations with an instant transition at retirement. Per-account customization available.</li>
           <li><strong>One-time expenses</strong> at specified ages, optionally inflation-adjusted. Additional income sources with configurable start/end ages.</li>

@@ -88,7 +88,6 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
       (!scenario.stateCode) ||
       (!scenario.healthcare) ||
       (!scenario.rothConversion) ||
-      (!scenario.cashBuffer) ||
       (!scenario.spouse) ||
       (!scenario.jobs) ||
       (!scenario.housing) ||
@@ -152,13 +151,6 @@ export function ScenarioProvider({ children }: { children: ReactNode }) {
           medicareStartAge: 65,
           lateLifeStartAge: 80,
           inflationRate: 0.05,
-        };
-      }
-      if (!patched.cashBuffer) {
-        (patched as Record<string, unknown>).cashBuffer = {
-          enabled: false,
-          yearsOfExpenses: 3,
-          refillInUpMarkets: true,
         };
       }
       if (!patched.rothConversion) {

@@ -96,30 +96,6 @@ describe('Healthcare Costs', () => {
   });
 });
 
-describe('Cash Buffer Strategy', () => {
-  // Use a scenario with some volatility where buffer can help
-  const bufferBase: Partial<ScenarioInput> = {
-    currentAge: 65, retirementAge: 65, endAge: 90,
-    jobs: [] as ScenarioInput['jobs'],
-    balances: { traditional401k: 300000, roth401k: 0, traditionalIRA: 0, rothIRA: 100000, taxable: 100000, hsa: 0, cashAccount: 150000, otherAssets: 0 },
-    baseAnnualSpending: 4500, socialSecurityBenefit: 2000,
-  };
-
-  it('cash buffer enabled produces different median ending than disabled', () => {
-    const disabled = run({ ...bufferBase, cashBuffer: { enabled: false, yearsOfExpenses: 3, refillInUpMarkets: true } });
-    const enabled = run({ ...bufferBase, cashBuffer: { enabled: true, yearsOfExpenses: 3, refillInUpMarkets: true } });
-    // The strategy should produce a measurably different outcome
-    expect(Math.abs(enabled.medianEnding - disabled.medianEnding)).toBeGreaterThan(100);
-  });
-
-  it('larger cash buffer → different ending profile', () => {
-    const smallBuf = run({ ...bufferBase, cashBuffer: { enabled: true, yearsOfExpenses: 1, refillInUpMarkets: true } });
-    const largeBuf = run({ ...bufferBase, cashBuffer: { enabled: true, yearsOfExpenses: 5, refillInUpMarkets: true } });
-    // Differences below ~$200 on a multi-hundred-k portfolio are within MC noise.
-    expect(Math.abs(largeBuf.medianEnding - smallBuf.medianEnding)).toBeGreaterThan(50);
-  });
-});
-
 describe('Roth Conversions', () => {
   const rothBase: Partial<ScenarioInput> = {
     currentAge: 60, retirementAge: 65, endAge: 90,
@@ -273,7 +249,6 @@ describe('Benchmark: 4% Rule / Trinity Study', () => {
     otherIncomeSources: [],
     healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false },
     guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
-    cashBuffer: { ...DEFAULT_SCENARIO.cashBuffer, enabled: false },
     rothConversion: { ...DEFAULT_SCENARIO.rothConversion, enabled: false },
     investments: withInvestments({
       // 60/40 portfolio — classic Trinity Study allocation
@@ -341,7 +316,6 @@ describe('Benchmark: Social Security as Income Floor', () => {
       pensionAmount: 0,
       healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false },
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
-      cashBuffer: { ...DEFAULT_SCENARIO.cashBuffer, enabled: false },
       rothConversion: { ...DEFAULT_SCENARIO.rothConversion, enabled: false },
       investments: withInvestments({
         postRetirement: makeUniformAllocations({ stocks: 60, bonds: 30, cash: 10, crypto: 0 }),
@@ -399,7 +373,6 @@ describe('Benchmark: Tax Impact Reality Check', () => {
       pensionAmount: 0,
       healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false },
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
-      cashBuffer: { ...DEFAULT_SCENARIO.cashBuffer, enabled: false },
       rothConversion: { ...DEFAULT_SCENARIO.rothConversion, enabled: false },
       investments: withInvestments({
         postRetirement: makeUniformAllocations({ stocks: 50, bonds: 40, cash: 10, crypto: 0 }),
@@ -421,7 +394,6 @@ describe('Benchmark: Tax Impact Reality Check', () => {
       pensionAmount: 0,
       healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false },
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
-      cashBuffer: { ...DEFAULT_SCENARIO.cashBuffer, enabled: false },
       rothConversion: { ...DEFAULT_SCENARIO.rothConversion, enabled: false },
     });
     // No taxable income — tax should be near zero
@@ -465,7 +437,6 @@ describe('Benchmark: Spending Guardrails Effectiveness', () => {
       socialSecurityBenefit: 1500,
       socialSecurityClaimAge: 67,
       healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false },
-      cashBuffer: { ...DEFAULT_SCENARIO.cashBuffer, enabled: false },
       rothConversion: { ...DEFAULT_SCENARIO.rothConversion, enabled: false },
     };
     const noGuard = run({ ...stressed, guardrails: { enabled: false, tiers: [{ drawdownPct: 15, spendingCutPct: 20 }] } });
@@ -486,7 +457,6 @@ describe('Benchmark: Inflation Erosion', () => {
       socialSecurityBenefit: 0,
       healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false },
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
-      cashBuffer: { ...DEFAULT_SCENARIO.cashBuffer, enabled: false },
       rothConversion: { ...DEFAULT_SCENARIO.rothConversion, enabled: false },
     };
     const lowInflation = run({ ...base, spendingInflationRate: 0.02 });

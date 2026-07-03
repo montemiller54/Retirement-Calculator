@@ -90,7 +90,7 @@ function migrateScenario(s: ScenarioInput): ScenarioInput {
 
   // Patch nested objects: merge with defaults so partially-defined objects get all fields
   const nestedKeys = [
-    'healthcare', 'cashBuffer', 'rothConversion', 'guardrails',
+    'healthcare', 'rothConversion', 'guardrails',
     'housing', 'spouse',
   ] as const;
   for (const key of nestedKeys) {

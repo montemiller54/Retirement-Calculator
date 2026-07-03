@@ -193,21 +193,6 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     }
     const assetReturns = generateCorrelatedReturns(rng, choleskyL, yearMeans, stdDevs, inBearRegime, regimeMask, recoveryBoost);
 
-    // Compute portfolio-weighted return signal for cash buffer decisions
-    let portfolioReturnSignal = 0;
-    if (isRetired && s.cashBuffer?.enabled) {
-      let totalWeight = 0;
-      for (const acct of ACCOUNT_TYPES) {
-        if (acct === 'cashAccount') continue; // exclude the buffer itself
-        if (balances[acct] <= 0) continue;
-        const allocPcts = getAllocation(scenario, acct, isRetired);
-        const ret = blendedReturn(assetReturns, allocPcts);
-        portfolioReturnSignal += ret * balances[acct];
-        totalWeight += balances[acct];
-      }
-      portfolioReturnSignal = totalWeight > 0 ? portfolioReturnSignal / totalWeight : 0;
-    }
-
     // ── Variable inflation for this year ──
     // Compound inflation year by year; if volatility > 0, randomize each year's rate
     let yearInflationFactor: number;
@@ -498,7 +483,8 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
       let penalizable = 0;
 
       // Traditional 401k — penalty-free if Rule of 55 eligible and age >= 55
-      if (w.traditional401k > 0 && !(s.ruleof55Eligible && age >= 55)) {
+      const rule55 = s.ruleof55Eligible && age >= 55;
+      if (w.traditional401k > 0 && !rule55) {
         penalizable += w.traditional401k;
       }
       // Traditional IRA — always subject to penalty before 59.5
@@ -742,35 +728,6 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
 
         // Taxable account: gains add to balance but not to cost basis
         // (cost basis stays the same → unrealized gains grow)
-      }
-    }
-
-    // ── Cash buffer refill in up markets ──
-    // Only refill from taxable and otherAssets — transferring from tax-deferred
-    // or Roth accounts would be an untaxed distribution masquerading as an
-    // internal transfer. If those two sources can't cover the deficit, the
-    // buffer stays low and the normal (taxed) withdrawal path handles it next year.
-    if (isRetired && !depleted && s.cashBuffer?.enabled && s.cashBuffer.refillInUpMarkets && portfolioReturnSignal >= 0) {
-      const targetBuffer = s.cashBuffer.yearsOfExpenses * spending;
-      const deficit = targetBuffer - balances.cashAccount;
-      if (deficit > 0) {
-        const refillOrder: AccountType[] = ['taxable', 'otherAssets'];
-        let remaining = deficit;
-        for (const acct of refillOrder) {
-          if (remaining <= 0) break;
-          const transfer = Math.min(remaining, balances[acct]);
-          if (transfer > 0) {
-            balances[acct] -= transfer;
-            balances.cashAccount += transfer;
-            remaining -= transfer;
-            if (acct === 'taxable') {
-              const prevBal = balances[acct] + transfer;
-              if (prevBal > 0) {
-                taxableCostBasis *= (1 - transfer / prevBal);
-              }
-            }
-          }
-        }
       }
     }
 

@@ -70,7 +70,6 @@ function strippedScenario(
     oneTimeExpenses: [],
     healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false },
     guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
-    cashBuffer: { ...DEFAULT_SCENARIO.cashBuffer, enabled: false },
     rothConversion: { ...DEFAULT_SCENARIO.rothConversion, enabled: false },
     spouse: { ...DEFAULT_SCENARIO.spouse, enabled: false },
     housing: { ...DEFAULT_SCENARIO.housing, enabled: false },

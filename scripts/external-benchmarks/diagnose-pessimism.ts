@@ -271,7 +271,6 @@ function runOurEngineWithCrashFreq(s: ExternalScenario, crashFrequency: number) 
     guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
     healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false },
     rothConversion: { ...DEFAULT_SCENARIO.rothConversion, enabled: false },
-    cashBuffer: { ...DEFAULT_SCENARIO.cashBuffer, enabled: false },
     balances: {
       traditional401k: 0, roth401k: 0, traditionalIRA: 0, rothIRA: 0,
       taxable: s.initialBalance, hsa: 0, cashAccount: 0, otherAssets: 0,

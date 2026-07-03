@@ -151,13 +151,6 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
     endAge: 72,
   },
 
-  // Cash buffer
-  cashBuffer: {
-    enabled: false,
-    yearsOfExpenses: 3,
-    refillInUpMarkets: true,
-  },
-
   // Spouse
   spouse: {
     enabled: false,

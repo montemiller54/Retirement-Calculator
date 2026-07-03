@@ -20,7 +20,6 @@ function scenario(overrides: Partial<ScenarioInput>): ScenarioInput {
 const OFF_GUARDRAILS = { ...DEFAULT_SCENARIO.guardrails, enabled: false };
 const OFF_HEALTHCARE = { ...DEFAULT_SCENARIO.healthcare, enabled: false };
 const OFF_ROTH = { ...DEFAULT_SCENARIO.rothConversion, enabled: false };
-const OFF_BUFFER = { ...DEFAULT_SCENARIO.cashBuffer, enabled: false };
 
 function zeroBalances() {
   return {
@@ -73,7 +72,6 @@ const benchmarks: Benchmark[] = [
       guardrails: OFF_GUARDRAILS,
       healthcare: OFF_HEALTHCARE,
       rothConversion: OFF_ROTH,
-      cashBuffer: OFF_BUFFER,
       balances: { ...zeroBalances(), taxable: 1000000 },
       taxableCostBasisPct: 1.0, // all basis = no cap gains tax drag
       investments: {
@@ -106,7 +104,6 @@ const benchmarks: Benchmark[] = [
       guardrails: OFF_GUARDRAILS,
       healthcare: OFF_HEALTHCARE,
       rothConversion: OFF_ROTH,
-      cashBuffer: OFF_BUFFER,
       balances: { ...zeroBalances(), taxable: 1000000 },
       taxableCostBasisPct: 1.0,
       investments: {
@@ -139,7 +136,6 @@ const benchmarks: Benchmark[] = [
       guardrails: OFF_GUARDRAILS,
       healthcare: OFF_HEALTHCARE,
       rothConversion: OFF_ROTH,
-      cashBuffer: OFF_BUFFER,
       balances: { ...zeroBalances(), taxable: 1000000 },
       taxableCostBasisPct: 1.0,
       investments: {
@@ -172,7 +168,6 @@ const benchmarks: Benchmark[] = [
       guardrails: OFF_GUARDRAILS,
       healthcare: OFF_HEALTHCARE,
       rothConversion: OFF_ROTH,
-      cashBuffer: OFF_BUFFER,
       balances: { ...zeroBalances(), taxable: 1000000 },
       taxableCostBasisPct: 1.0,
       investments: {
@@ -207,7 +202,6 @@ const benchmarks: Benchmark[] = [
       guardrails: OFF_GUARDRAILS,
       healthcare: OFF_HEALTHCARE,
       rothConversion: OFF_ROTH,
-      cashBuffer: OFF_BUFFER,
       balances: { ...zeroBalances(), traditional401k: 1000000, rothIRA: 300000, taxable: 200000 },
       taxableCostBasisPct: 0.7,
       investments: {
@@ -242,7 +236,6 @@ const benchmarks: Benchmark[] = [
       guardrails: OFF_GUARDRAILS,
       healthcare: OFF_HEALTHCARE,
       rothConversion: OFF_ROTH,
-      cashBuffer: OFF_BUFFER,
       balances: { ...zeroBalances(), taxable: 800000, rothIRA: 400000 },
       taxableCostBasisPct: 0.6,
       investments: {
@@ -276,7 +269,6 @@ const benchmarks: Benchmark[] = [
       guardrails: OFF_GUARDRAILS,
       healthcare: OFF_HEALTHCARE,
       rothConversion: OFF_ROTH,
-      cashBuffer: OFF_BUFFER,
       balances: { ...zeroBalances(), taxable: 1000000 },
       taxableCostBasisPct: 1.0,
       investments: {
@@ -307,7 +299,6 @@ const features = [
   { feature: 'Tax-aware withdrawals', ours: 'Iterative convergence loop', fireCalc: 'No', cFIREsim: 'No', fidelity: 'Yes', pviz: 'No' },
   { feature: 'Spending guardrails', ours: 'Multi-tier drawdown-based', fireCalc: 'No', cFIREsim: 'No', fidelity: 'No', pviz: 'No' },
   { feature: 'Healthcare costs', ours: '3-phase (pre-Medicare/Medicare/late)', fireCalc: 'No', cFIREsim: 'No', fidelity: 'Basic', pviz: 'No' },
-  { feature: 'Cash buffer / bucket', ours: 'Yes (auto-refill in up markets)', fireCalc: 'No', cFIREsim: 'No', fidelity: 'No', pviz: 'No' },
   { feature: 'Employer match', ours: 'Yes (rate + cap + Roth split)', fireCalc: 'No', cFIREsim: 'No', fidelity: 'Yes', pviz: 'No' },
   { feature: 'One-time expenses', ours: 'Yes (inflation-adjustable)', fireCalc: 'Yes', cFIREsim: 'Yes', fidelity: 'Yes', pviz: 'No' },
   { feature: 'Inflation modeling', ours: 'Separate: spending, tax, medical, SS', fireCalc: 'Historical CPI', cFIREsim: 'Historical CPI', fidelity: 'Assumed rate', pviz: 'Assumed rate' },

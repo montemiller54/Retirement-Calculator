@@ -60,9 +60,10 @@ export function executeWithdrawals(input: WithdrawalInput): WithdrawalResult {
   // ── Strategy-based withdrawals ──
   if (strategy === 'proRata') {
     // Withdraw proportionally from all accounts with balances
+    const accts = STRATEGY_ORDER.proRata;
     const availableBalances: Partial<Record<AccountType, number>> = {};
     let totalAvailable = 0;
-    for (const acct of STRATEGY_ORDER.proRata) {
+    for (const acct of accts) {
       const avail = balances[acct] - withdrawals[acct];
       if (avail > 0) {
         availableBalances[acct] = avail;

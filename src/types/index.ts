@@ -140,13 +140,6 @@ export interface HealthcareCosts {
   inflationRate: number;        // medical inflation, e.g. 0.05 for 5%
 }
 
-// ── Cash buffer strategy ──
-export interface CashBufferConfig {
-  enabled: boolean;
-  yearsOfExpenses: number;      // target buffer size (e.g., 3 = 3× annual spending)
-  refillInUpMarkets: boolean;   // refill buffer when market return is positive
-}
-
 // ── Spouse config ──
 export interface SpouseConfig {
   enabled: boolean;
@@ -264,9 +257,6 @@ export interface ScenarioInput {
 
   // Roth conversions
   rothConversion: RothConversion;
-
-  // Cash buffer
-  cashBuffer: CashBufferConfig;
 
   // Spouse
   spouse: SpouseConfig;

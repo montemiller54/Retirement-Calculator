@@ -329,30 +329,6 @@ describe('Miscellaneous controls (isolated)', () => {
     expect(Math.abs(none.medianEnding - high.medianEnding)).toBeGreaterThan(MIN_MEDIAN_MOVE);
   });
 
-  it('cashBuffer.yearsOfExpenses alone moves median (when enabled)', () => {
-    // Need a scenario where cash buffer mechanics actually bite (lots of
-    // spending pressure with growth assets). Bigger gap between sizes.
-    const base: Partial<ScenarioInput> = {
-      currentAge: 65, retirementAge: 65, endAge: 95, jobs: [],
-      balances: { traditional401k: 500000, roth401k: 0, traditionalIRA: 0, rothIRA: 300000, taxable: 200000, hsa: 0, cashAccount: 200000, otherAssets: 0 },
-      baseAnnualSpending: 5500, socialSecurityBenefit: 2000,
-    };
-    const small = run({ ...base, cashBuffer: { enabled: true, yearsOfExpenses: 0.5, refillInUpMarkets: true } });
-    const big   = run({ ...base, cashBuffer: { enabled: true, yearsOfExpenses: 10,  refillInUpMarkets: true } });
-    expect(Math.abs(small.medianEnding - big.medianEnding)).toBeGreaterThan(MIN_MEDIAN_MOVE);
-  });
-
-  it('cashBuffer.refillInUpMarkets alone changes outcome', () => {
-    const base: Partial<ScenarioInput> = {
-      currentAge: 65, retirementAge: 65, endAge: 90, jobs: [],
-      balances: { traditional401k: 300000, roth401k: 0, traditionalIRA: 0, rothIRA: 100000, taxable: 100000, hsa: 0, cashAccount: 150000, otherAssets: 0 },
-      baseAnnualSpending: 4500, socialSecurityBenefit: 2000,
-    };
-    const noRefill = run({ ...base, cashBuffer: { enabled: true, yearsOfExpenses: 3, refillInUpMarkets: false } });
-    const refill   = run({ ...base, cashBuffer: { enabled: true, yearsOfExpenses: 3, refillInUpMarkets: true } });
-    expect(Math.abs(noRefill.medianEnding - refill.medianEnding)).toBeGreaterThan(MIN_MEDIAN_MOVE);
-  });
-
   it('ruleof55Eligible alone moves median (early retiree with traditional)', () => {
     const early: Partial<ScenarioInput> = {
       currentAge: 55, retirementAge: 55, endAge: 90,

@@ -75,7 +75,6 @@ function strippedScenario(opts: {
     oneTimeExpenses: [],
     healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false },
     guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
-    cashBuffer: { ...DEFAULT_SCENARIO.cashBuffer, enabled: false },
     rothConversion: { ...DEFAULT_SCENARIO.rothConversion, enabled: false },
     spouse: { ...DEFAULT_SCENARIO.spouse, enabled: false },
     housing: { ...DEFAULT_SCENARIO.housing, enabled: false },
@@ -209,7 +208,6 @@ describe('Depletion invariant', () => {
       oneTimeExpenses: [],
       healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false }, // HSA never drained for medical
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
-      cashBuffer: { ...DEFAULT_SCENARIO.cashBuffer, enabled: false },
       rothConversion: { ...DEFAULT_SCENARIO.rothConversion, enabled: false },
       spouse: { ...DEFAULT_SCENARIO.spouse, enabled: false },
       housing: { ...DEFAULT_SCENARIO.housing, enabled: false },

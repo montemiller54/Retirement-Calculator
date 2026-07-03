@@ -22,7 +22,6 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
   const ve = validationErrors;
   const rc = scenario.rothConversion;
   const g = scenario.guardrails;
-  const cb = scenario.cashBuffer;
 
   const addTier = () => {
     const newTier: GuardrailTier = { drawdownPct: 20, spendingCutPct: 10 };
@@ -215,44 +214,6 @@ export function WithdrawalStrategyCard({ validationErrors }: CardProps) {
               ))}
 
               <button className="text-xs text-primary-600 dark:text-primary-400 hover:underline" onClick={addTier}>+ Add tier</button>
-            </div>
-          )}
-        </div>
-      </Section>
-
-      {/* ── Emergency Cash Reserve ── */}
-      <Section
-        title="Emergency Cash Reserve"
-        description="Keep a cash reserve so you don't have to sell investments when the market is down."
-      >
-        <div className="space-y-3">
-          <div className="flex items-center gap-1">
-            <Toggle
-              checked={cb.enabled}
-              onChange={v => setField('cashBuffer.enabled', v)}
-              label="Enable cash reserve"
-            />
-            <InfoTip text="Keeps a cash reserve equal to several years of expenses so you don't have to sell investments at a loss during market downturns." />
-          </div>
-
-          {cb.enabled && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs max-w-[20rem]">
-                <span>Years of expenses</span>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="range" className="w-24" min={1} max={5} step={1}
-                    value={cb.yearsOfExpenses}
-                    onChange={e => setField('cashBuffer.yearsOfExpenses', parseInt(e.target.value))}
-                  />
-                  <span className="font-semibold text-primary-600 dark:text-primary-400 w-4 text-right">{cb.yearsOfExpenses}</span>
-                </div>
-              </div>
-
-              <label className="flex items-center gap-2 text-xs cursor-pointer">
-                <input type="checkbox" checked={cb.refillInUpMarkets} onChange={e => setField('cashBuffer.refillInUpMarkets', e.target.checked)} className="accent-primary-600" />
-                Refill buffer in up markets
-              </label>
             </div>
           )}
         </div>

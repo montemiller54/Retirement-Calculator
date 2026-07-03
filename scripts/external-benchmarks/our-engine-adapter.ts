@@ -19,7 +19,6 @@ const OFF_GUARDRAILS = { ...DEFAULT_SCENARIO.guardrails, enabled: false };
 const ON_GUARDRAILS = { ...DEFAULT_SCENARIO.guardrails, enabled: true };
 const OFF_HEALTHCARE = { ...DEFAULT_SCENARIO.healthcare, enabled: false };
 const OFF_ROTH = { ...DEFAULT_SCENARIO.rothConversion, enabled: false };
-const OFF_BUFFER = { ...DEFAULT_SCENARIO.cashBuffer, enabled: false };
 
 function alloc(stocks: number, bonds: number): AssetAllocation {
   return { stocks: stocks * 100, bonds: bonds * 100, cash: 0, crypto: 0 };
@@ -54,7 +53,6 @@ function buildScenario(s: ExternalScenario, guardrailsOn = false): ScenarioInput
     guardrails: guardrailsOn ? ON_GUARDRAILS : OFF_GUARDRAILS,
     healthcare: OFF_HEALTHCARE,
     rothConversion: OFF_ROTH,
-    cashBuffer: OFF_BUFFER,
     balances: { ...zeroBalances(), taxable: s.initialBalance },
     taxableCostBasisPct: 1.0, // all basis → no cap gains drag
     investments: {

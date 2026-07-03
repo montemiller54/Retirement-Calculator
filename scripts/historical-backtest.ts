@@ -26,7 +26,6 @@ function scenario(overrides: Partial<ScenarioInput>): ScenarioInput {
 const OFF_GUARDRAILS = { ...DEFAULT_SCENARIO.guardrails, enabled: false };
 const OFF_HEALTHCARE = { ...DEFAULT_SCENARIO.healthcare, enabled: false };
 const OFF_ROTH = { ...DEFAULT_SCENARIO.rothConversion, enabled: false };
-const OFF_BUFFER = { ...DEFAULT_SCENARIO.cashBuffer, enabled: false };
 function zeroBalances() {
   return {
     traditional401k: 0, roth401k: 0,
@@ -228,7 +227,6 @@ function ourMonteCarlo(
     guardrails: OFF_GUARDRAILS,
     healthcare: OFF_HEALTHCARE,
     rothConversion: OFF_ROTH,
-    cashBuffer: OFF_BUFFER,
     balances: { ...zeroBalances(), taxable: startingBalance },
     taxableCostBasisPct: 1.0,
     investments: {

@@ -10,7 +10,6 @@ function makeScenario(overrides: Partial<ScenarioInput> = {}): ScenarioInput {
 const DISABLED_GUARDRAILS = { ...DEFAULT_SCENARIO.guardrails, enabled: false };
 const DISABLED_HEALTHCARE = { ...DEFAULT_SCENARIO.healthcare, enabled: false };
 const DISABLED_ROTH = { ...DEFAULT_SCENARIO.rothConversion, enabled: false };
-const DISABLED_BUFFER = { ...DEFAULT_SCENARIO.cashBuffer, enabled: false };
 
 describe('Spouse config', () => {
   it('disabled spouse has no effect on simulation', () => {
@@ -23,7 +22,6 @@ describe('Spouse config', () => {
       guardrails: DISABLED_GUARDRAILS,
       healthcare: DISABLED_HEALTHCARE,
       rothConversion: DISABLED_ROTH,
-      cashBuffer: DISABLED_BUFFER,
       balances: { ...DEFAULT_SCENARIO.balances, taxable: 500000 },
     };
 
@@ -60,7 +58,6 @@ describe('Spouse config', () => {
       guardrails: DISABLED_GUARDRAILS,
       healthcare: DISABLED_HEALTHCARE,
       rothConversion: DISABLED_ROTH,
-      cashBuffer: DISABLED_BUFFER,
       spouse: sp,
       balances: { ...DEFAULT_SCENARIO.balances, taxable: 500000 },
     });
@@ -88,7 +85,6 @@ describe('Spouse config', () => {
       guardrails: DISABLED_GUARDRAILS,
       healthcare: DISABLED_HEALTHCARE,
       rothConversion: DISABLED_ROTH,
-      cashBuffer: DISABLED_BUFFER,
       spouse: sp,
       balances: { ...DEFAULT_SCENARIO.balances, traditional401k: 500000, rothIRA: 200000, taxable: 300000 },
     });
@@ -121,7 +117,6 @@ describe('Spouse income (owner-aware jobs)', () => {
       guardrails: DISABLED_GUARDRAILS,
       healthcare: DISABLED_HEALTHCARE,
       rothConversion: DISABLED_ROTH,
-      cashBuffer: DISABLED_BUFFER,
       jobs: [
         { id: 'p1', name: 'Primary', owner: 'primary', monthlyPay: 6000,
           startAge: 55, endAge: 65, has401k: true,
@@ -243,7 +238,6 @@ describe('Spouse income (owner-aware jobs)', () => {
         guardrails: DISABLED_GUARDRAILS,
         healthcare: DISABLED_HEALTHCARE,
         rothConversion: DISABLED_ROTH,
-        cashBuffer: DISABLED_BUFFER,
         spouse: makeSp(),
         jobs: [
           { id: 's1', name: 'Spouse', owner: 'spouse', monthlyPay: spouseMonthlyPay,
