@@ -33,6 +33,17 @@ export const DEFAULT_VOLATILITY: Record<AssetClass, number> = {
 // ── Return outlook presets ──
 // Each preset specifies the mean return per asset class and the crash frequency.
 // Volatility is NOT part of the preset — it stays at DEFAULT_VOLATILITY.
+//
+// Anchor: the default ("Historical") preset targets long-run US historical
+// arithmetic averages — stocks ~10% nominal (S&P 500 1926–2024), intermediate
+// treasuries ~4.5%, cash ~3%. Crash frequency 5.5 → ~18% bear years, matching
+// the historical share of down-regime years. This calibration puts our results
+// in line with mainstream calculators (FIRECalc, cFIREsim, Portfolio Visualizer,
+// Fidelity) that also anchor on historical returns.
+//
+// "Cautious" is a forward-looking preset for users who expect the next few
+// decades to underperform history (Vanguard CMA-style ~7–8% stocks, plus a
+// slightly elevated crash frequency). "Bullish" assumes above-history returns.
 export interface ReturnOutlookPreset {
   means: Record<AssetClass, number>;
   crashFrequency: number;
@@ -40,23 +51,23 @@ export interface ReturnOutlookPreset {
 
 export const RETURN_OUTLOOK_PRESETS: Record<ReturnOutlook, ReturnOutlookPreset> = {
   conservative: {
-    means: { stocks: 0.07, bonds: 0.03, cash: 0.015, crypto: 0.05 },
+    means: { stocks: 0.08, bonds: 0.035, cash: 0.02, crypto: 0.06 },
     crashFrequency: 6.5,
   },
   moderate: {
-    means: { stocks: 0.085, bonds: 0.04, cash: 0.025, crypto: 0.10 },
+    means: { stocks: 0.10, bonds: 0.045, cash: 0.03, crypto: 0.12 },
     crashFrequency: 5.5,
   },
   optimistic: {
-    means: { stocks: 0.10, bonds: 0.05, cash: 0.035, crypto: 0.15 },
+    means: { stocks: 0.115, bonds: 0.055, cash: 0.04, crypto: 0.18 },
     crashFrequency: 4.5,
   },
 };
 
 export const RETURN_OUTLOOK_LABELS: Record<ReturnOutlook, string> = {
-  conservative: 'Conservative',
-  moderate: 'Moderate',
-  optimistic: 'Optimistic',
+  conservative: 'Cautious',
+  moderate: 'Historical',
+  optimistic: 'Bullish',
 };
 
 // Bull-regime correlation matrix (Stocks, Bonds, Cash, Crypto)

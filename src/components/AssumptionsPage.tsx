@@ -85,7 +85,7 @@ export function AssumptionsPage() {
           <li>Returns are clamped at −100% (an asset cannot lose more than its full value).</li>
           <li><strong>Regime-dependent correlations</strong>: in bear markets, stock-bond correlation strengthens to −0.35 (flight to quality) and stock-crypto correlation tightens from 0.30 to 0.50 (risk-off selling). Bonds also receive a mean boost in bear years (6.5% vs 4.0%) reflecting rate cuts.</li>
           <li>Regime switching applies only to stocks and crypto. Bonds and cash always use Gaussian distributions (vol 6% and 1% respectively).</li>
-          <li>Default returns (nominal): Stocks 10% / 16% vol, Bonds 4% / 6% vol, Cash 2.5% / 1% vol, Crypto 15% / 50% vol.</li>
+          <li>Default returns (nominal, "Historical" preset): Stocks 10% / 16% vol, Bonds 4.5% / 6% vol, Cash 3% / 1% vol, Crypto 12% / 50% vol. Anchored on long-run US historical arithmetic averages (S&P 500 1926–2024, intermediate treasuries).</li>
           <li>Returns are generated via Cholesky decomposition of the regime-appropriate correlation matrix, producing properly correlated draws across all four asset classes.</li>
           <li>Returns are applied annually. No intra-year rebalancing.</li>
         </ul>
@@ -94,7 +94,7 @@ export function AssumptionsPage() {
       {/* ── Return Outlook Presets ── */}
       <section className="space-y-2">
         <h3 className="font-semibold text-sm">Return Outlook Presets</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">Three preset outlooks let you stress-test results without editing individual asset means. Each preset adjusts mean returns and bear-market frequency together.</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">Three preset outlooks control the mean returns and bear-market frequency. The default "Historical" preset targets long-run US arithmetic averages; "Cautious" is a forward-looking view for those expecting weaker returns; "Bullish" assumes above-history returns.</p>
         <div className="ml-4 mt-1">
           <table className="text-xs text-gray-600 dark:text-gray-400 border-collapse">
             <thead>
@@ -108,9 +108,9 @@ export function AssumptionsPage() {
               </tr>
             </thead>
             <tbody>
-              <tr><td className="pr-4 py-0.5">Conservative</td><td className="text-right pr-4">7%</td><td className="text-right pr-4">3%</td><td className="text-right pr-4">1.5%</td><td className="text-right pr-4">5%</td><td className="text-right">6.5</td></tr>
-              <tr><td className="pr-4 py-0.5">Moderate (default)</td><td className="text-right pr-4">8.5%</td><td className="text-right pr-4">4%</td><td className="text-right pr-4">2.5%</td><td className="text-right pr-4">10%</td><td className="text-right">5.5</td></tr>
-              <tr><td className="pr-4 py-0.5">Optimistic</td><td className="text-right pr-4">10%</td><td className="text-right pr-4">5%</td><td className="text-right pr-4">3.5%</td><td className="text-right pr-4">15%</td><td className="text-right">4.5</td></tr>
+              <tr><td className="pr-4 py-0.5">Cautious</td><td className="text-right pr-4">8%</td><td className="text-right pr-4">3.5%</td><td className="text-right pr-4">2%</td><td className="text-right pr-4">6%</td><td className="text-right">6.5</td></tr>
+              <tr><td className="pr-4 py-0.5">Historical (default)</td><td className="text-right pr-4">10%</td><td className="text-right pr-4">4.5%</td><td className="text-right pr-4">3%</td><td className="text-right pr-4">12%</td><td className="text-right">5.5</td></tr>
+              <tr><td className="pr-4 py-0.5">Bullish</td><td className="text-right pr-4">11.5%</td><td className="text-right pr-4">5.5%</td><td className="text-right pr-4">4%</td><td className="text-right pr-4">18%</td><td className="text-right">4.5</td></tr>
             </tbody>
           </table>
         </div>
