@@ -137,9 +137,11 @@ describe('Accumulation phase logic', () => {
     const result = runSimulation(DEFAULT_SCENARIO, { numSimulations: 1, seed: 42 });
     for (const yr of result.medianPath) {
       const totalContribs = ACCOUNT_TYPES.reduce((s, a) => s + yr.contributions[a], 0);
-      // Default job endAge = retirementAge = 65, so contributions happen through age 65
+      // A regular job ends at retirementAge (person is retired that year, no salary),
+      // so contributions happen from startAge through retirementAge - 1.
       const defaultJob = DEFAULT_SCENARIO.jobs[0];
-      if (yr.age >= defaultJob.startAge && yr.age <= defaultJob.endAge) {
+      const lastWorkingAge = Math.min(defaultJob.endAge, DEFAULT_SCENARIO.retirementAge - 1);
+      if (yr.age >= defaultJob.startAge && yr.age <= lastWorkingAge) {
         expect(totalContribs).toBeGreaterThan(0);
       } else {
         expect(totalContribs).toBe(0);

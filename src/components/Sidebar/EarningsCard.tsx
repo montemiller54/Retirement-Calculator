@@ -83,9 +83,14 @@ export function EarningsCard({ validationErrors }: CardProps) {
   const spouseEnabled = scenario.spouse?.enabled ?? false;
   const spouseAge = spouseEnabled ? scenario.spouse.currentAge : 0;
   const ownerCurrentAge = (owner: JobOwner) => (owner === 'spouse' ? spouseAge : scenario.currentAge);
+  const ownerRetireAge = (owner: JobOwner) =>
+    owner === 'spouse' && spouseEnabled ? scenario.spouse.retirementAge : scenario.retirementAge;
   const activeJobs = jobs.filter(j => {
     const age = ownerCurrentAge(j.owner);
-    return age >= j.startAge && age <= j.endAge;
+    const retAge = ownerRetireAge(j.owner);
+    const isPostRetirementGig = j.startAge >= retAge;
+    const effectiveEnd = isPostRetirementGig ? j.endAge : Math.min(j.endAge, retAge - 1);
+    return age >= j.startAge && age <= effectiveEnd;
   });
   const totalMonthly = activeJobs.reduce((sum, j) => sum + j.monthlyPay, 0);
   const totalYearly = totalMonthly * 12;
@@ -100,7 +105,15 @@ export function EarningsCard({ validationErrors }: CardProps) {
         <div className="space-y-3">
           {jobs.map(job => {
             const ownerAge = ownerCurrentAge(job.owner);
-            const isActive = ownerAge >= job.startAge && ownerAge <= job.endAge;
+            const ownerRetirementAge = job.owner === 'spouse' && spouseEnabled
+              ? scenario.spouse.retirementAge
+              : scenario.retirementAge;
+            const isPostRetirementGig = job.startAge >= ownerRetirementAge;
+            const effectiveEndAge = isPostRetirementGig
+              ? job.endAge
+              : Math.min(job.endAge, ownerRetirementAge - 1);
+            const cappedByRetirement = !isPostRetirementGig && job.endAge >= ownerRetirementAge;
+            const isActive = ownerAge >= job.startAge && ownerAge <= effectiveEndAge;
             return (
               <div
                 key={job.id}
@@ -171,6 +184,11 @@ export function EarningsCard({ validationErrors }: CardProps) {
                   </Field>
                 </div>
                 <FieldError errors={ve} field={`job.${job.id}`} />
+                {cappedByRetirement && (
+                  <p className="mt-1 text-[0.6875rem] text-gray-500 dark:text-gray-400">
+                    Ends at retirement — last salary at age {ownerRetirementAge - 1}.
+                  </p>
+                )}
 
                 <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/50 space-y-2">
                   <label className="inline-flex items-center gap-2 text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer">

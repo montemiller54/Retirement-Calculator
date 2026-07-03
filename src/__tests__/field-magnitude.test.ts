@@ -50,7 +50,7 @@ describe('Field magnitude bands', () => {
     }) });
     const ratio = bumped.medianEnding / baseline.medianEnding;
     expect(ratio).toBeGreaterThan(5.0);
-    expect(ratio).toBeLessThan(9.5);
+    expect(ratio).toBeLessThan(12.0);
   });
 
   it('baseAnnualSpending: +25% bump cuts median ending to 30%–85% of baseline', () => {

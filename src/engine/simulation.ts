@@ -224,25 +224,31 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
 
     // ── Income from jobs (per owner) ──
     // Each job is active when its owner's age falls within its own window.
-    // The owner's retirementAge does NOT auto-cap a job — the user controls
-    // each job's endAge directly (so post-retirement gigs work too).
+    // A regular job ends at the owner's retirementAge (retiring at N means the
+    // person is retired starting the year they turn N — no salary that year).
+    // Explicit post-retirement gigs (startAge >= retirementAge) are honored.
     let primarySalary = 0;
     let spouseSalary = 0;
     const activeJobs: typeof s.jobs = [];
     for (const job of (s.jobs ?? [])) {
       let ownerAge: number;
+      let ownerRetirementAge: number;
       if (job.owner === 'spouse') {
         if (!sp?.enabled || spouseAge === null) continue;
         ownerAge = spouseAge;
+        ownerRetirementAge = sp.retirementAge;
       } else {
         ownerAge = age;
+        ownerRetirementAge = s.retirementAge;
       }
-      if (ownerAge >= job.startAge && ownerAge <= job.endAge) {
-        const jobSalary = job.monthlyPay * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
-        if (job.owner === 'spouse') spouseSalary += jobSalary;
-        else primarySalary += jobSalary;
-        activeJobs.push(job);
-      }
+      if (ownerAge < job.startAge || ownerAge > job.endAge) continue;
+      // Cap regular jobs at retirement; allow explicit post-retirement gigs.
+      const isPostRetirementGig = job.startAge >= ownerRetirementAge;
+      if (!isPostRetirementGig && ownerAge >= ownerRetirementAge) continue;
+      const jobSalary = job.monthlyPay * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
+      if (job.owner === 'spouse') spouseSalary += jobSalary;
+      else primarySalary += jobSalary;
+      activeJobs.push(job);
     }
     const salary = primarySalary + spouseSalary;
 
@@ -740,11 +746,15 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     }
 
     // ── Cash buffer refill in up markets ──
+    // Only refill from taxable and otherAssets — transferring from tax-deferred
+    // or Roth accounts would be an untaxed distribution masquerading as an
+    // internal transfer. If those two sources can't cover the deficit, the
+    // buffer stays low and the normal (taxed) withdrawal path handles it next year.
     if (isRetired && !depleted && s.cashBuffer?.enabled && s.cashBuffer.refillInUpMarkets && portfolioReturnSignal >= 0) {
       const targetBuffer = s.cashBuffer.yearsOfExpenses * spending;
       const deficit = targetBuffer - balances.cashAccount;
       if (deficit > 0) {
-        const refillOrder: AccountType[] = ['taxable', 'otherAssets', 'traditional401k', 'traditionalIRA', 'roth401k', 'rothIRA'];
+        const refillOrder: AccountType[] = ['taxable', 'otherAssets'];
         let remaining = deficit;
         for (const acct of refillOrder) {
           if (remaining <= 0) break;
