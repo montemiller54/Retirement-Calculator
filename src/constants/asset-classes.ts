@@ -35,11 +35,14 @@ export const DEFAULT_VOLATILITY: Record<AssetClass, number> = {
 // Volatility is NOT part of the preset — it stays at DEFAULT_VOLATILITY.
 //
 // Anchor: the default ("Historical") preset targets long-run US historical
-// arithmetic averages — stocks ~10% nominal (S&P 500 1926–2024), intermediate
-// treasuries ~4.5%, cash ~3%. Crash frequency 5.5 → ~18% bear years, matching
-// the historical share of down-regime years. This calibration puts our results
-// in line with mainstream calculators (FIRECalc, cFIREsim, Portfolio Visualizer,
-// Fidelity) that also anchor on historical returns.
+// arithmetic averages, discounted slightly for elevated current valuations —
+// stocks 9% nominal (vs S&P 500 1926–2024 arithmetic mean ~10–10.5%),
+// intermediate treasuries ~4.5%, cash ~3%. Crash frequency 5.5 → ~18% bear
+// years, matching the historical share of down-regime years. With 16% stock
+// vol, the implied realized CAGR is roughly 9% − (0.16²/2) ≈ 7.7% nominal.
+// This calibration puts our results in line with mainstream calculators
+// (FIRECalc, cFIREsim, Portfolio Visualizer, Fidelity) while incorporating a
+// modest forward-looking haircut.
 //
 // "Cautious" is a forward-looking preset for users who expect the next few
 // decades to underperform history (Vanguard CMA-style ~7–8% stocks, plus a
@@ -55,7 +58,7 @@ export const RETURN_OUTLOOK_PRESETS: Record<ReturnOutlook, ReturnOutlookPreset> 
     crashFrequency: 6.5,
   },
   moderate: {
-    means: { stocks: 0.10, bonds: 0.045, cash: 0.03, crypto: 0.12 },
+    means: { stocks: 0.09, bonds: 0.045, cash: 0.03, crypto: 0.12 },
     crashFrequency: 5.5,
   },
   optimistic: {
