@@ -34,19 +34,26 @@ export const DEFAULT_VOLATILITY: Record<AssetClass, number> = {
 // Each preset specifies the mean return per asset class and the crash frequency.
 // Volatility is NOT part of the preset — it stays at DEFAULT_VOLATILITY.
 //
-// Anchor: the default ("Historical") preset targets long-run US historical
-// arithmetic averages, discounted slightly for elevated current valuations —
-// stocks 9% nominal (vs S&P 500 1926–2024 arithmetic mean ~10–10.5%),
-// intermediate treasuries ~4.5%, cash ~3%. Crash frequency 5.5 → ~18% bear
-// years, matching the historical share of down-regime years. With 16% stock
-// vol, the implied realized CAGR is roughly 9% − (0.16²/2) ≈ 7.7% nominal.
-// This calibration puts our results in line with mainstream calculators
-// (FIRECalc, cFIREsim, Portfolio Visualizer, Fidelity) while incorporating a
-// modest forward-looking haircut.
+// Presets tell coherent macro stories anchored on 20-year rolling US history
+// (1926–2024), nominal, intermediate Treasuries + T-bills:
 //
-// "Cautious" is a forward-looking preset for users who expect the next few
-// decades to underperform history (Vanguard CMA-style ~7–8% stocks, plus a
-// slightly elevated crash frequency). "Bullish" assumes above-history returns.
+//   • "Historical" (default) matches the full-period long-run averages: stocks
+//     ~9%, bonds ~4.5%, cash ~3%. Slight haircut vs the 10.4% S&P CAGR for
+//     today's elevated valuations.
+//
+//   • "Bullish" reflects sustained stock bulls (1942–61, 1980–99): stocks 11%,
+//     bonds 5%, cash 3.5%. Fixed income is at long-run average or slightly
+//     above because stock bulls generally coincide with functioning markets.
+//
+//   • "Cautious" reflects stock-poor eras (1929–48, 1962–81, 2000–19): stocks
+//     6%, bonds 4%, cash 2.5%. Bonds stay near their long-run mean because
+//     bond returns over 20-year windows track starting yields, not stock
+//     performance. The stock/bond "hedging" happens as stocks fall toward
+//     bonds, not as bonds rise above their normal range.
+//
+// Short-term flight-to-quality (bonds rally when stocks crash within a bear
+// year) is handled separately by the regime engine's bear-year bond mean boost
+// (see BEAR_REGIME_BOND_MEAN in engine/math.ts).
 export interface ReturnOutlookPreset {
   means: Record<AssetClass, number>;
   crashFrequency: number;
@@ -54,7 +61,7 @@ export interface ReturnOutlookPreset {
 
 export const RETURN_OUTLOOK_PRESETS: Record<ReturnOutlook, ReturnOutlookPreset> = {
   conservative: {
-    means: { stocks: 0.08, bonds: 0.035, cash: 0.02, crypto: 0.06 },
+    means: { stocks: 0.06, bonds: 0.04, cash: 0.025, crypto: 0.06 },
     crashFrequency: 6.5,
   },
   moderate: {
@@ -62,7 +69,7 @@ export const RETURN_OUTLOOK_PRESETS: Record<ReturnOutlook, ReturnOutlookPreset> 
     crashFrequency: 5.5,
   },
   optimistic: {
-    means: { stocks: 0.115, bonds: 0.055, cash: 0.04, crypto: 0.18 },
+    means: { stocks: 0.11, bonds: 0.05, cash: 0.035, crypto: 0.15 },
     crashFrequency: 4.5,
   },
 };

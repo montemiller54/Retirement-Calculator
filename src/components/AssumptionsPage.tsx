@@ -94,7 +94,7 @@ export function AssumptionsPage() {
       {/* ── Return Outlook Presets ── */}
       <section className="space-y-2">
         <h3 className="font-semibold text-sm">Return Outlook Presets</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">Three preset outlooks control the mean returns and bear-market frequency. The default "Historical" preset targets long-run US arithmetic averages; "Cautious" is a forward-looking view for those expecting weaker returns; "Bullish" assumes above-history returns.</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">Three preset outlooks tell coherent macro stories anchored on 20-year rolling US history (1926–2024). <strong>Historical</strong> matches the full-period long-run averages. <strong>Bullish</strong> reflects sustained stock bulls like 1942–61 and 1980–99. <strong>Cautious</strong> reflects stock-poor eras like 1929–48, 1962–81, and 2000–19 — where bonds stay near their long-run mean because their 20-year returns track starting yields, not stock performance.</p>
         <div className="ml-4 mt-1">
           <table className="text-xs text-gray-600 dark:text-gray-400 border-collapse">
             <thead>
@@ -108,9 +108,9 @@ export function AssumptionsPage() {
               </tr>
             </thead>
             <tbody>
-              <tr><td className="pr-4 py-0.5">Cautious</td><td className="text-right pr-4">8%</td><td className="text-right pr-4">3.5%</td><td className="text-right pr-4">2%</td><td className="text-right pr-4">6%</td><td className="text-right">6.5</td></tr>
+              <tr><td className="pr-4 py-0.5">Cautious</td><td className="text-right pr-4">6%</td><td className="text-right pr-4">4%</td><td className="text-right pr-4">2.5%</td><td className="text-right pr-4">6%</td><td className="text-right">6.5</td></tr>
               <tr><td className="pr-4 py-0.5">Historical (default)</td><td className="text-right pr-4">9%</td><td className="text-right pr-4">4.5%</td><td className="text-right pr-4">3%</td><td className="text-right pr-4">12%</td><td className="text-right">5.5</td></tr>
-              <tr><td className="pr-4 py-0.5">Bullish</td><td className="text-right pr-4">11.5%</td><td className="text-right pr-4">5.5%</td><td className="text-right pr-4">4%</td><td className="text-right pr-4">18%</td><td className="text-right">4.5</td></tr>
+              <tr><td className="pr-4 py-0.5">Bullish</td><td className="text-right pr-4">11%</td><td className="text-right pr-4">5%</td><td className="text-right pr-4">3.5%</td><td className="text-right pr-4">15%</td><td className="text-right">4.5</td></tr>
             </tbody>
           </table>
         </div>
