@@ -166,6 +166,10 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
                 </Field>
               </div>
 
+              <p className="text-[0.6875rem] text-gray-500 dark:text-gray-400 italic leading-snug">
+                All amounts are added on top of base spending — base spending does not shrink in late life. For long-term care, enter the <strong>incremental</strong> cost above what you'd otherwise spend (facility cost minus the housing, food, utilities, and other household expenses that go away when in care), not the gross facility bill. A couple with one spouse in a facility might net ~$5–6k/mo incremental; both spouses in care ~$10–12k/mo.
+              </p>
+
               <div className="pt-2">
                 <PctSlider
                   label="Medical Inflation"

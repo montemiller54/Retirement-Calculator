@@ -20,11 +20,15 @@ function AppInner() {
 
   const validationErrors = validateScenario(scenario);
 
-  // Auto-navigate to results when simulation completes
+  // Auto-navigate to results only on the FIRST successful run.
+  // Subsequent recalculations keep the user on their current card — the
+  // PlanStatusStrip and charts update in place.
   const wasRunning = useRef(false);
+  const hasNavigatedToResults = useRef(false);
   useEffect(() => {
-    if (wasRunning.current && !isRunning && result) {
+    if (wasRunning.current && !isRunning && result && !hasNavigatedToResults.current) {
       setView({ kind: 'results', sectionId: 'plan' });
+      hasNavigatedToResults.current = true;
     }
     wasRunning.current = isRunning;
   }, [isRunning, result]);
