@@ -144,11 +144,13 @@ export function AssumptionsPage() {
       {/* ── Withdrawals & RMDs ── */}
       <section className="space-y-2">
         <h3 className="font-semibold text-sm">Withdrawals &amp; Required Minimum Distributions</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">Three withdrawal strategies are available:</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Three withdrawal strategies are available. In all three, HSA is reserved for qualified medical expenses and is not part of the general spending order.
+        </p>
         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4">
-          <li><strong>Tax-Efficient</strong> (default): Cash → Other Assets → Taxable → HSA → Trad 401(k) → Trad IRA → Roth 401(k) → Roth IRA. Depletes taxable accounts first and preserves tax-free Roth growth.</li>
-          <li><strong>Roth-Preserving</strong>: same ordering as Tax-Efficient — taxable and pre-tax balances are drained before any Roth — but labeled separately to make the intent explicit.</li>
-          <li><strong>Pro-Rata</strong>: withdraws proportionally from every account based on balance. Spreads tax impact and asset allocation drift evenly.</li>
+          <li><strong>Tax-Efficient</strong> (default): bracket-aware. Cash → Other Assets → Traditional (up to the top of the 12% bracket) → Taxable brokerage → Traditional (above the bracket) → Roth 401(k) → Roth IRA. Fills the low ordinary-income bracket with pre-tax dollars, then falls back to LTCG-taxed dollars before pushing into higher brackets, preserving Roth for last.</li>
+          <li><strong>Roth-Preserving</strong>: Cash → Other Assets → Traditional 401(k) → Traditional IRA → Taxable → Roth 401(k) → Roth IRA. Drains pre-tax accounts aggressively regardless of bracket, to shrink future RMDs and let Roth compound tax-free for as many years as possible.</li>
+          <li><strong>Pro-Rata</strong>: withdraws proportionally from every non-HSA account based on current balance. Spreads tax impact and account-mix drift evenly across the horizon.</li>
         </ul>
         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4 mt-1">
           <li><strong>RMDs</strong> begin at age 73 (SECURE 2.0). Formula: prior-year-end balance ÷ IRS Uniform Lifetime Table divisor. RMDs above current spending are taxed and reinvested in the taxable account.</li>
