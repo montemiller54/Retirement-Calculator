@@ -235,27 +235,41 @@ describe('HIGH IMPACT: Investment Assumptions', () => {
 });
 
 describe('HIGH IMPACT: Withdrawal Strategy', () => {
-  it('#37 different strategies produce different ending balances', () => {
-    // Use a scenario with mixed account types so strategy matters
+  it('#37 all three strategies produce materially different ending balances', () => {
+    // Spending above the HoH 12% bracket ceiling but survivable for 25 years,
+    // so bracket-aware taxEfficient visibly diverges from rothPreserving without
+    // any strategy depleting the portfolio.
     const base: Partial<ScenarioInput> = {
-      currentAge: 65,
-      retirementAge: 65,
-      endAge: 90,
+      currentAge: 60,
+      retirementAge: 60,
+      endAge: 85,
       balances: {
-        traditional401k: 400000, roth401k: 0, traditionalIRA: 100000,
-        rothIRA: 200000, taxable: 100000, hsa: 0,
+        traditional401k: 1200000, roth401k: 0, traditionalIRA: 200000,
+        rothIRA: 400000, taxable: 400000, hsa: 0,
         cashAccount: 0, otherAssets: 0,
       },
-      baseAnnualSpending: 4000,
-      socialSecurityBenefit: 2000,
-      socialSecurityClaimAge: 67,
+      baseAnnualSpending: 7500, // monthly → 90k/yr
+      socialSecurityBenefit: 0,
+      socialSecurityClaimAge: 70,
     };
     const taxEff = run({ ...base, withdrawalStrategy: 'taxEfficient' });
+    const rothPres = run({ ...base, withdrawalStrategy: 'rothPreserving' });
     const proRata = run({ ...base, withdrawalStrategy: 'proRata' });
+
     // Direction depends on the interplay of RMDs, SS tax torpedo, and account
-    // composition; what matters is the strategy is actually distinguishing
-    // the two paths, not that one universally dominates.
-    expect(Math.abs(taxEff.medianEnding - proRata.medianEnding)).toBeGreaterThan(10000);
+    // composition; what matters is that every strategy is actually distinguishing
+    // itself from every other strategy — not that one universally dominates.
+    const pairs: Array<[string, number, string, number]> = [
+      ['taxEfficient', taxEff.medianEnding, 'rothPreserving', rothPres.medianEnding],
+      ['taxEfficient', taxEff.medianEnding, 'proRata', proRata.medianEnding],
+      ['rothPreserving', rothPres.medianEnding, 'proRata', proRata.medianEnding],
+    ];
+    for (const [nameA, a, nameB, b] of pairs) {
+      expect(
+        Math.abs(a - b),
+        `${nameA} ($${Math.round(a)}) and ${nameB} ($${Math.round(b)}) medians too close — strategies may be coded identically`,
+      ).toBeGreaterThan(10000);
+    }
   });
 });
 

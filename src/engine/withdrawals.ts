@@ -10,6 +10,16 @@ export interface WithdrawalInput {
   priorYear401kBalance: number;
   priorYearIRABalance: number;
   taxableCostBasisPct: number;  // current cost basis / balance ratio
+  /**
+   * Gross traditional-account withdrawal (RMDs + voluntary) that keeps total
+   * ordinary income at or below the target bracket ceiling for the year
+   * (e.g. top of the 12% bracket + standard deduction, minus already-known
+   * ordinary income like wages, pension, taxable SS, and Roth conversions).
+   *
+   * Only used by the 'taxEfficient' strategy. When undefined, taxEfficient
+   * falls back to the legacy fixed order (taxable → traditional → Roth).
+   */
+  traditionalBracketFillLimit?: number;
 }
 
 export interface WithdrawalResult {
@@ -23,9 +33,15 @@ export interface WithdrawalResult {
 // HSA is intentionally excluded: it is reserved for qualified medical expenses
 // and is consumed by the healthcare-cost block in simulation.ts, not by general spending.
 const STRATEGY_ORDER: Record<WithdrawalStrategy, AccountType[]> = {
-  taxEfficient: ['cashAccount', 'otherAssets', 'taxable', 'traditional401k', 'traditionalIRA', 'roth401k', 'rothIRA'],
-  rothPreserving: ['cashAccount', 'otherAssets', 'taxable', 'traditional401k', 'traditionalIRA', 'roth401k', 'rothIRA'],
-  proRata: ['cashAccount', 'otherAssets', 'taxable', 'traditional401k', 'roth401k', 'traditionalIRA', 'rothIRA'],
+  // Conventional "tax-efficient" order: spend the lightest-taxed dollars first,
+  // spreading ordinary income across many years. Taxable (LTCG-taxed gains) → Traditional
+  // (ordinary income) → Roth (tax-free, preserved for last).
+  taxEfficient:   ['cashAccount', 'otherAssets', 'taxable', 'traditional401k', 'traditionalIRA', 'roth401k', 'rothIRA'],
+  // "Roth-preserving" / reverse-conventional: drain traditional first to shrink
+  // future RMDs and let Roth compound tax-free for as many years as possible.
+  // Trade-off: higher ordinary-income taxes in early retirement.
+  rothPreserving: ['cashAccount', 'otherAssets', 'traditional401k', 'traditionalIRA', 'taxable', 'roth401k', 'rothIRA'],
+  proRata:        ['cashAccount', 'otherAssets', 'taxable', 'traditional401k', 'roth401k', 'traditionalIRA', 'rothIRA'],
 };
 
 export function executeWithdrawals(input: WithdrawalInput): WithdrawalResult {
@@ -78,11 +94,57 @@ export function executeWithdrawals(input: WithdrawalInput): WithdrawalResult {
         remaining -= w;
       }
     }
+  } else if (strategy === 'taxEfficient' && input.traditionalBracketFillLimit !== undefined) {
+    // Bracket-aware tax-efficient withdrawal (Kitces-style bracket management):
+    //   1. cash & other assets first (effectively tax-free)
+    //   2. traditional up to the bracket-fill limit (fills low bracket with ordinary income)
+    //   3. taxable brokerage (LTCG, often at 0% or 15%)
+    //   4. more traditional (accepts higher bracket only after taxable is exhausted)
+    //   5. Roth 401k → Roth IRA (last resort — protects tax-free growth)
+    //
+    // The limit is the TOTAL traditional withdrawal that fits in the target
+    // bracket (RMDs count toward it), so we deduct RMDs already withdrawn.
+    const rmdAlreadyTaken = withdrawals.traditional401k + withdrawals.traditionalIRA;
+    let bracketBudget = Math.max(0, input.traditionalBracketFillLimit - rmdAlreadyTaken);
+
+    // Phase 1: cash / other assets
+    for (const acct of ['cashAccount', 'otherAssets'] as AccountType[]) {
+      if (remaining <= 0) break;
+      const available = balances[acct] - withdrawals[acct];
+      if (available <= 0) continue;
+      const w = Math.min(remaining, available);
+      withdrawals[acct] += w;
+      remaining -= w;
+    }
+
+    // Phase 2: traditional up to bracket cap
+    for (const acct of ['traditional401k', 'traditionalIRA'] as AccountType[]) {
+      if (remaining <= 0 || bracketBudget <= 0) break;
+      const available = balances[acct] - withdrawals[acct];
+      if (available <= 0) continue;
+      const w = Math.min(remaining, available, bracketBudget);
+      withdrawals[acct] += w;
+      remaining -= w;
+      bracketBudget -= w;
+    }
+
+    // Phases 3–5: taxable → more traditional (over-bracket) → Roth
+    const fallThrough: AccountType[] = [
+      'taxable',
+      'traditional401k', 'traditionalIRA',
+      'roth401k', 'rothIRA',
+    ];
+    for (const acct of fallThrough) {
+      if (remaining <= 0) break;
+      const available = balances[acct] - withdrawals[acct];
+      if (available <= 0) continue;
+      const w = Math.min(remaining, available);
+      withdrawals[acct] += w;
+      remaining -= w;
+    }
   } else {
     // Sequential withdrawal
-    const order = strategy === 'rothPreserving'
-      ? ['cashAccount', 'otherAssets', 'taxable', 'traditional401k', 'traditionalIRA', 'roth401k', 'rothIRA'] as AccountType[]
-      : STRATEGY_ORDER.taxEfficient;
+    const order = STRATEGY_ORDER[strategy];
 
     for (const acct of order) {
       if (remaining <= 0) break;

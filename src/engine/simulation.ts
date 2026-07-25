@@ -599,6 +599,44 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
       const incomeFromSources = socialSecurity + spouseSS + pension + otherIncome + netSalaryCash;
       let totalCashNeed = Math.max(0, spending - incomeFromSources);
 
+      // ── Bracket-fill limit for tax-efficient withdrawals ──
+      // Compute the total traditional withdrawal that would keep ordinary income at
+      // or below the top of the 12% bracket. Passed to executeWithdrawals so the
+      // tax-efficient strategy can cap early traditional draws at the low bracket,
+      // fall through to taxable, then accept higher brackets only if needed.
+      // (Only computed for taxEfficient; other strategies ignore the value.)
+      let traditionalBracketFillLimit: number | undefined;
+      if (s.withdrawalStrategy === 'taxEfficient') {
+        const idx = Math.pow(1 + (s.taxBracketInflationRate ?? 0), yearsFromNow);
+        const brackets = getFederalBrackets(s.filingStatus ?? 'hoh');
+        const stdDed = getStandardDeduction(s.filingStatus ?? 'hoh') * idx;
+        const ssThresh = getSSThresholds(s.filingStatus ?? 'hoh');
+
+        // Existing ordinary income excluding SS (wages, pension, other, Roth conv)
+        const wagesTaxable = (activeJobs.length > 0 && salary > 0) ? salary - employeePreTax401k - employeeHSA : salary;
+        const ordinaryExSS = wagesTaxable + pension + pensionLumpSumTaxable + otherIncome + rothConversionAmount;
+        // Estimate SS taxable portion (mirrors Roth conversion logic)
+        const totalSS = socialSecurity + spouseSS;
+        const provisionalIncome = ordinaryExSS + totalSS * 0.5;
+        let estSSTaxable = 0;
+        if (totalSS > 0 && provisionalIncome > ssThresh.low * idx) {
+          estSSTaxable = provisionalIncome > ssThresh.high * idx
+            ? 0.5 * (ssThresh.high * idx - ssThresh.low * idx) + 0.85 * (provisionalIncome - ssThresh.high * idx)
+            : 0.5 * (provisionalIncome - ssThresh.low * idx);
+          estSSTaxable = Math.max(0, Math.min(estSSTaxable, 0.85 * totalSS));
+        }
+        const existingOrdinary = ordinaryExSS + estSSTaxable;
+
+        // Top of 12% bracket for this filing status, indexed
+        let twelvePctCeiling = 0;
+        for (const b of brackets) {
+          if (b.rate === 0.12) { twelvePctCeiling = b.max * idx; break; }
+        }
+        // Traditional room = gross income needed to hit the ceiling
+        // = (12% bracket top on taxable income) + std deduction - existing ordinary
+        traditionalBracketFillLimit = Math.max(0, twelvePctCeiling + stdDed - existingOrdinary);
+      }
+
       if ((totalCashNeed > 0 || rothConversionAmount > 0) && !depleted) {
         // Save balance snapshot for iteration
         const balanceSnapshot = cloneBalances(balances);
@@ -621,6 +659,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
             priorYear401kBalance: priorYearEnd401k,
             priorYearIRABalance: priorYearEndIRA,
             taxableCostBasisPct: Math.min(1, Math.max(0, costBasisPct)),
+            traditionalBracketFillLimit,
           });
 
           for (const acct of ACCOUNT_TYPES) {

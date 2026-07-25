@@ -359,34 +359,44 @@ describe('Guardrail spending cuts', () => {
 });
 
 describe('Multiple withdrawal strategies produce different results', () => {
-  it('taxEfficient vs rothPreserving vs proRata differ', () => {
+  it('taxEfficient vs rothPreserving vs proRata all produce distinct outcomes', () => {
+    // Spending above the HoH 12% bracket ceiling (~$86.7k gross) but sustainable
+    // for 18 years so both strategies retain positive balances — lets us observe
+    // the divergence between bracket-aware tax-eff and blind roth-preserving.
     const baseScenario = makeScenario({
-      currentAge: 65,
-      retirementAge: 65,
-      endAge: 80,
-      socialSecurityBenefit: 1500,
-      socialSecurityClaimAge: 67,
+      currentAge: 60,
+      retirementAge: 60,
+      endAge: 78,
+      socialSecurityBenefit: 0, // no SS — keep ordinary income at 0 pre-withdrawal
+      socialSecurityClaimAge: 70,
       balances: {
-        traditional401k: 300000, roth401k: 0,
-        traditionalIRA: 100000, rothIRA: 200000,
-        taxable: 100000, hsa: 0,
+        traditional401k: 1200000, roth401k: 0,
+        traditionalIRA: 200000, rothIRA: 400000,
+        taxable: 400000, hsa: 0,
         cashAccount: 0, otherAssets: 0,
       },
-      baseAnnualSpending: 4000, // monthly → 48k/yr
+      baseAnnualSpending: 7500, // monthly → 90k/yr, above bracket ceiling
     });
 
-    const strategies: Array<'taxEfficient' | 'rothPreserving' | 'proRata'> = [
-      'taxEfficient', 'rothPreserving', 'proRata',
-    ];
-    const endBalances = strategies.map(strat => {
+    const results = (['taxEfficient', 'rothPreserving', 'proRata'] as const).map(strat => {
       const s = { ...baseScenario, withdrawalStrategy: strat } as ScenarioInput;
       const result = runSimulation(s, { numSimulations: 1, seed: 42 });
-      return result.endingBalances[0];
+      return { strat, ending: result.endingBalances[0] };
     });
 
-    // At least two strategies should produce different ending balances
-    const unique = new Set(endBalances.map(b => Math.round(b)));
-    expect(unique.size).toBeGreaterThanOrEqual(2);
+    // Every pair of strategies must produce a materially different outcome.
+    // Guards against two strategies being coded identically (the 'unique.size >= 2'
+    // predecessor would pass even when taxEfficient === rothPreserving).
+    for (let i = 0; i < results.length; i++) {
+      for (let j = i + 1; j < results.length; j++) {
+        const a = results[i];
+        const b = results[j];
+        expect(
+          Math.abs(a.ending - b.ending),
+          `${a.strat} ($${Math.round(a.ending)}) and ${b.strat} ($${Math.round(b.ending)}) produced the same ending balance — strategies may be coded identically`,
+        ).toBeGreaterThan(1);
+      }
+    }
   });
 });
 
