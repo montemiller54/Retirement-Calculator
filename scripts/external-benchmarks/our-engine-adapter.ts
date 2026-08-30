@@ -33,7 +33,7 @@ function zeroBalances() {
   };
 }
 
-function buildScenario(s: ExternalScenario, guardrailsOn = false): ScenarioInput {
+export function buildScenario(s: ExternalScenario, guardrailsOn = false): ScenarioInput {
   const startAge = 65;
   const endAge = startAge + s.years;
   return {
@@ -58,6 +58,7 @@ function buildScenario(s: ExternalScenario, guardrailsOn = false): ScenarioInput
     investments: {
       mode: 'simple',
       riskProfile: 'balanced',
+      returnOutlook: 'moderate',
       preRetirement: makeUniformAllocations(alloc(s.stockPct, s.bondPct)),
       postRetirement: makeUniformAllocations(alloc(s.stockPct, s.bondPct)),
       assetClassReturns: { ...DEFAULT_ASSET_RETURNS },
