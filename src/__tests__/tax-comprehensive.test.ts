@@ -464,3 +464,70 @@ describe('SS provisional income includes capital gains', () => {
     expect(result.federal).toBe(0);
   });
 });
+
+// ───── 12. STATUTORILY FROZEN THRESHOLDS ─────
+// SS taxation thresholds (frozen since 1983/1993), the NIIT threshold and the
+// Additional Medicare Tax threshold (both frozen since 2013) are NOT indexed
+// for inflation, unlike brackets and the standard deduction. Over a long
+// horizon this pushes more SS into taxability in real terms.
+
+describe('Statutorily frozen thresholds', () => {
+  const Y30 = { yearsFromNow: 30, taxBracketInflationRate: 0.02 };
+  const idx = Math.pow(1.02, 30); // ≈ 1.8114
+
+  it('year-0 baseline: MFJ $40k withdrawal + $30k SS → $2,315 federal', () => {
+    // provisional = 55,000 → taxable SS = 6,000 + 0.85×11,000 = 15,350
+    // ordinary = 55,350 − 32,200 = 23,150 → all 10% bracket
+    const result = calculateTaxes({
+      ...ZERO_INPUT,
+      traditionalWithdrawals: 40000, socialSecurity: 30000,
+      filingStatus: 'mfj', stateCode: 'TX',
+    });
+    expect(result.federal).toBeCloseTo(2315.0, 0);
+  });
+
+  it('SS thresholds stay frozen: real-constant income → rising real SS taxation', () => {
+    // Same income as baseline in REAL terms, 30 years out. Brackets and the
+    // deduction index, but the $32k/$44k provisional thresholds must not.
+    // taxable SS hits the 85% cap → ordinary = 118,644 − 58,326 ded = 60,318
+    // → 10% of 43,201 + 12% of 17,117 = $6,374 (indexed thresholds would give
+    // 2,315 × idx ≈ $4,193).
+    const result = calculateTaxes({
+      ...ZERO_INPUT,
+      traditionalWithdrawals: 40000 * idx, socialSecurity: 30000 * idx,
+      filingStatus: 'mfj', stateCode: 'TX',
+      ...Y30,
+    });
+    expect(result.federal).toBeCloseTo(6374.2, 0);
+    // The invariant behind the exact number: real SS taxation RISES over time
+    expect(result.federal / idx).toBeGreaterThan(2315.0 * 1.25);
+  });
+
+  it('NIIT threshold stays frozen at $200k (single)', () => {
+    // $400k LTCG, 30 years out. LTCG brackets index (0% top = 87,579) but the
+    // NIIT threshold must not: NIIT = 3.8% × (400,000 − 200,000) = 7,600.
+    // LTCG tax = 15% × (400,000 − 87,579) = 46,863. Federal = 54,463.
+    const result = calculateTaxes({
+      ...ZERO_INPUT,
+      capitalGains: 400000,
+      filingStatus: 'single', stateCode: 'TX',
+      ...Y30,
+    });
+    expect(result.federal).toBeCloseTo(46863.1 + 7600, 0);
+  });
+
+  it('Additional Medicare Tax threshold stays frozen at $200k (single)', () => {
+    // $500k wages, 30 years out. The SS wage base indexes (SSA adjusts it
+    // annually) but the 0.9% surtax threshold is frozen:
+    // surtax = 0.9% × (500,000 − 200,000) = 2,700.
+    const result = calculateTaxes({
+      ...ZERO_INPUT,
+      wages: 500000, age: 40,
+      filingStatus: 'single', stateCode: 'TX',
+      ...Y30,
+    });
+    const ssPortion = Math.min(500000, 184500 * idx) * 0.062;
+    const medicare = 500000 * 0.0145;
+    expect(result.fica).toBeCloseTo(ssPortion + medicare + 2700, 0);
+  });
+});

@@ -128,12 +128,15 @@ export function calculateTaxes(input: TaxInput): TaxResult {
   const fedBrackets = inflateBrackets(getFederalBrackets(filingStatus));
   const ltcgBrackets = inflateBrackets(getLTCGBrackets(filingStatus));
   const stdDeduction = getStandardDeduction(filingStatus) * idx;
-  const niitThreshold = getNIITThreshold(filingStatus) * idx;
+  // Statutorily frozen thresholds — NOT indexed: SS taxation (since 1983/1993),
+  // NIIT and Additional Medicare Tax (since 2013)
+  const niitThreshold = getNIITThreshold(filingStatus);
   const ssThresholds = getSSThresholds(filingStatus);
-  const ssThresholdLow = ssThresholds.low * idx;
-  const ssThresholdHigh = ssThresholds.high * idx;
+  const ssThresholdLow = ssThresholds.low;
+  const ssThresholdHigh = ssThresholds.high;
+  const medicareSurtaxThreshold = getMedicareSurtaxThreshold(filingStatus);
+  // SSA indexes the wage base annually
   const ficaWageBase = FICA_SS_WAGE_BASE * idx;
-  const medicareSurtaxThreshold = getMedicareSurtaxThreshold(filingStatus) * idx;
 
   // ── Federal ──
   // Ordinary income (before SS)

@@ -419,14 +419,15 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
           // Existing ordinary income (before conversion)
           const ordinaryExSS = salary + pension + otherIncome;
           // Estimate SS taxable portion for bracket room calc
+          // (SS thresholds are statutorily frozen — not indexed)
           const totalSS = socialSecurity + spouseSS;
           const provisionalIncome = ordinaryExSS + totalSS * 0.5;
           let estSSTaxable = 0;
-          if (totalSS > 0 && provisionalIncome > ssThresh.low * idx) {
+          if (totalSS > 0 && provisionalIncome > ssThresh.low) {
             estSSTaxable = Math.min(0.85 * totalSS,
-              provisionalIncome > ssThresh.high * idx
-                ? 0.5 * (ssThresh.high * idx - ssThresh.low * idx) + 0.85 * (provisionalIncome - ssThresh.high * idx)
-                : 0.5 * (provisionalIncome - ssThresh.low * idx));
+              provisionalIncome > ssThresh.high
+                ? 0.5 * (ssThresh.high - ssThresh.low) + 0.85 * (provisionalIncome - ssThresh.high)
+                : 0.5 * (provisionalIncome - ssThresh.low));
             estSSTaxable = Math.max(0, Math.min(estSSTaxable, 0.85 * totalSS));
           }
           const existingOrdinary = ordinaryExSS + estSSTaxable;
@@ -630,14 +631,15 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
         // Existing ordinary income excluding SS (wages, pension, other, Roth conv)
         const wagesTaxable = (activeJobs.length > 0 && salary > 0) ? salary - employeePreTax401k - employeeHSA : salary;
         const ordinaryExSS = wagesTaxable + pension + pensionLumpSumTaxable + otherIncome + rothConversionAmount;
-        // Estimate SS taxable portion (mirrors Roth conversion logic)
+        // Estimate SS taxable portion (mirrors Roth conversion logic;
+        // SS thresholds are statutorily frozen — not indexed)
         const totalSS = socialSecurity + spouseSS;
         const provisionalIncome = ordinaryExSS + totalSS * 0.5;
         let estSSTaxable = 0;
-        if (totalSS > 0 && provisionalIncome > ssThresh.low * idx) {
-          estSSTaxable = provisionalIncome > ssThresh.high * idx
-            ? 0.5 * (ssThresh.high * idx - ssThresh.low * idx) + 0.85 * (provisionalIncome - ssThresh.high * idx)
-            : 0.5 * (provisionalIncome - ssThresh.low * idx);
+        if (totalSS > 0 && provisionalIncome > ssThresh.low) {
+          estSSTaxable = provisionalIncome > ssThresh.high
+            ? 0.5 * (ssThresh.high - ssThresh.low) + 0.85 * (provisionalIncome - ssThresh.high)
+            : 0.5 * (provisionalIncome - ssThresh.low);
           estSSTaxable = Math.max(0, Math.min(estSSTaxable, 0.85 * totalSS));
         }
         const existingOrdinary = ordinaryExSS + estSSTaxable;
