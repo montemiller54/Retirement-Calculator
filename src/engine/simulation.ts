@@ -12,6 +12,7 @@ import { executeWithdrawals } from './withdrawals';
 import { estimateSSBenefit, getFullRetirementAgeMonths } from '../utils/social-security';
 import { calculateTaxes, type TaxInput } from './tax';
 import { getFederalBrackets, getStandardDeduction, getSSThresholds } from '../constants/tax';
+import { getRmdStartAge } from '../constants/rmd-table';
 import { DEFAULT_401K_CATCHUP, DEFAULT_401K_SUPER_CATCHUP, DEFAULT_IRA_CATCHUP, DEFAULT_HSA_SELF_ONLY } from '../constants/contribution-limits';
 
 function emptyBalances(): AccountBalances {
@@ -147,6 +148,9 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
   // Track prior-year-end traditional balances for RMD (IRS uses Dec 31 balance of prior year)
   let priorYearEnd401k = balances.traditional401k;
   let priorYearEndIRA = balances.traditionalIRA;
+
+  // SECURE 2.0: RMDs begin at 73 (born ≤1959) or 75 (born ≥1960)
+  const rmdStartAge = getRmdStartAge(new Date().getFullYear() - s.currentAge);
 
   // Cumulative inflation factor — compounds year over year with random variation
   let cumulativeInflationFactor = 1.0;
@@ -623,7 +627,6 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
         const brackets = getFederalBrackets(s.filingStatus ?? 'hoh');
         const stdDed = getStandardDeduction(s.filingStatus ?? 'hoh') * idx;
         const ssThresh = getSSThresholds(s.filingStatus ?? 'hoh');
-
         // Existing ordinary income excluding SS (wages, pension, other, Roth conv)
         const wagesTaxable = (activeJobs.length > 0 && salary > 0) ? salary - employeePreTax401k - employeeHSA : salary;
         const ordinaryExSS = wagesTaxable + pension + pensionLumpSumTaxable + otherIncome + rothConversionAmount;
@@ -649,7 +652,10 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
         traditionalBracketFillLimit = Math.max(0, twelvePctCeiling + stdDed - existingOrdinary);
       }
 
-      if ((totalCashNeed > 0 || rothConversionAmount > 0) && !depleted) {
+      // RMDs must be taken even when income fully covers spending
+      const rmdIsDue = age >= rmdStartAge && (priorYearEnd401k + priorYearEndIRA) > 0;
+
+      if ((totalCashNeed > 0 || rothConversionAmount > 0 || rmdIsDue) && !depleted) {
         // Save balance snapshot for iteration
         const balanceSnapshot = cloneBalances(balances);
         const costBasisSnapshot = taxableCostBasis;
@@ -671,6 +677,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
             priorYear401kBalance: priorYearEnd401k,
             priorYearIRABalance: priorYearEndIRA,
             taxableCostBasisPct: Math.min(1, Math.max(0, costBasisPct)),
+            rmdStartAge,
             traditionalBracketFillLimit,
           });
 

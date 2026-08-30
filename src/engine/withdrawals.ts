@@ -10,6 +10,8 @@ export interface WithdrawalInput {
   priorYear401kBalance: number;
   priorYearIRABalance: number;
   taxableCostBasisPct: number;  // current cost basis / balance ratio
+  /** RMD start age (73 or 75 per SECURE 2.0); defaults to 73 when omitted. */
+  rmdStartAge?: number;
   /**
    * Gross traditional-account withdrawal (RMDs + voluntary) that keeps total
    * ordinary income at or below the target bracket ceiling for the year
@@ -48,7 +50,7 @@ export function executeWithdrawals(input: WithdrawalInput): WithdrawalResult {
   const {
     cashNeed, balances, strategy, age,
     priorYear401kBalance, priorYearIRABalance,
-    taxableCostBasisPct,
+    taxableCostBasisPct, rmdStartAge,
   } = input;
 
   const withdrawals: AccountBalances = {
@@ -59,8 +61,8 @@ export function executeWithdrawals(input: WithdrawalInput): WithdrawalResult {
   };
 
   // ── RMDs ──
-  const rmd401k = calculateRMD(age, priorYear401kBalance);
-  const rmdIRA = calculateRMD(age, priorYearIRABalance);
+  const rmd401k = calculateRMD(age, priorYear401kBalance, rmdStartAge);
+  const rmdIRA = calculateRMD(age, priorYearIRABalance, rmdStartAge);
   const totalRMD = rmd401k + rmdIRA;
 
   // Force RMD withdrawals
