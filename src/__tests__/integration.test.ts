@@ -73,6 +73,42 @@ describe('Percentile band ordering', () => {
   });
 });
 
+describe('Aggregated path per-account consistency', () => {
+  it('worstDecilePath per-account balances sum to its totalBalance', () => {
+    const result = runSimulation(DEFAULT_SCENARIO, { numSimulations: 100, seed: 42 });
+    let sawNonZeroYear = false;
+    for (const yr of result.worstDecilePath) {
+      const sum = ACCOUNT_TYPES.reduce((s, a) => s + yr.balances[a], 0);
+      if (yr.totalBalance > 1000) {
+        sawNonZeroYear = true;
+        expect(sum).toBeCloseTo(yr.totalBalance, 0);
+      }
+    }
+    expect(sawNonZeroYear).toBe(true);
+  });
+
+  it('averagePath per-account balances sum to its totalBalance', () => {
+    const result = runSimulation(DEFAULT_SCENARIO, { numSimulations: 100, seed: 42 });
+    for (const yr of result.averagePath) {
+      const sum = ACCOUNT_TYPES.reduce((s, a) => s + yr.balances[a], 0);
+      if (yr.totalBalance > 1000) {
+        expect(sum).toBeCloseTo(yr.totalBalance, 0);
+      }
+    }
+  });
+});
+
+describe('Payroll taxes during accumulation', () => {
+  it('FICA is levied on gross salary, not reduced by 401k deferrals', () => {
+    // DEFAULT_SCENARIO: $99,996 salary, 20% savings with 50% → traditional 401k,
+    // no HSA allocation. FICA base must be the full salary (401k deferrals are
+    // FICA-taxable; only payroll HSA contributions are exempt).
+    const result = runSimulation(DEFAULT_SCENARIO, { numSimulations: 1, seed: 42 });
+    const yr = result.medianPath.find(y => y.age === DEFAULT_SCENARIO.currentAge)!;
+    expect(yr.taxes.fica).toBeCloseTo(yr.income.salary * (0.062 + 0.0145), 0);
+  });
+});
+
 describe('Tax gross-up convergence', () => {
   it('spending + taxes ≤ total withdrawn + income (each retirement year)', () => {
     // Use a scenario that is well into retirement with substantial withdrawals
@@ -176,9 +212,11 @@ describe('Decumulation phase logic', () => {
         expect(yr.income.socialSecurity).toBe(0);
       } else {
         expect(yr.income.socialSecurity).toBeGreaterThan(0);
-        // Check COLA growth from claim age
-        const yearsFromClaim = yr.age - 67;
-        const expected = 24000 * Math.pow(1.02, yearsFromClaim); // 2000*12 annualized
+        // Benefit is entered in today's dollars, so it is indexed from TODAY
+        // (current age 60), not from the claim age — SSA estimates are in
+        // current dollars and real benefits grow with wage/CPI indexing.
+        const yearsFromNow = yr.age - 60;
+        const expected = 24000 * Math.pow(1.02, yearsFromNow); // 2000*12 annualized
         expect(yr.income.socialSecurity).toBeCloseTo(expected, 0);
       }
     }

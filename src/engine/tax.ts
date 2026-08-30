@@ -88,6 +88,7 @@ export interface TaxInput {
   yearsFromNow?: number;             // years elapsed since simulation start
   taxBracketInflationRate?: number;   // annual indexing rate for brackets/thresholds
   earlyWithdrawalPenaltyAmount?: number;  // amount subject to 10% early withdrawal penalty
+  ficaWages?: number;   // FICA base (gross wages minus payroll HSA); defaults to wages
 }
 
 export interface TaxResult {
@@ -109,6 +110,7 @@ export function calculateTaxes(input: TaxInput): TaxResult {
     stateCode = 'IA',
     yearsFromNow = 0, taxBracketInflationRate = 0,
     earlyWithdrawalPenaltyAmount = 0,
+    ficaWages,
   } = input;
 
   // Inflation factor for indexing brackets/thresholds
@@ -139,7 +141,8 @@ export function calculateTaxes(input: TaxInput): TaxResult {
     taxableInterest + otherTaxableIncome;
 
   // SS taxable portion (using indexed thresholds)
-  const ssTaxable = calcSSTaxablePortionIndexed(socialSecurity, ordinaryIncomeExSS, ssThresholdLow, ssThresholdHigh);
+  // Provisional income is AGI excluding SS (Pub 915), which includes capital gains
+  const ssTaxable = calcSSTaxablePortionIndexed(socialSecurity, ordinaryIncomeExSS + capitalGains, ssThresholdLow, ssThresholdHigh);
 
   // Total ordinary income
   const totalOrdinaryIncome = ordinaryIncomeExSS + ssTaxable;
@@ -174,11 +177,13 @@ export function calculateTaxes(input: TaxInput): TaxResult {
   const totalFederal = federalOrdinaryTax + ltcgTax + Math.max(0, niit);
 
   // ── FICA (indexed wage base and surtax threshold) ──
+  // 401k deferrals remain FICA-taxable, so the base can exceed income-tax wages
+  const ficaBase = ficaWages ?? wages;
   let fica = 0;
-  if (wages > 0) {
-    const ssTax = Math.min(wages, ficaWageBase) * FICA_SS_RATE;
-    const medicareTax = wages * FICA_MEDICARE_RATE;
-    const surtax = Math.max(0, wages - medicareSurtaxThreshold) * FICA_MEDICARE_SURTAX_RATE;
+  if (ficaBase > 0) {
+    const ssTax = Math.min(ficaBase, ficaWageBase) * FICA_SS_RATE;
+    const medicareTax = ficaBase * FICA_MEDICARE_RATE;
+    const surtax = Math.max(0, ficaBase - medicareSurtaxThreshold) * FICA_MEDICARE_SURTAX_RATE;
     fica = ssTax + medicareTax + surtax;
   }
 

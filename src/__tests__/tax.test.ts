@@ -39,6 +39,17 @@ describe('calcFICA', () => {
     expect(result).toBeCloseTo(7650, 0);
   });
 
+  it('calculateTaxes uses ficaWages for FICA when provided (401k deferrals stay FICA-taxable)', () => {
+    const result = calculateTaxes({
+      wages: 80000,        // income-tax wages (net of pre-tax deferrals)
+      ficaWages: 100000,   // FICA wages (gross, minus payroll HSA only)
+      traditionalWithdrawals: 0, socialSecurity: 0, pension: 0,
+      capitalGains: 0, taxableInterest: 0, otherTaxableIncome: 0,
+      age: 45, filingStatus: 'single', stateCode: 'TX',
+    });
+    expect(result.fica).toBeCloseTo(7650, 0);
+  });
+
   it('caps SS tax at wage base', () => {
     const result = calcFICA(250000);
     const ss = FICA_SS_WAGE_BASE * 0.062;

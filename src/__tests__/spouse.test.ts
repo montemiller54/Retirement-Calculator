@@ -67,6 +67,40 @@ describe('Spouse config', () => {
     expect(result.successRate).toBeGreaterThanOrEqual(0);
   });
 
+  it('spouse SS is inflation-indexed from today, not from claim age', () => {
+    const sp: SpouseConfig = {
+      enabled: true,
+      currentAge: 60,
+      retirementAge: 60,
+      socialSecurityBenefit: 1000, // monthly, today's dollars
+      socialSecurityClaimAge: 67,
+    };
+    const scenario = makeScenario({
+      currentAge: 60, retirementAge: 60, endAge: 75,
+      filingStatus: 'mfj',
+      jobs: [] as ScenarioInput['jobs'],
+      baseAnnualSpending: 3000, spendingInflationRate: 0,
+      socialSecurityBenefit: 0, socialSecurityClaimAge: 90, // primary never claims
+      socialSecurityCOLA: 0.02,
+      pensionAmount: 0,
+      guardrails: DISABLED_GUARDRAILS,
+      healthcare: DISABLED_HEALTHCARE,
+      rothConversion: DISABLED_ROTH,
+      spouse: sp,
+      balances: { ...DEFAULT_SCENARIO.balances, taxable: 800000 },
+    });
+    const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });
+    for (const yr of result.medianPath) {
+      const spouseAge = 60 + (yr.age - 60);
+      if (spouseAge < 67) {
+        expect(yr.income.socialSecurity).toBe(0);
+      } else {
+        const expected = 12000 * Math.pow(1.02, yr.age - 60); // indexed from today
+        expect(yr.income.socialSecurity).toBeCloseTo(expected, 0);
+      }
+    }
+  });
+
   it('multi-simulation run with spouse enabled produces valid results', () => {
     const sp: SpouseConfig = {
       enabled: true,

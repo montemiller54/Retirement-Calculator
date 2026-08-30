@@ -430,3 +430,37 @@ describe('Filing status: Single', () => {
     expect(singleResult.federal).toBeGreaterThan(hohResult.federal);
   });
 });
+
+// ───── 11. SS PROVISIONAL INCOME INCLUDES CAPITAL GAINS (Pub 915) ─────
+
+describe('SS provisional income includes capital gains', () => {
+  it('capital gains push SS benefits into taxability', () => {
+    // Single, TX (no state tax): SS $30k, LTCG $40k, nothing else.
+    // Provisional income = 40,000 + 0.5×30,000 = 55,000 > $34k high threshold.
+    // Taxable SS = min(0.5×(34k−25k) + 0.85×(55k−34k), 0.85×30k) = min(22,350, 25,500) = 22,350
+    // Ordinary taxable = 22,350 − 16,100 std ded = 6,250 → 10% bracket → $625 federal.
+    // The gains themselves stay in the 0% LTCG bracket.
+    const result = calculateTaxes({
+      ...ZERO_INPUT,
+      socialSecurity: 30000,
+      capitalGains: 40000,
+      age: 67,
+      filingStatus: 'single',
+      stateCode: 'TX',
+    });
+    expect(result.capitalGains).toBe(0); // LTCG in 0% bracket
+    expect(result.federal).toBeCloseTo(625, 0);
+  });
+
+  it('same SS with no capital gains is untaxed', () => {
+    // Provisional income = 0.5×30,000 = 15,000 < $25k low threshold
+    const result = calculateTaxes({
+      ...ZERO_INPUT,
+      socialSecurity: 30000,
+      age: 67,
+      filingStatus: 'single',
+      stateCode: 'TX',
+    });
+    expect(result.federal).toBe(0);
+  });
+});

@@ -38,10 +38,12 @@ function withInvestments(overrides: Partial<ScenarioInput['investments']>): Scen
 }
 
 describe('Field magnitude bands', () => {
-  it('stocks.mean: +4pp bump produces a 5x–9x lift in median ending', () => {
+  it('stocks.mean: +4pp bump produces a 4x–10x lift in median ending', () => {
     // Catches the exact class of bug we just fixed (silently dead control)
     // AND catches if the wiring is half-strength or double-strength.
     // Compounding over 30+y amplifies a +4pp return delta dramatically.
+    // Re-baselined 2026-08 after SS pre-claim indexing fix (ratio ~4.9):
+    // higher SS income raises the baseline, diluting the relative lift.
     const baseline = run({ investments: withInvestments({
       assetClassReturns: { ...DEFAULT_SCENARIO.investments.assetClassReturns, stocks: { mean: 0.07, stdDev: 0.18 } },
     }) });
@@ -49,8 +51,8 @@ describe('Field magnitude bands', () => {
       assetClassReturns: { ...DEFAULT_SCENARIO.investments.assetClassReturns, stocks: { mean: 0.11, stdDev: 0.18 } },
     }) });
     const ratio = bumped.medianEnding / baseline.medianEnding;
-    expect(ratio).toBeGreaterThan(5.0);
-    expect(ratio).toBeLessThan(12.0);
+    expect(ratio).toBeGreaterThan(4.0);
+    expect(ratio).toBeLessThan(10.0);
   });
 
   it('baseAnnualSpending: +25% bump cuts median ending to 30%–85% of baseline', () => {

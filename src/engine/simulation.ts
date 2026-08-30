@@ -141,6 +141,8 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
   // Roth 5-year rule: track conversion amounts by year (age)
   // Converted amounts can't be withdrawn penalty-free until 5 years later
   const rothConversionsByAge: Map<number, number> = new Map();
+  // Roth IRA contribution basis — withdrawn first, penalty-free, consumed as used
+  let rothBasisRemaining = Math.max(0, s.rothContributionBasis);
 
   // Track prior-year-end traditional balances for RMD (IRS uses Dec 31 balance of prior year)
   let priorYearEnd401k = balances.traditional401k;
@@ -238,9 +240,10 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     const salary = primarySalary + spouseSalary;
 
     const ssClaiming = age >= s.socialSecurityClaimAge;
-    const ssYears = ssClaiming ? age - s.socialSecurityClaimAge : 0;
+    // Benefit is entered in today's dollars; index from TODAY (not from claim age)
+    // so purchasing power isn't silently eroded during the pre-claim years.
     let socialSecurity = ssClaiming
-      ? s.socialSecurityBenefit * Math.pow(1 + s.socialSecurityCOLA, ssYears)
+      ? s.socialSecurityBenefit * Math.pow(1 + s.socialSecurityCOLA, yearsFromNow)
       : 0;
 
     // ── Social Security earnings test (per person) ──
@@ -285,9 +288,8 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     let spouseSS = 0;
     if (sp?.enabled && spouseAge !== null) {
       const spouseSsClaiming = spouseAge >= sp.socialSecurityClaimAge;
-      const spouseSsYears = spouseSsClaiming ? spouseAge - sp.socialSecurityClaimAge : 0;
       spouseSS = spouseSsClaiming
-        ? sp.socialSecurityBenefit * Math.pow(1 + s.socialSecurityCOLA, spouseSsYears)
+        ? sp.socialSecurityBenefit * Math.pow(1 + s.socialSecurityCOLA, yearsFromNow)
         : 0;
 
       // Spouse SS earnings test — reduced if spouse still working pre-FRA
@@ -476,9 +478,35 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     // ── Early withdrawal penalty helper ──
     // 10% penalty on Traditional 401k/IRA withdrawals before 59.5
     // Rule of 55: 401k penalty-free if separated from service at 55+
-    // Roth IRA: contribution basis is always penalty-free
-    // Roth 5-year rule: converted amounts subject to penalty if < 5 years
-    const calcPenaltyAmount = (w: AccountBalances, conversionAmt: number): number => {
+    // Roth IRA follows IRS ordering: contribution basis (penalty-free) →
+    // conversions oldest-first (penalized only if < 5 years old) → earnings (penalized).
+    // A conversion itself is never penalized — the full amount is converted.
+
+    // Walk Roth IRA layers for a withdrawal; returns the penalizable portion.
+    // consume=true permanently uses up basis/conversion layers (call once per year).
+    const walkRothLayers = (amount: number, consume: boolean): number => {
+      let remaining = amount;
+      let penalized = 0;
+      const fromBasis = Math.min(remaining, rothBasisRemaining);
+      remaining -= fromBasis;
+      if (consume) rothBasisRemaining -= fromBasis;
+      const convAges = [...rothConversionsByAge.keys()].sort((a, b) => a - b);
+      for (const convAge of convAges) {
+        if (remaining <= 0) break;
+        const layerAmt = rothConversionsByAge.get(convAge)!;
+        const take = Math.min(remaining, layerAmt);
+        if (age - convAge < 5) penalized += take;
+        remaining -= take;
+        if (consume) {
+          if (take >= layerAmt) rothConversionsByAge.delete(convAge);
+          else rothConversionsByAge.set(convAge, layerAmt - take);
+        }
+      }
+      penalized += remaining; // beyond basis and all conversion layers = earnings
+      return penalized;
+    };
+
+    const calcPenaltyAmount = (w: AccountBalances): number => {
       if (age >= 60) return 0; // 59.5 — using 60 as annual approximation
       let penalizable = 0;
 
@@ -490,26 +518,10 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
       // Traditional IRA — always subject to penalty before 59.5
       penalizable += w.traditionalIRA;
 
-      // Roth IRA withdrawals: contributions are penalty-free, earnings are penalized
+      // Roth IRA — layered ordering (basis → conversions → earnings)
+      // Roth 401k basis/earnings split isn't tracked; treated as penalty-free.
       if (w.rothIRA > 0) {
-        const rothBasis = Math.max(0, s.rothContributionBasis);
-        // Penalty only on amount exceeding contribution basis
-        penalizable += Math.max(0, w.rothIRA - rothBasis);
-      }
-
-      // Roth 5-year rule: conversions done within last 5 years are penalized on withdrawal
-      let unconvertedPenalty = 0;
-      for (const [convAge, convAmt] of rothConversionsByAge) {
-        if (age - convAge < 5 && age < 60) {
-          unconvertedPenalty += convAmt;
-        }
-      }
-      // The conversion penalty applies to Roth withdrawals from converted amounts
-      penalizable += Math.min(unconvertedPenalty, w.roth401k + w.rothIRA);
-
-      // Roth conversion this year is also subject to penalty if early
-      if (conversionAmt > 0) {
-        penalizable += conversionAmt;
+        penalizable += walkRothLayers(w.rothIRA, false);
       }
 
       return penalizable;
@@ -684,9 +696,10 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
 
           // Estimate taxes on these withdrawals
           const tradW = withdrawals.traditional401k + withdrawals.traditionalIRA;
-          const iterPenaltyAmount = calcPenaltyAmount(withdrawals, rothConversionAmount);
+          const iterPenaltyAmount = calcPenaltyAmount(withdrawals);
           const iterTaxInput: TaxInput = {
             wages: (activeJobs.length > 0 && salary > 0) ? salary - employeePreTax401k - employeeHSA : salary,
+            ficaWages: salary > 0 ? salary - employeeHSA : 0,
             traditionalWithdrawals: tradW + rothConversionAmount,
             socialSecurity: socialSecurity + spouseSS,
             pension: pension + pensionLumpSumTaxable,
@@ -715,9 +728,12 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
 
     // ── Taxes ──
     const traditionalWithdrawals = withdrawals.traditional401k + withdrawals.traditionalIRA + rothConversionAmount;
-    const penaltyAmount = isRetired ? calcPenaltyAmount(withdrawals, rothConversionAmount) : 0;
+    const penaltyAmount = isRetired ? calcPenaltyAmount(withdrawals) : 0;
     const taxInput: TaxInput = {
-      wages: (activeJobs.length > 0 && salary > 0) ? salary * (1 - s.totalSavingsRate) : salary,
+      // Income-tax wages: net of pre-tax 401k + HSA. FICA wages: gross minus HSA only
+      // (401k deferrals remain FICA-taxable). Employer match affects neither.
+      wages: (activeJobs.length > 0 && salary > 0) ? salary - employeePreTax401k - employeeHSA : salary,
+      ficaWages: salary > 0 ? salary - employeeHSA : 0,
       traditionalWithdrawals,
       socialSecurity: socialSecurity + spouseSS,
       pension: pension + pensionLumpSumTaxable,
@@ -732,13 +748,12 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
       earlyWithdrawalPenaltyAmount: penaltyAmount,
     };
 
-    // Adjust wages for pre-tax employee contributions (traditional 401k + HSA reduce taxable wages)
-    // Employer match does NOT reduce taxable wages
-    if (activeJobs.length > 0 && salary > 0) {
-      taxInput.wages = salary - employeePreTax401k - employeeHSA;
-    }
-
     const taxResult = calculateTaxes(taxInput);
+
+    // Consume Roth IRA basis/conversion layers actually withdrawn this year
+    if (withdrawals.rothIRA > 0) {
+      walkRothLayers(withdrawals.rothIRA, true);
+    }
 
     // ── Surplus income reinvestment ──
     // When retirement income exceeds spending + taxes, reinvest surplus into taxable.
@@ -958,6 +973,11 @@ function aggregateResults(paths: SimulationPath[], _scenario: ScenarioInput): Si
       avg.taxes.capitalGains += yr.taxes.capitalGains;
       avg.taxes.fica += yr.taxes.fica;
       avg.taxes.total += yr.taxes.total;
+      for (const acct of ACCOUNT_TYPES) {
+        avg.balances[acct] += yr.balances[acct];
+        avg.contributions[acct] += yr.contributions[acct];
+        avg.withdrawals[acct] += yr.withdrawals[acct];
+      }
     }
     const wc = worstPaths.length;
     avg.totalBalance /= wc;
@@ -975,6 +995,11 @@ function aggregateResults(paths: SimulationPath[], _scenario: ScenarioInput): Si
     avg.taxes.capitalGains /= wc;
     avg.taxes.fica /= wc;
     avg.taxes.total /= wc;
+    for (const acct of ACCOUNT_TYPES) {
+      avg.balances[acct] /= wc;
+      avg.contributions[acct] /= wc;
+      avg.withdrawals[acct] /= wc;
+    }
     avg.depleted = avg.totalBalance <= 0;
     worstDecilePath.push(avg);
   }
