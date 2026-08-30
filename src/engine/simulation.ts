@@ -6,7 +6,7 @@ import type {
 } from '../types';
 import { ASSET_CLASSES, ACCOUNT_TYPES } from '../types';
 import { PRNG, cholesky, generateCorrelatedReturns, blendedReturn, crashFrequencyToSteadyState } from './math';
-import { DEFAULT_CORRELATION_MATRIX, BEAR_CORRELATION_MATRIX, DEFAULT_ASSET_RETURNS, BEAR_PERSISTENCE, BEAR_BOND_MEAN, POST_BEAR_RECOVERY_YEAR1_MEAN, POST_BEAR_RECOVERY_YEAR2_MEAN, MAX_BEAR_DURATION } from '../constants/asset-classes';
+import { DEFAULT_CORRELATION_MATRIX, BEAR_CORRELATION_MATRIX, DEFAULT_ASSET_RETURNS, BEAR_PERSISTENCE, BEAR_BOND_MEAN, POST_BEAR_RECOVERY_YEAR1_MEAN, POST_BEAR_RECOVERY_YEAR2_MEAN, MAX_BEAR_DURATION, QUALIFIED_DIVIDEND_YIELD } from '../constants/asset-classes';
 import { allocateContributions } from './contributions';
 import { executeWithdrawals } from './withdrawals';
 import { estimateSSBenefit, getFullRetirementAgeMonths } from '../utils/social-security';
@@ -401,6 +401,24 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
       }
     }
 
+    // ── Taxable-account investment income (dividends & interest) ──
+    // The blended return already includes these; recharacterize the slice as
+    // currently-taxed income: qualified dividends (LTCG rates) on the stock
+    // portion, interest (ordinary) on bond/cash. Reinvested → adds to basis.
+    let taxableDividends = 0;
+    let taxableInterestIncome = 0;
+    if (balances.taxable > 0) {
+      const taxAlloc = getAllocation(scenario, 'taxable', isRetired);
+      const stockPct = (taxAlloc[ASSET_CLASSES.indexOf('stocks')] ?? 0) / 100;
+      const bondPct = (taxAlloc[ASSET_CLASSES.indexOf('bonds')] ?? 0) / 100;
+      const cashPct = (taxAlloc[ASSET_CLASSES.indexOf('cash')] ?? 0) / 100;
+      const bondMean = means[ASSET_CLASSES.indexOf('bonds')] ?? 0;
+      const cashMean = means[ASSET_CLASSES.indexOf('cash')] ?? 0;
+      taxableDividends = balances.taxable * stockPct * QUALIFIED_DIVIDEND_YIELD;
+      taxableInterestIncome = balances.taxable * Math.max(0, bondPct * bondMean + cashPct * cashMean);
+      taxableCostBasis += taxableDividends + taxableInterestIncome;
+    }
+
     // ── Roth Conversion ──
     let rothConversionAmount = 0;
     if (s.rothConversion?.enabled && age >= s.rothConversion.startAge && age <= s.rothConversion.endAge) {
@@ -417,7 +435,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
           const ssThresh = getSSThresholds(s.filingStatus ?? 'hoh');
 
           // Existing ordinary income (before conversion)
-          const ordinaryExSS = salary + pension + otherIncome;
+          const ordinaryExSS = salary + pension + otherIncome + taxableInterestIncome;
           // Estimate SS taxable portion for bracket room calc
           // (SS thresholds are statutorily frozen — not indexed)
           const totalSS = socialSecurity + spouseSS;
@@ -535,11 +553,8 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     if (isRetired) {
       let baseSpending = s.baseAnnualSpending * yearInflationFactor;
 
-      // Housing: subtract mortgage payment if paid off, add downsizing proceeds
+      // Housing: downsizing proceeds deposited at the chosen age
       if (s.housing?.enabled) {
-        if (age < s.housing.payoffAge) {
-          baseSpending += s.housing.mortgagePayment * yearInflationFactor;
-        }
         if (age === s.housing.downsizingAge && s.housing.downsizingProceeds > 0) {
           // Downsizing proceeds appreciate at inflation + 1% (historical real home appreciation)
           const homeAppreciation = s.spendingInflationRate + 0.01;
@@ -582,6 +597,13 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
       }
 
       spending = baseSpending;
+
+      // ── Mortgage P&I (non-discretionary) ──
+      // Fixed-rate P&I is constant in nominal dollars — never inflated —
+      // and contractual, so guardrail cuts don't apply.
+      if (s.housing?.enabled && age < s.housing.payoffAge) {
+        spending += s.housing.mortgagePayment;
+      }
 
       // ── Healthcare costs (non-discretionary, not subject to guardrails) ──
       if (s.healthcare?.enabled) {
@@ -630,7 +652,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
         const ssThresh = getSSThresholds(s.filingStatus ?? 'hoh');
         // Existing ordinary income excluding SS (wages, pension, other, Roth conv)
         const wagesTaxable = (activeJobs.length > 0 && salary > 0) ? salary - employeePreTax401k - employeeHSA : salary;
-        const ordinaryExSS = wagesTaxable + pension + pensionLumpSumTaxable + otherIncome + rothConversionAmount;
+        const ordinaryExSS = wagesTaxable + pension + pensionLumpSumTaxable + otherIncome + rothConversionAmount + taxableInterestIncome;
         // Estimate SS taxable portion (mirrors Roth conversion logic;
         // SS thresholds are statutorily frozen — not indexed)
         const totalSS = socialSecurity + spouseSS;
@@ -712,8 +734,8 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
             traditionalWithdrawals: tradW + rothConversionAmount,
             socialSecurity: socialSecurity + spouseSS,
             pension: pension + pensionLumpSumTaxable,
-            capitalGains,
-            taxableInterest: 0,
+            capitalGains: capitalGains + taxableDividends,
+            taxableInterest: taxableInterestIncome,
             otherTaxableIncome: otherIncome,
             age,
             filingStatus: s.filingStatus,
@@ -746,8 +768,8 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
       traditionalWithdrawals,
       socialSecurity: socialSecurity + spouseSS,
       pension: pension + pensionLumpSumTaxable,
-      capitalGains,
-      taxableInterest: 0, // simplified
+      capitalGains: capitalGains + taxableDividends,
+      taxableInterest: taxableInterestIncome,
       otherTaxableIncome: otherIncome,
       age,
       filingStatus: s.filingStatus,

@@ -2,7 +2,8 @@ node_modules
 dist
 .DS_Store
 *.local
+coverage
 
-# External benchmark cached data and reports
-scripts/external-benchmarks/data/*.json
+# External benchmark reports (historical-returns.json is committed —
+# the benchmark regression tests depend on it)
 benchmarks/external-comparison.md

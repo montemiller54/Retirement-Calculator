@@ -53,8 +53,10 @@ export function buildScenario(s: ExternalScenario, guardrailsOn = false): Scenar
     guardrails: guardrailsOn ? ON_GUARDRAILS : OFF_GUARDRAILS,
     healthcare: OFF_HEALTHCARE,
     rothConversion: OFF_ROTH,
-    balances: { ...zeroBalances(), taxable: s.initialBalance },
-    taxableCostBasisPct: 1.0, // all basis → no cap gains drag
+    // Roth IRA keeps the comparison truly tax-free (no dividend/interest
+    // drag, no RMDs) to match what Bengen/Pfau/cFIREsim model
+    balances: { ...zeroBalances(), rothIRA: s.initialBalance },
+    taxableCostBasisPct: 1.0,
     investments: {
       mode: 'simple',
       riskProfile: 'balanced',

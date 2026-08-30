@@ -348,8 +348,10 @@ describe('Roth conversions', () => {
       guardrails: DISABLED_GUARDRAILS,
       healthcare: DISABLED_HEALTHCARE,
       rothConversion: rc,
-      // Plenty of taxable to cover spending → no traditional withdrawal for spending
-      balances: { ...DEFAULT_SCENARIO.balances, traditional401k: 500000, rothIRA: 0, taxable: 200000, cashAccount: 0, otherAssets: 0 },
+      // Plenty of cash to cover spending → no traditional withdrawal for spending.
+      // (Cash account, not taxable: taxable interest/dividends would consume
+      // bracket room now that annual investment income is taxed.)
+      balances: { ...DEFAULT_SCENARIO.balances, traditional401k: 500000, rothIRA: 0, taxable: 0, cashAccount: 200000, otherAssets: 0 },
     });
 
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });

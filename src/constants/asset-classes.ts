@@ -167,6 +167,10 @@ export const MAX_BEAR_DURATION = 4;
 // Historical avg bond return during stock bear years: ~5-7%. Normal: ~4%.
 export const BEAR_BOND_MEAN = 0.065;
 
+// Annual qualified-dividend yield on the stock portion of the taxable
+// brokerage account (taxed at LTCG rates each year, reinvested into basis)
+export const QUALIFIED_DIVIDEND_YIELD = 0.018;
+
 // Post-bear recovery: the first 1-2 bull years after exiting a bear regime get
 // an elevated mean, reflecting historical snapbacks (1933 +50%, 1954 +53%,
 // 1975 +37%, 2003 +29%, 2009 +26%). Magnitude scales with bear duration:

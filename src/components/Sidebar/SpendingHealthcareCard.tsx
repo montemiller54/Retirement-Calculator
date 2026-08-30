@@ -95,7 +95,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
           {scenario.housing?.enabled && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <Field label={<>Monthly Mortgage <InfoTip text="Enter only principal and interest — exclude taxes, insurance, and HOA fees. Those should be included in your base monthly spending." /></>}>
+                <Field label={<>Monthly Mortgage <InfoTip text="Enter only principal and interest — exclude taxes, insurance, and HOA fees. Those should be included in your base monthly spending. P&I stays fixed in nominal dollars (it is not inflated) and is never reduced by guardrail cuts." /></>}>
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
                     <CurrencyInput value={scenario.housing.mortgagePayment} onChange={v => setField('housing.mortgagePayment', v)} />

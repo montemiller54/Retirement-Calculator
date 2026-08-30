@@ -31,7 +31,7 @@ export function AssumptionsPage() {
           <li><strong>Collect income</strong> — salary (if working), Social Security, pension, spouse income, other sources.</li>
           <li><strong>Make contributions</strong> — allocate savings across accounts, enforce IRS limits, add employer match.</li>
           <li><strong>Execute Roth conversions</strong> — if enabled, move funds from Traditional to Roth IRA (taxable event).</li>
-          <li><strong>Calculate spending need</strong> — base spending + healthcare + one-time expenses + mortgage − guardrail adjustments.</li>
+          <li><strong>Calculate spending need</strong> — base spending + healthcare + one-time expenses + mortgage − guardrail adjustments (mortgage and healthcare are non-discretionary and never cut).</li>
           <li><strong>Iterative tax-aware withdrawal loop</strong> — withdraw to cover spending + taxes, iterating up to 5 times until the withdrawal amount converges within $100.</li>
           <li><strong>Calculate and pay taxes</strong> — federal, state, FICA, early-withdrawal penalties, capital gains.</li>
           <li><strong>Reinvest surplus</strong> — if income exceeds spending + taxes, the excess flows into the taxable account.</li>
@@ -212,7 +212,7 @@ export function AssumptionsPage() {
         <h3 className="font-semibold text-sm">Other Features</h3>
         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4">
           <li><strong>Healthcare</strong>: three-tier cost model (pre-Medicare / Medicare / late-life) with its own medical inflation rate (default 5%). Costs are added on top of base spending.</li>
-          <li><strong>Housing</strong>: mortgage payment added to spending until payoff age. Optional downsizing proceeds deposited at a specified age, appreciating at inflation + 1%.</li>
+          <li><strong>Housing</strong>: mortgage P&I added to spending as a fixed nominal amount until payoff age (fixed-rate payments don't inflate). Optional downsizing proceeds deposited at a specified age, appreciating at inflation + 1%.</li>
           <li><strong>Spending safety rules (guardrails)</strong>: configurable spending-cut tiers triggered by portfolio drawdown from peak. Multiple tiers allow graduated responses.</li>
           <li><strong>Spouse</strong>: separate age, retirement age, and Social Security claim age. Each spouse's jobs are owned by them and contribute their own salary, employer match, and per-person 401(k)/IRA/HSA contribution limits. Spouse's pre-retirement allocation continues until both spouses are retired.</li>
           <li><strong>Asset allocation</strong>: separate pre-retirement and post-retirement allocations with an instant transition at retirement. Per-account customization available.</li>
