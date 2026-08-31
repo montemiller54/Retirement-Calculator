@@ -47,7 +47,7 @@ describe('Filing Status & State Tax', () => {
     const base: Partial<ScenarioInput> = {
       currentAge: 65, retirementAge: 65, endAge: 90,
       balances: { traditional401k: 800000, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 200000, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      baseAnnualSpending: 5000, socialSecurityBenefit: 2500,
+      baseMonthlySpending: 5000, socialSecurityBenefit: 2500,
     };
     const mfj = run({ ...base, filingStatus: 'mfj' });
     const single = run({ ...base, filingStatus: 'single' });
@@ -58,7 +58,7 @@ describe('Filing Status & State Tax', () => {
     const base: Partial<ScenarioInput> = {
       currentAge: 65, retirementAge: 65, endAge: 90,
       balances: { traditional401k: 600000, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 200000, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      baseAnnualSpending: 4000, socialSecurityBenefit: 2000,
+      baseMonthlySpending: 4000, socialSecurityBenefit: 2000,
     };
     // TX has no state income tax; CA has high rates
     const noTax = run({ ...base, stateCode: 'TX' });
@@ -100,7 +100,7 @@ describe('Roth Conversions', () => {
   const rothBase: Partial<ScenarioInput> = {
     currentAge: 60, retirementAge: 65, endAge: 90,
     balances: { traditional401k: 500000, roth401k: 0, traditionalIRA: 200000, rothIRA: 50000, taxable: 100000, hsa: 0, cashAccount: 0, otherAssets: 0 },
-    baseAnnualSpending: 4000, socialSecurityBenefit: 2000,
+    baseMonthlySpending: 4000, socialSecurityBenefit: 2000,
   };
 
   it('enabling Roth conversions changes ending balance', () => {
@@ -138,7 +138,7 @@ describe('Other Income Sources', () => {
     const noOther = run({ otherIncomeSources: [] });
     const withOther = run({
       otherIncomeSources: [{
-        id: 'rental', name: 'Rental', annualAmount: 18000,
+        id: 'rental', name: 'Rental', monthlyAmount: 18000,
         startAge: 65, endAge: 95, inflationRate: 0.02,
       }],
     });
@@ -164,7 +164,7 @@ describe('Tax Bracket Inflation Rate', () => {
     const base: Partial<ScenarioInput> = {
       currentAge: 65, retirementAge: 65, endAge: 90,
       balances: { traditional401k: 800000, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 200000, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      baseAnnualSpending: 5000, socialSecurityBenefit: 2500,
+      baseMonthlySpending: 5000, socialSecurityBenefit: 2500,
     };
     const noInfl = run({ ...base, taxBracketInflationRate: 0 });
     const withInfl = run({ ...base, taxBracketInflationRate: 0.03 });
@@ -242,7 +242,7 @@ describe('Benchmark: 4% Rule / Trinity Study', () => {
       taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0,
     },
     // 4% of $1M = $40k/yr = $3333/mo
-    baseAnnualSpending: 3333,
+    baseMonthlySpending: 3333,
     spendingInflationRate: 0.025,
     socialSecurityBenefit: 0,    // pure portfolio withdrawal
     pensionAmount: 0,
@@ -273,14 +273,14 @@ describe('Benchmark: 4% Rule / Trinity Study', () => {
   });
 
   it('3% withdrawal on $1M portfolio: higher success than 4%', () => {
-    const threePercent = run({ ...trinityScenario, baseAnnualSpending: 2500 }); // $30k/yr
+    const threePercent = run({ ...trinityScenario, baseMonthlySpending: 2500 }); // $30k/yr
     const fourPercent = run(trinityScenario);
     expect(threePercent.successRate).toBeGreaterThanOrEqual(fourPercent.successRate);
   });
 
   it('5% withdrawal on $1M portfolio: lower success than 4%', () => {
     const fourPercent = run(trinityScenario);
-    const fivePercent = run({ ...trinityScenario, baseAnnualSpending: 4167 }); // $50k/yr
+    const fivePercent = run({ ...trinityScenario, baseMonthlySpending: 4167 }); // $50k/yr
     expect(fourPercent.successRate).toBeGreaterThan(fivePercent.successRate);
   });
 
@@ -308,7 +308,7 @@ describe('Benchmark: Social Security as Income Floor', () => {
       filingStatus: 'mfj', stateCode: 'TX',
       jobs: [],
       balances: { traditional401k: 500000, roth401k: 0, traditionalIRA: 0, rothIRA: 500000, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      baseAnnualSpending: 5000,  // $60k/yr
+      baseMonthlySpending: 5000,  // $60k/yr
       spendingInflationRate: 0.025,
       socialSecurityBenefit: 2000,
       socialSecurityClaimAge: 65,
@@ -341,7 +341,7 @@ describe('Benchmark: Accumulation Phase Growth', () => {
       salaryGrowthRate: 0.03,
       totalSavingsRate: 0.20,     // $24k/yr initially
       balances: { traditional401k: 0, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      baseAnnualSpending: 4000,
+      baseMonthlySpending: 4000,
       socialSecurityBenefit: 2000,
       investments: withInvestments({
         preRetirement: makeUniformAllocations({ stocks: 70, bonds: 20, cash: 10, crypto: 0 }),
@@ -367,7 +367,7 @@ describe('Benchmark: Tax Impact Reality Check', () => {
       filingStatus: 'single', stateCode: 'CA',
       jobs: [],
       balances: { traditional401k: 800000, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      baseAnnualSpending: 4167,  // $50k/yr
+      baseMonthlySpending: 4167,  // $50k/yr
       socialSecurityBenefit: 2000,
       socialSecurityClaimAge: 67,
       pensionAmount: 0,
@@ -389,7 +389,7 @@ describe('Benchmark: Tax Impact Reality Check', () => {
       filingStatus: 'single', stateCode: 'TX',
       jobs: [],
       balances: { traditional401k: 0, roth401k: 0, traditionalIRA: 0, rothIRA: 800000, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      baseAnnualSpending: 4167,
+      baseMonthlySpending: 4167,
       socialSecurityBenefit: 0,
       pensionAmount: 0,
       healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false },
@@ -411,7 +411,7 @@ describe('Benchmark: RMD Impact', () => {
       socialSecurityMode: 'manual',
       currentAge: 73, retirementAge: 73, endAge: 95,
       balances: { traditional401k: 0, roth401k: 0, traditionalIRA: 2000000, rothIRA: 0, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      baseAnnualSpending: 3000,   // $36k/yr — much less than RMD on $2M
+      baseMonthlySpending: 3000,   // $36k/yr — much less than RMD on $2M
       socialSecurityBenefit: 2000,
       socialSecurityClaimAge: 70,
       healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false },
@@ -433,7 +433,7 @@ describe('Benchmark: Spending Guardrails Effectiveness', () => {
     const stressed: Partial<ScenarioInput> = {
       currentAge: 65, retirementAge: 65, endAge: 95,
       balances: { traditional401k: 300000, roth401k: 0, traditionalIRA: 0, rothIRA: 200000, taxable: 100000, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      baseAnnualSpending: 5000,  // aggressive 10% withdrawal rate
+      baseMonthlySpending: 5000,  // aggressive 10% withdrawal rate
       socialSecurityBenefit: 1500,
       socialSecurityClaimAge: 67,
       healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false },
@@ -453,7 +453,7 @@ describe('Benchmark: Inflation Erosion', () => {
     const base: Partial<ScenarioInput> = {
       currentAge: 65, retirementAge: 65, endAge: 95,
       balances: { traditional401k: 0, roth401k: 0, traditionalIRA: 0, rothIRA: 1000000, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      baseAnnualSpending: 3333,
+      baseMonthlySpending: 3333,
       socialSecurityBenefit: 0,
       healthcare: { ...DEFAULT_SCENARIO.healthcare, enabled: false },
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
@@ -474,7 +474,7 @@ describe('Part-Time Income (via jobs)', () => {
     currentAge: 60, retirementAge: 60, endAge: 90,
     jobs: [],
     balances: { traditional401k: 800000, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 200000, hsa: 0, cashAccount: 0, otherAssets: 0 },
-    baseAnnualSpending: 4000,
+    baseMonthlySpending: 4000,
     socialSecurityBenefit: 2000,
     socialSecurityClaimAge: 67,
   };
@@ -507,7 +507,7 @@ describe('Housing / Mortgage', () => {
   const retiredBase: Partial<ScenarioInput> = {
     currentAge: 55, retirementAge: 65, endAge: 95,
     balances: { traditional401k: 600000, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 200000, hsa: 0, cashAccount: 0, otherAssets: 0 },
-    baseAnnualSpending: 4000,
+    baseMonthlySpending: 4000,
     socialSecurityBenefit: 2000,
   };
 
@@ -545,7 +545,7 @@ describe('Early Withdrawal Controls', () => {
   const earlyRetiree: Partial<ScenarioInput> = {
     currentAge: 50, retirementAge: 50, endAge: 90,
     balances: { traditional401k: 1000000, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 50000, hsa: 0, cashAccount: 0, otherAssets: 0 },
-    baseAnnualSpending: 4000,
+    baseMonthlySpending: 4000,
     socialSecurityBenefit: 2000,
     socialSecurityClaimAge: 67,
   };

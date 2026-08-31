@@ -19,7 +19,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
     const src: IncomeSource = {
       id: crypto.randomUUID(),
       name: 'Other Income',
-      annualAmount: 833,
+      monthlyAmount: 833,
       startAge: scenario.retirementAge,
       endAge: scenario.endAge,
       inflationRate: 0.02,
@@ -213,7 +213,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
                   <Field label="Monthly amount">
                     <div className="relative">
                       <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
-                      <CurrencyInput value={src.annualAmount as number} onChange={v => updateOtherIncome(src.id, 'annualAmount', v)} />
+                      <CurrencyInput value={src.monthlyAmount as number} onChange={v => updateOtherIncome(src.id, 'monthlyAmount', v)} />
                     </div>
                   </Field>
                   <Field label="Start age">

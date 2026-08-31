@@ -79,6 +79,18 @@ describe('Scenario migration (importScenario path)', () => {
     expect(roundTripped).toEqual(DEFAULT_SCENARIO);
   });
 
+  it('renames legacy monthly-valued fields (baseAnnualSpending, annualAmount)', () => {
+    const fixture = legacyFixture();
+    (fixture as Record<string, unknown>).otherIncomeSources = [
+      { id: 'r', name: 'rental', annualAmount: 900, startAge: 60, endAge: 70, inflationRate: 0.02 },
+    ];
+    const s = importFixture(fixture);
+    expect(s.baseMonthlySpending).toBe(5000);
+    expect((s as unknown as Record<string, unknown>).baseAnnualSpending).toBeUndefined();
+    expect(s.otherIncomeSources[0].monthlyAmount).toBe(900);
+    expect((s.otherIncomeSources[0] as unknown as Record<string, unknown>).annualAmount).toBeUndefined();
+  });
+
   it('migrates legacy currentSalary/match fields into a jobs array', () => {
     const s = importFixture(legacyFixture());
     expect(s.jobs).toHaveLength(1);

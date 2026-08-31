@@ -35,7 +35,7 @@ function makeScenario(
     filingStatus: 'single',
     stateCode: 'TX',
     currentAge: 65, retirementAge: 65, endAge: 75,
-    baseAnnualSpending: 2000, // monthly → $24k/yr
+    baseMonthlySpending: 2000, // monthly → $24k/yr
     spendingInflationRate: 0,
     inflationVolatility: 0,
     taxableCostBasisPct: 1.0,

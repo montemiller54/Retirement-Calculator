@@ -16,7 +16,7 @@ describe('Spouse config', () => {
     const base = {
       currentAge: 65, retirementAge: 65, endAge: 70,
       jobs: [] as ScenarioInput['jobs'],
-      baseAnnualSpending: 3000, spendingInflationRate: 0,
+      baseMonthlySpending: 3000, spendingInflationRate: 0,
       socialSecurityBenefit: 2000, socialSecurityClaimAge: 65,
       pensionAmount: 0,
       guardrails: DISABLED_GUARDRAILS,
@@ -51,7 +51,7 @@ describe('Spouse config', () => {
     const scenario = makeScenario({
       currentAge: 65, retirementAge: 65, endAge: 70,
       jobs: [] as ScenarioInput['jobs'],
-      baseAnnualSpending: 4000, spendingInflationRate: 0,
+      baseMonthlySpending: 4000, spendingInflationRate: 0,
       socialSecurityBenefit: 2000, socialSecurityClaimAge: 65,
       socialSecurityCOLA: 0.02,
       pensionAmount: 0,
@@ -79,7 +79,7 @@ describe('Spouse config', () => {
       currentAge: 60, retirementAge: 60, endAge: 75,
       filingStatus: 'mfj',
       jobs: [] as ScenarioInput['jobs'],
-      baseAnnualSpending: 3000, spendingInflationRate: 0,
+      baseMonthlySpending: 3000, spendingInflationRate: 0,
       socialSecurityBenefit: 0, socialSecurityClaimAge: 90, // primary never claims
       socialSecurityCOLA: 0.02,
       pensionAmount: 0,
@@ -113,7 +113,7 @@ describe('Spouse config', () => {
     const scenario = makeScenario({
       currentAge: 60, retirementAge: 62, endAge: 90,
       filingStatus: 'mfj',
-      baseAnnualSpending: 6000, spendingInflationRate: 0.025,
+      baseMonthlySpending: 6000, spendingInflationRate: 0.025,
       socialSecurityBenefit: 2500, socialSecurityClaimAge: 67,
       pensionAmount: 0,
       guardrails: DISABLED_GUARDRAILS,
@@ -144,7 +144,7 @@ describe('Spouse income (owner-aware jobs)', () => {
     makeScenario({
       currentAge: 55, retirementAge: 65, endAge: 80,
       filingStatus: 'mfj',
-      baseAnnualSpending: 4000, spendingInflationRate: 0,
+      baseMonthlySpending: 4000, spendingInflationRate: 0,
       socialSecurityBenefit: 2000, socialSecurityClaimAge: 67,
       socialSecurityCOLA: 0,
       totalSavingsRate: 0.20,
@@ -266,7 +266,7 @@ describe('Spouse income (owner-aware jobs)', () => {
       makeScenario({
         currentAge: 67, retirementAge: 67, endAge: 80,
         filingStatus: 'mfj',
-        baseAnnualSpending: 5000, spendingInflationRate: 0,
+        baseMonthlySpending: 5000, spendingInflationRate: 0,
         socialSecurityBenefit: 2500, socialSecurityClaimAge: 67,
         socialSecurityCOLA: 0,
         guardrails: DISABLED_GUARDRAILS,

@@ -42,7 +42,7 @@ describe('Mortgage payment', () => {
   it('stays fixed in nominal dollars while base spending inflates', () => {
     const scenario = makeScenario({
       currentAge: 65, retirementAge: 65, endAge: 75,
-      baseAnnualSpending: 3000, // $36k/yr, inflating
+      baseMonthlySpending: 3000, // $36k/yr, inflating
       spendingInflationRate: 0.025,
     });
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });
@@ -60,7 +60,7 @@ describe('Mortgage payment', () => {
     // is contractual and must pass through untouched.
     const scenario = makeScenario({
       currentAge: 65, retirementAge: 65, endAge: 70,
-      baseAnnualSpending: 3000, // $36k/yr
+      baseMonthlySpending: 3000, // $36k/yr
       spendingInflationRate: 0,
       guardrails: { enabled: true, tiers: [{ drawdownPct: 15, spendingCutPct: 20 }] },
       investments: {
@@ -91,7 +91,7 @@ describe('Mortgage payment', () => {
   it('drops off entirely at payoff age', () => {
     const scenario = makeScenario({
       currentAge: 65, retirementAge: 65, endAge: 75,
-      baseAnnualSpending: 3000,
+      baseMonthlySpending: 3000,
       spendingInflationRate: 0,
     });
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });

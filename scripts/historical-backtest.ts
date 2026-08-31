@@ -219,7 +219,7 @@ function ourMonteCarlo(
     currentAge: 65, retirementAge: 65, endAge: 65 + years,
     filingStatus: 'single',
     jobs: [], totalSavingsRate: 0,
-    baseAnnualSpending: monthlySpending, // engine stores as monthly
+    baseMonthlySpending: monthlySpending,
     spendingInflationRate: 0.025,
     socialSecurityBenefit: 0, socialSecurityClaimAge: 99,
     pensionAmount: 0,

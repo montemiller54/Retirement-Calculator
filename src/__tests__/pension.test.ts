@@ -35,7 +35,7 @@ function makeScenario(overrides: Partial<ScenarioInput> = {}): ScenarioInput {
       },
     },
     currentAge: 60, retirementAge: 60, endAge: 70,
-    baseAnnualSpending: 2000, // monthly → $24k/yr, funded from cashAccount
+    baseMonthlySpending: 2000, // monthly → $24k/yr, funded from cashAccount
     pensionType: 'lumpSum',
     pensionAmount: 200_000,   // lump sum — NOT annualized
     pensionStartAge: 65,

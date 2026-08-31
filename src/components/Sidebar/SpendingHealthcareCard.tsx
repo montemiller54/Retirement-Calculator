@@ -55,8 +55,8 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
               <div className="relative w-48">
                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
                 <CurrencyInput
-                  value={scenario.baseAnnualSpending}
-                  onChange={v => setField('baseAnnualSpending', v)}
+                  value={scenario.baseMonthlySpending}
+                  onChange={v => setField('baseMonthlySpending', v)}
                 />
               </div>
             </Field>

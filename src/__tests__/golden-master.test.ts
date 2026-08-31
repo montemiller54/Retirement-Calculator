@@ -27,7 +27,7 @@ const earlyRetiree: ScenarioInput = {
   filingStatus: 'mfj', stateCode: 'IA',
   socialSecurityMode: 'auto', socialSecurityClaimAge: 62,
   pensionAmount: 4600, pensionStartAge: 62, pensionCOLA: 0,
-  baseAnnualSpending: 11000,
+  baseMonthlySpending: 11000,
   ruleof55Eligible: true,
   guardrails: { enabled: true, tiers: [{ drawdownPct: 20, spendingCutPct: 20 }] },
   healthcare: {
@@ -49,7 +49,7 @@ const converter: ScenarioInput = {
   currentAge: 62, retirementAge: 62, endAge: 90,
   filingStatus: 'single', stateCode: 'CA',
   socialSecurityMode: 'manual', socialSecurityBenefit: 2400, socialSecurityClaimAge: 70,
-  baseAnnualSpending: 6000,
+  baseMonthlySpending: 6000,
   jobs: [] as ScenarioInput['jobs'],
   rothConversion: {
     enabled: true, strategy: 'fillBracket', targetBracketRate: 0.12,
@@ -69,7 +69,7 @@ const couple: ScenarioInput = {
   currentAge: 55, retirementAge: 60, endAge: 92,
   filingStatus: 'mfj', stateCode: 'TX',
   socialSecurityMode: 'manual', socialSecurityBenefit: 2800, socialSecurityClaimAge: 67,
-  baseAnnualSpending: 7000,
+  baseMonthlySpending: 7000,
   withdrawalStrategy: 'proRata',
   jobs: [
     { id: 'p', name: 'P', owner: 'primary', monthlyPay: 10000, startAge: 55, endAge: 60,
@@ -82,7 +82,7 @@ const couple: ScenarioInput = {
     { id: 'x', name: 'roof', amount: 40000, age: 65, inflationAdjusted: true },
   ],
   otherIncomeSources: [
-    { id: 'r', name: 'rental', annualAmount: 1200, startAge: 60, endAge: 75, inflationRate: 0.02 },
+    { id: 'r', name: 'rental', monthlyAmount: 1200, startAge: 60, endAge: 75, inflationRate: 0.02 },
   ],
   balances: {
     traditional401k: 600000, roth401k: 150000, traditionalIRA: 100000, rothIRA: 80000,

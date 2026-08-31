@@ -64,7 +64,7 @@ function strippedScenario(opts: {
     stateCode: 'TX',
     jobs: [],
     totalSavingsRate: 0,
-    baseAnnualSpending: opts.monthlySpending,
+    baseMonthlySpending: opts.monthlySpending,
     spendingInflationRate: 0,
     inflationVolatility: 0,
     taxBracketInflationRate: 0,
@@ -197,7 +197,7 @@ describe('Depletion invariant', () => {
       stateCode: 'TX',
       jobs: [],
       totalSavingsRate: 0,
-      baseAnnualSpending: 5_000, // $60K/yr — high relative to balance
+      baseMonthlySpending: 5_000, // $60K/yr — high relative to balance
       spendingInflationRate: 0,
       inflationVolatility: 0,
       taxBracketInflationRate: 0,

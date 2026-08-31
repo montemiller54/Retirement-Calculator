@@ -57,7 +57,7 @@ function makeScenario(overrides: Partial<ScenarioInput> = {}): ScenarioInput {
     filingStatus: 'mfj',
     stateCode: 'TX',
     currentAge: 65, retirementAge: 65, endAge: 72,
-    baseAnnualSpending: 3000, // $36k/yr
+    baseMonthlySpending: 3000, // $36k/yr
     spendingInflationRate: 0,
     inflationVolatility: 0,
     taxBracketInflationRate: 0, // freeze thresholds for exact assertions

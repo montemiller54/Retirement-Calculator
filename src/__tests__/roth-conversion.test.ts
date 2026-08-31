@@ -17,7 +17,7 @@ describe('Roth conversions', () => {
   it('disabled conversion moves no money', () => {
     const scenario = makeScenario({
       currentAge: 65, retirementAge: 65, endAge: 70,
-      baseAnnualSpending: 3000, spendingInflationRate: 0,
+      baseMonthlySpending: 3000, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       guardrails: DISABLED_GUARDRAILS,
       healthcare: DISABLED_HEALTHCARE,
@@ -43,7 +43,7 @@ describe('Roth conversions', () => {
 
     const scenario = makeScenario({
       currentAge: 65, retirementAge: 65, endAge: 70,
-      baseAnnualSpending: 1000, spendingInflationRate: 0,
+      baseMonthlySpending: 1000, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       guardrails: DISABLED_GUARDRAILS,
       healthcare: DISABLED_HEALTHCARE,
@@ -78,7 +78,7 @@ describe('Roth conversions', () => {
     const scenario = makeScenario({
       currentAge: 65, retirementAge: 65, endAge: 67,
       jobs: [] as ScenarioInput['jobs'],
-      baseAnnualSpending: 0, spendingInflationRate: 0,
+      baseMonthlySpending: 0, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       socialSecurityClaimAge: 90,
       guardrails: DISABLED_GUARDRAILS,
@@ -106,7 +106,7 @@ describe('Roth conversions', () => {
     // Run without conversions
     const baseScenario = makeScenario({
       currentAge: 65, retirementAge: 65, endAge: 66,
-      baseAnnualSpending: 0, spendingInflationRate: 0,
+      baseMonthlySpending: 0, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       socialSecurityClaimAge: 90,
       guardrails: DISABLED_GUARDRAILS,
@@ -141,7 +141,7 @@ describe('Roth conversions', () => {
 
     const baseScenario = makeScenario({
       currentAge: 65, retirementAge: 65, endAge: 66,
-      baseAnnualSpending: 0, spendingInflationRate: 0,
+      baseMonthlySpending: 0, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       socialSecurityClaimAge: 90,
       guardrails: DISABLED_GUARDRAILS,
@@ -175,7 +175,7 @@ describe('Roth conversions', () => {
       currentAge: 65, retirementAge: 65, endAge: 66,
       filingStatus: 'mfj',
       jobs: [] as ScenarioInput['jobs'],
-      baseAnnualSpending: 0, spendingInflationRate: 0,
+      baseMonthlySpending: 0, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       socialSecurityClaimAge: 90,
       taxBracketInflationRate: 0, // disable indexing for deterministic test
@@ -204,7 +204,7 @@ describe('Roth conversions', () => {
     const scenario = makeScenario({
       currentAge: 67, retirementAge: 67, endAge: 68,
       filingStatus: 'mfj',
-      baseAnnualSpending: 0, spendingInflationRate: 0,
+      baseMonthlySpending: 0, spendingInflationRate: 0,
       socialSecurityBenefit: 2000, // $24K/yr SS
       socialSecurityClaimAge: 67,
       socialSecurityCOLA: 0,
@@ -235,7 +235,7 @@ describe('Roth conversions', () => {
 
     const scenario = makeScenario({
       currentAge: 64, retirementAge: 64, endAge: 70,
-      baseAnnualSpending: 1000, spendingInflationRate: 0,
+      baseMonthlySpending: 1000, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       socialSecurityClaimAge: 90,
       guardrails: DISABLED_GUARDRAILS,
@@ -267,7 +267,7 @@ describe('Roth conversions', () => {
 
     const scenario = makeScenario({
       currentAge: 65, retirementAge: 65, endAge: 66,
-      baseAnnualSpending: 0, spendingInflationRate: 0,
+      baseMonthlySpending: 0, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       socialSecurityClaimAge: 90,
       guardrails: DISABLED_GUARDRAILS,
@@ -306,7 +306,7 @@ describe('Roth conversions', () => {
       currentAge: 65, retirementAge: 65, endAge: 66,
       filingStatus: 'mfj',
       jobs: [] as ScenarioInput['jobs'],
-      baseAnnualSpending: 5000, // $60K/yr
+      baseMonthlySpending: 5000, // $60K/yr
       spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       socialSecurityClaimAge: 90,
@@ -340,7 +340,7 @@ describe('Roth conversions', () => {
       currentAge: 65, retirementAge: 65, endAge: 66,
       filingStatus: 'mfj',
       jobs: [] as ScenarioInput['jobs'],
-      baseAnnualSpending: 5000, // $60K/yr
+      baseMonthlySpending: 5000, // $60K/yr
       spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       socialSecurityClaimAge: 90,
@@ -376,7 +376,7 @@ describe('Roth conversions', () => {
     const scenario = makeScenario({
       currentAge: 67, retirementAge: 67, endAge: 68,
       filingStatus: 'mfj',
-      baseAnnualSpending: 2000, // $24K/yr — fully covered by SS
+      baseMonthlySpending: 2000, // $24K/yr — fully covered by SS
       spendingInflationRate: 0,
       socialSecurityBenefit: 3000, // $36K/yr SS → income > spending
       socialSecurityClaimAge: 67,
@@ -413,7 +413,7 @@ describe('Roth conversions', () => {
     const scenario = makeScenario({
       currentAge: 67, retirementAge: 67, endAge: 68,
       filingStatus: 'mfj',
-      baseAnnualSpending: 3000, // $36K/yr — exactly equals SS
+      baseMonthlySpending: 3000, // $36K/yr — exactly equals SS
       spendingInflationRate: 0,
       socialSecurityBenefit: 3000, // $36K/yr SS
       socialSecurityClaimAge: 67,

@@ -47,7 +47,7 @@ describe('Traditional account penalties (regression)', () => {
   it('traditional IRA withdrawals before 59½ incur exactly 10%', () => {
     const scenario = makeScenario({
       currentAge: 50, retirementAge: 50, endAge: 55,
-      baseAnnualSpending: 4000, // monthly → $48k/yr
+      baseMonthlySpending: 4000, // monthly → $48k/yr
       balances: { ...makeScenario().balances, traditionalIRA: 1_000_000 },
     });
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });
@@ -63,7 +63,7 @@ describe('Traditional account penalties (regression)', () => {
   it('Rule of 55 exempts 401k withdrawals at 55+, but ineligibility does not', () => {
     const base = makeScenario({
       currentAge: 55, retirementAge: 55, endAge: 59,
-      baseAnnualSpending: 4000,
+      baseMonthlySpending: 4000,
       balances: { ...makeScenario().balances, traditional401k: 1_000_000 },
     });
 
@@ -82,7 +82,7 @@ describe('Traditional account penalties (regression)', () => {
   it('no penalty at age 60+', () => {
     const scenario = makeScenario({
       currentAge: 60, retirementAge: 60, endAge: 65,
-      baseAnnualSpending: 4000,
+      baseMonthlySpending: 4000,
       balances: { ...makeScenario().balances, traditionalIRA: 1_000_000 },
     });
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });
@@ -100,7 +100,7 @@ describe('Roth conversions and the 10% penalty', () => {
     };
     const scenario = makeScenario({
       currentAge: 50, retirementAge: 50, endAge: 54,
-      baseAnnualSpending: 0,
+      baseMonthlySpending: 0,
       rothConversion: rc,
       // Cash covers the conversion's income tax, so no penalizable withdrawals occur
       balances: { ...makeScenario().balances, traditional401k: 500_000, cashAccount: 300_000 },
@@ -122,7 +122,7 @@ describe('Roth conversions and the 10% penalty', () => {
     };
     const scenario = makeScenario({
       currentAge: 50, retirementAge: 50, endAge: 53,
-      baseAnnualSpending: 2500, // $30k/yr, funded from the freshly converted Roth IRA
+      baseMonthlySpending: 2500, // $30k/yr, funded from the freshly converted Roth IRA
       rothConversion: rc,
       balances: { ...makeScenario().balances, traditionalIRA: 100_000 },
     });
@@ -147,7 +147,7 @@ describe('Roth conversions and the 10% penalty', () => {
     };
     const scenario = makeScenario({
       currentAge: 50, retirementAge: 50, endAge: 59,
-      baseAnnualSpending: 2500, // $30k/yr
+      baseMonthlySpending: 2500, // $30k/yr
       rothConversion: rc,
       // Cash funds early years so Roth withdrawals start after the layer has aged
       balances: { ...makeScenario().balances, traditionalIRA: 50_000, cashAccount: 170_000 },
@@ -173,7 +173,7 @@ describe('Roth conversions and the 10% penalty', () => {
   it('contribution basis comes out first, penalty-free, and is consumed across years', () => {
     const scenario = makeScenario({
       currentAge: 50, retirementAge: 50, endAge: 55,
-      baseAnnualSpending: 3000, // $36k/yr
+      baseMonthlySpending: 3000, // $36k/yr
       rothContributionBasis: 60_000,
       balances: { ...makeScenario().balances, rothIRA: 500_000 },
     });

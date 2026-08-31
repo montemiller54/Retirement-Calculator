@@ -72,7 +72,7 @@ describe('RMD start age in simulation (derived from birth year)', () => {
       socialSecurityBenefit: 0,
       socialSecurityClaimAge: 90,
       pensionAmount: 0,
-      baseAnnualSpending: 4000, // forces withdrawals so RMDs are exercised
+      baseMonthlySpending: 4000, // forces withdrawals so RMDs are exercised
       spendingInflationRate: 0,
       inflationVolatility: 0,
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
@@ -115,7 +115,7 @@ describe('RMD start age in simulation (derived from birth year)', () => {
       socialSecurityCOLA: 0,
       pensionAmount: 4000,           // monthly → $48k/yr
       pensionStartAge: currentAge,
-      baseAnnualSpending: 3000,      // monthly → $36k/yr, fully covered by income
+      baseMonthlySpending: 3000,      // monthly → $36k/yr, fully covered by income
     };
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });
 

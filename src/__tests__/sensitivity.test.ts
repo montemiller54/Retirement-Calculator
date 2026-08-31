@@ -114,8 +114,8 @@ describe('HIGH IMPACT: Starting Balances', () => {
 
 describe('HIGH IMPACT: Spending', () => {
   it('#17 higher spending → lower success rate', () => {
-    const low = run({ baseAnnualSpending: 3000 });
-    const high = run({ baseAnnualSpending: 8000 });
+    const low = run({ baseMonthlySpending: 3000 });
+    const high = run({ baseMonthlySpending: 8000 });
     expect(low.successRate).toBeGreaterThan(high.successRate);
   });
 
@@ -248,7 +248,7 @@ describe('HIGH IMPACT: Withdrawal Strategy', () => {
         rothIRA: 400000, taxable: 400000, hsa: 0,
         cashAccount: 0, otherAssets: 0,
       },
-      baseAnnualSpending: 7500, // monthly → 90k/yr
+      baseMonthlySpending: 7500, // monthly → 90k/yr
       socialSecurityBenefit: 0,
       socialSecurityClaimAge: 70,
     };
@@ -276,7 +276,7 @@ describe('HIGH IMPACT: Withdrawal Strategy', () => {
 describe('HIGH IMPACT: Guardrails', () => {
   it('#38 guardrails enabled → higher success rate than disabled', () => {
     const base: Partial<ScenarioInput> = {
-      baseAnnualSpending: 6000, // aggressive spending
+      baseMonthlySpending: 6000, // aggressive spending
       guardrails: {
         enabled: false,
         tiers: [{ drawdownPct: 15, spendingCutPct: 20 }],
@@ -370,7 +370,7 @@ describe('MEDIUM IMPACT: Portfolio', () => {
         rothIRA: 0, taxable: 800000, hsa: 0,
         cashAccount: 0, otherAssets: 0,
       },
-      baseAnnualSpending: 4000,
+      baseMonthlySpending: 4000,
       socialSecurityBenefit: 1500,
     };
     const lowBasis = run({ ...base, taxableCostBasisPct: 0.20 });
@@ -472,7 +472,7 @@ describe('MEDIUM IMPACT: Investment Allocations', () => {
 describe('MEDIUM IMPACT: Guardrail Parameters', () => {
   // All guardrail tests use aggressive spending to create drawdown conditions
   const guardrailBase: Partial<ScenarioInput> = {
-    baseAnnualSpending: 7000, // high spending to trigger guardrails
+    baseMonthlySpending: 7000, // high spending to trigger guardrails
   };
 
   it('#39 lower drawdown threshold → triggers sooner → more protection → higher success', () => {
@@ -529,7 +529,7 @@ describe('MEDIUM IMPACT: Tax Rates (via scenario manipulation)', () => {
         rothIRA: 0, taxable: 0, hsa: 0,
         cashAccount: 0, otherAssets: 0,
       },
-      baseAnnualSpending: 6000,
+      baseMonthlySpending: 6000,
       socialSecurityBenefit: 2500,
     });
     // All-Roth (no tax on withdrawal)
@@ -542,7 +542,7 @@ describe('MEDIUM IMPACT: Tax Rates (via scenario manipulation)', () => {
         rothIRA: 2000000, taxable: 0, hsa: 0,
         cashAccount: 0, otherAssets: 0,
       },
-      baseAnnualSpending: 6000,
+      baseMonthlySpending: 6000,
       socialSecurityBenefit: 2500,
     });
     // Roth withdrawals aren't taxed → should end with more money

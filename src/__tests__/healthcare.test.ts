@@ -21,7 +21,7 @@ describe('Healthcare cost modeling', () => {
   it('disabled healthcare adds no extra spending', () => {
     const withoutHC = makeScenario({
       currentAge: 65, retirementAge: 65, endAge: 67,
-      baseAnnualSpending: 3000, spendingInflationRate: 0,
+      baseMonthlySpending: 3000, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
       healthcare: { ...BASE_HEALTHCARE, enabled: false },
@@ -41,7 +41,7 @@ describe('Healthcare cost modeling', () => {
     // Age 60, retires at 60, Medicare at 65 → pre-Medicare phase
     const scenario = makeScenario({
       currentAge: 60, retirementAge: 60, endAge: 62,
-      baseAnnualSpending: 3000, spendingInflationRate: 0,
+      baseMonthlySpending: 3000, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
       healthcare: { ...BASE_HEALTHCARE, inflationRate: 0 },
@@ -58,7 +58,7 @@ describe('Healthcare cost modeling', () => {
     // Age 65, retires at 65, Medicare at 65 → Medicare phase
     const scenario = makeScenario({
       currentAge: 65, retirementAge: 65, endAge: 67,
-      baseAnnualSpending: 3000, spendingInflationRate: 0,
+      baseMonthlySpending: 3000, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
       healthcare: { ...BASE_HEALTHCARE, inflationRate: 0 },
@@ -75,7 +75,7 @@ describe('Healthcare cost modeling', () => {
     // Age 80+, retires at 80 → late-life phase
     const scenario = makeScenario({
       currentAge: 80, retirementAge: 80, endAge: 82,
-      baseAnnualSpending: 3000, spendingInflationRate: 0,
+      baseMonthlySpending: 3000, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       socialSecurityClaimAge: 90,
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
@@ -93,7 +93,7 @@ describe('Healthcare cost modeling', () => {
     // 5% medical inflation, test after 10 years
     const scenario = makeScenario({
       currentAge: 55, retirementAge: 55, endAge: 66,
-      baseAnnualSpending: 3000, spendingInflationRate: 0,
+      baseMonthlySpending: 3000, spendingInflationRate: 0,
       inflationVolatility: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       socialSecurityClaimAge: 70,
@@ -118,7 +118,7 @@ describe('Healthcare cost modeling', () => {
   it('phase transitions happen at correct ages', () => {
     const scenario = makeScenario({
       currentAge: 60, retirementAge: 60, endAge: 85,
-      baseAnnualSpending: 0, spendingInflationRate: 0,
+      baseMonthlySpending: 0, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       socialSecurityClaimAge: 90,
       guardrails: { ...DEFAULT_SCENARIO.guardrails, enabled: false },
@@ -158,7 +158,7 @@ describe('Healthcare cost modeling', () => {
     // healthcare portion is preserved
     const scenario = makeScenario({
       currentAge: 65, retirementAge: 65, endAge: 67,
-      baseAnnualSpending: 3000, spendingInflationRate: 0,
+      baseMonthlySpending: 3000, spendingInflationRate: 0,
       socialSecurityBenefit: 0, pensionAmount: 0,
       guardrails: {
         enabled: true,

@@ -126,7 +126,7 @@ describe('Tax gross-up convergence', () => {
         hsa: 0,
         cashAccount: 0, otherAssets: 0,
       },
-      baseAnnualSpending: 5000, // monthly → $60k/yr
+      baseMonthlySpending: 5000, // monthly → $60k/yr
       socialSecurityBenefit: 2000, // monthly → $24k/yr
       socialSecurityClaimAge: 67,
     });
@@ -273,7 +273,7 @@ describe('Zero-balance edge cases', () => {
         taxable: 0, hsa: 0,
         cashAccount: 0, otherAssets: 0,
       },
-      baseAnnualSpending: 3000, // monthly → 36k/yr
+      baseMonthlySpending: 3000, // monthly → 36k/yr
     });
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });
     expect(result.medianPath.length).toBe(11); // ages 65-75
@@ -296,7 +296,7 @@ describe('Success rate boundaries', () => {
         taxable: 0, hsa: 0,
         cashAccount: 0, otherAssets: 0,
       },
-      baseAnnualSpending: 500, // monthly → $6k/yr
+      baseMonthlySpending: 500, // monthly → $6k/yr
       socialSecurityBenefit: 2000,
     });
     const result = runSimulation(scenario, { numSimulations: 100, seed: 42 });

@@ -12,6 +12,21 @@ const ACTIVE_PLAN_KEY = 'retirement-planner-active-plan';
  * Old saved data may lack newer asset classes (e.g. 'crypto') or account types (e.g. 'cashAccount').
  */
 function migrateScenario(s: ScenarioInput): ScenarioInput {
+  // Rename migrations — these fields were always stored as MONTHLY values
+  // despite their old "annual" names.
+  const rawTop = s as unknown as Record<string, unknown>;
+  if (rawTop.baseAnnualSpending != null && rawTop.baseMonthlySpending == null) {
+    rawTop.baseMonthlySpending = rawTop.baseAnnualSpending;
+  }
+  delete rawTop.baseAnnualSpending;
+  for (const src of (s.otherIncomeSources ?? [])) {
+    const r = src as unknown as Record<string, unknown>;
+    if (r.annualAmount != null && r.monthlyAmount == null) {
+      r.monthlyAmount = r.annualAmount;
+    }
+    delete r.annualAmount;
+  }
+
   const patchAlloc = (alloc: Record<string, number>): Record<string, number> => {
     for (const ac of ASSET_CLASSES) {
       if (!(ac in alloc)) {

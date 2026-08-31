@@ -59,7 +59,7 @@ function strippedScenario(
     stateCode: 'TX',
     jobs: [],
     totalSavingsRate: 0,
-    baseAnnualSpending: 0,
+    baseMonthlySpending: 0,
     spendingInflationRate: 0,
     inflationVolatility: 0,
     taxBracketInflationRate: 0,

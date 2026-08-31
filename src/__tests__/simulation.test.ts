@@ -39,7 +39,7 @@ describe('runSimulation', () => {
   it('handles zero spending scenario (100% success)', () => {
     const input = {
       ...DEFAULT_SCENARIO,
-      baseAnnualSpending: 0,
+      baseMonthlySpending: 0,
       socialSecurityBenefit: 0,
       pensionAmount: 0,
     };

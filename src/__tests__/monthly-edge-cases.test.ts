@@ -38,7 +38,7 @@ describe('Monthly-to-annual conversion (toAnnualScenario)', () => {
       currentAge: 65,
       retirementAge: 65,
       endAge: 70,
-      baseAnnualSpending: 4000, // monthly → $48k/yr
+      baseMonthlySpending: 4000, // monthly → $48k/yr
       socialSecurityBenefit: 0,
       pensionAmount: 0,
       spendingInflationRate: 0,
@@ -103,7 +103,7 @@ describe('Monthly-to-annual conversion (toAnnualScenario)', () => {
       currentAge: 70,
       retirementAge: 70,
       endAge: 75,
-      baseAnnualSpending: 10000, // monthly → 120k/yr
+      baseMonthlySpending: 10000, // monthly → 120k/yr
       spendingInflationRate: 0,
       socialSecurityBenefit: 0,
       pensionAmount: 0,
@@ -148,7 +148,7 @@ describe('Monthly-to-annual conversion (toAnnualScenario)', () => {
         {
           id: 'rental',
           name: 'Rental Income',
-          annualAmount: 800, // monthly label, but value used in conversion
+          monthlyAmount: 800, // monthly label, but value used in conversion
           startAge: 65,
           endAge: 70,
           inflationRate: 0,
@@ -173,7 +173,7 @@ describe('One-time expenses', () => {
       currentAge: 65,
       retirementAge: 65,
       endAge: 70,
-      baseAnnualSpending: 4000, // monthly → 48k/yr
+      baseMonthlySpending: 4000, // monthly → 48k/yr
       spendingInflationRate: 0,
       socialSecurityBenefit: 0,
       pensionAmount: 0,
@@ -200,7 +200,7 @@ describe('One-time expenses', () => {
       currentAge: 65,
       retirementAge: 65,
       endAge: 75,
-      baseAnnualSpending: 4000, // monthly → 48k/yr
+      baseMonthlySpending: 4000, // monthly → 48k/yr
       spendingInflationRate: 0.03,
       inflationVolatility: 0,
       socialSecurityBenefit: 0,
@@ -280,7 +280,7 @@ describe('Spending inflation compounding', () => {
       currentAge: 65,
       retirementAge: 65,
       endAge: 75,
-      baseAnnualSpending: 5000, // monthly → 60k/yr
+      baseMonthlySpending: 5000, // monthly → 60k/yr
       spendingInflationRate: 0.03,
       inflationVolatility: 0,
       socialSecurityBenefit: 0,
@@ -311,7 +311,7 @@ describe('Guardrail spending cuts', () => {
       currentAge: 70,
       retirementAge: 70,
       endAge: 85,
-      baseAnnualSpending: 8000, // monthly → 96k/yr (aggressive)
+      baseMonthlySpending: 8000, // monthly → 96k/yr (aggressive)
       spendingInflationRate: 0,
       socialSecurityBenefit: 0,
       pensionAmount: 0,
@@ -375,7 +375,7 @@ describe('Multiple withdrawal strategies produce different results', () => {
         taxable: 400000, hsa: 0,
         cashAccount: 0, otherAssets: 0,
       },
-      baseAnnualSpending: 7500, // monthly → 90k/yr, above bracket ceiling
+      baseMonthlySpending: 7500, // monthly → 90k/yr, above bracket ceiling
     });
 
     const results = (['taxEfficient', 'rothPreserving', 'proRata'] as const).map(strat => {
@@ -406,7 +406,7 @@ describe('Surplus income reinvestment', () => {
     const scenario = makeScenario({
       currentAge: 67, retirementAge: 67, endAge: 69,
       filingStatus: 'mfj',
-      baseAnnualSpending: 2000,
+      baseMonthlySpending: 2000,
       spendingInflationRate: 0,
       socialSecurityBenefit: 4000, // $48K/yr
       socialSecurityClaimAge: 67,
@@ -441,7 +441,7 @@ describe('Surplus income reinvestment', () => {
     const scenario = makeScenario({
       currentAge: 67, retirementAge: 67, endAge: 68,
       filingStatus: 'mfj',
-      baseAnnualSpending: 5000, // $60K/yr
+      baseMonthlySpending: 5000, // $60K/yr
       spendingInflationRate: 0,
       socialSecurityBenefit: 2000, // $24K/yr
       socialSecurityClaimAge: 67,
@@ -471,7 +471,7 @@ describe('Surplus income reinvestment', () => {
     const scenario = makeScenario({
       currentAge: 67, retirementAge: 67, endAge: 85,
       filingStatus: 'mfj',
-      baseAnnualSpending: 2000, // $24K/yr
+      baseMonthlySpending: 2000, // $24K/yr
       spendingInflationRate: 0.02,
       socialSecurityBenefit: 5000, // $60K/yr combined SS
       socialSecurityClaimAge: 67,

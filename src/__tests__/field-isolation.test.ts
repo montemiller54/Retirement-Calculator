@@ -180,7 +180,7 @@ describe('Healthcare sub-fields (isolated)', () => {
   const fundedBase: Partial<ScenarioInput> = {
     currentAge: 55, retirementAge: 55, endAge: 90, jobs: [],
     balances: { traditional401k: 1500000, roth401k: 0, traditionalIRA: 0, rothIRA: 500000, taxable: 500000, hsa: 0, cashAccount: 100000, otherAssets: 0 },
-    baseAnnualSpending: 4000, socialSecurityBenefit: 2500,
+    baseMonthlySpending: 4000, socialSecurityBenefit: 2500,
   };
 
   it('preMedicareMonthly alone moves median (matters before Medicare age)', () => {
@@ -227,7 +227,7 @@ describe('Spouse sub-fields (isolated)', () => {
     jobs: [],
     filingStatus: 'mfj',
     balances: { traditional401k: 800000, roth401k: 0, traditionalIRA: 0, rothIRA: 200000, taxable: 200000, hsa: 0, cashAccount: 50000, otherAssets: 0 },
-    baseAnnualSpending: 5000,
+    baseMonthlySpending: 5000,
     socialSecurityBenefit: 2000,
   };
 
@@ -259,7 +259,7 @@ describe('Roth conversion sub-fields (isolated)', () => {
   const rcBase: Partial<ScenarioInput> = {
     currentAge: 60, retirementAge: 65, endAge: 95,
     balances: { traditional401k: 1500000, roth401k: 0, traditionalIRA: 500000, rothIRA: 50000, taxable: 100000, hsa: 0, cashAccount: 0, otherAssets: 0 },
-    baseAnnualSpending: 4500, socialSecurityBenefit: 2000,
+    baseMonthlySpending: 4500, socialSecurityBenefit: 2000,
   };
 
   it('rothConversion.startAge alone moves median', () => {
@@ -289,7 +289,7 @@ describe('Housing sub-fields (isolated)', () => {
   const housingBase: Partial<ScenarioInput> = {
     currentAge: 55, retirementAge: 65, endAge: 95,
     balances: { traditional401k: 600000, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 200000, hsa: 0, cashAccount: 0, otherAssets: 0 },
-    baseAnnualSpending: 4000, socialSecurityBenefit: 2000,
+    baseMonthlySpending: 4000, socialSecurityBenefit: 2000,
   };
 
   it('housing.mortgagePayment alone moves median (higher → lower)', () => {
@@ -334,7 +334,7 @@ describe('Miscellaneous controls (isolated)', () => {
       currentAge: 55, retirementAge: 55, endAge: 90,
       jobs: [],
       balances: { traditional401k: 1000000, roth401k: 0, traditionalIRA: 0, rothIRA: 0, taxable: 50000, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      baseAnnualSpending: 4000, socialSecurityBenefit: 2000, socialSecurityClaimAge: 67,
+      baseMonthlySpending: 4000, socialSecurityBenefit: 2000, socialSecurityClaimAge: 67,
     };
     const off = run({ ...early, ruleof55Eligible: false });
     const on  = run({ ...early, ruleof55Eligible: true });
@@ -349,7 +349,7 @@ describe('Miscellaneous controls (isolated)', () => {
       currentAge: 50, retirementAge: 50, endAge: 75,
       jobs: [],
       balances: { traditional401k: 0, roth401k: 0, traditionalIRA: 0, rothIRA: 2000000, taxable: 0, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      baseAnnualSpending: 4000, socialSecurityBenefit: 2000, socialSecurityClaimAge: 67,
+      baseMonthlySpending: 4000, socialSecurityBenefit: 2000, socialSecurityClaimAge: 67,
       ruleof55Eligible: false,
     };
     const noBasis   = run({ ...early, rothContributionBasis: 0 });

@@ -44,7 +44,7 @@ export function buildScenario(s: ExternalScenario, guardrailsOn = false): Scenar
     filingStatus: 'single',
     jobs: [],
     totalSavingsRate: 0,
-    baseAnnualSpending: s.annualSpending / 12, // stored as monthly
+    baseMonthlySpending: s.annualSpending / 12, // stored as monthly
     spendingInflationRate: 0.025,
     socialSecurityBenefit: 0,
     socialSecurityClaimAge: 99,

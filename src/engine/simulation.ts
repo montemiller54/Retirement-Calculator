@@ -82,7 +82,7 @@ function toAnnualScenario(s: ScenarioInput): ScenarioInput {
     ...resolved,
     taxBracketInflationRate: derivedTaxBracketRate,
     jobs: (resolved.jobs ?? []).map(j => ({ ...j, monthlyPay: j.monthlyPay * 12 })),
-    baseAnnualSpending: resolved.baseAnnualSpending * 12,
+    baseMonthlySpending: resolved.baseMonthlySpending * 12,
     socialSecurityBenefit: resolved.socialSecurityBenefit * 12,
     pensionAmount: resolved.pensionType === 'lumpSum' ? resolved.pensionAmount : resolved.pensionAmount * 12,
     spouse: resolved.spouse ? {
@@ -91,7 +91,7 @@ function toAnnualScenario(s: ScenarioInput): ScenarioInput {
     } : resolved.spouse,
     otherIncomeSources: resolved.otherIncomeSources.map(src => ({
       ...src,
-      annualAmount: src.annualAmount * 12,
+      monthlyAmount: src.monthlyAmount * 12,
     })),
     guardrails: {
       ...resolved.guardrails,
@@ -262,7 +262,7 @@ function computeOtherIncome(s: ScenarioInput, age: number, yearsFromNow: number)
   let otherIncome = 0;
   for (const src of s.otherIncomeSources) {
     if (age >= src.startAge && age <= src.endAge) {
-      otherIncome += src.annualAmount * Math.pow(1 + src.inflationRate, yearsFromNow);
+      otherIncome += src.monthlyAmount * Math.pow(1 + src.inflationRate, yearsFromNow);
     }
   }
   return otherIncome;
@@ -422,7 +422,7 @@ function executeRothConversionPhase(
     // consume bracket room that spending withdrawals will also need.
     let estTradWithdrawal = 0;
     if (isRetired) {
-      const estSpending = s.baseAnnualSpending * Math.pow(1 + s.spendingInflationRate, yearsFromNow);
+      const estSpending = s.baseMonthlySpending * Math.pow(1 + s.spendingInflationRate, yearsFromNow);
       const estIncome = income.socialSecurity + income.spouseSS + income.pension + income.otherIncome;
       const estCashNeed = Math.max(0, estSpending - estIncome);
       // Non-traditional accounts are tapped first in most strategies
@@ -543,7 +543,7 @@ function computeRetirementSpending(
 ): { spending: number; taxableBasisAdd: number } {
   const sp = s.spouse;
   let taxableBasisAdd = 0;
-  let baseSpending = s.baseAnnualSpending * yearInflationFactor;
+  let baseSpending = s.baseMonthlySpending * yearInflationFactor;
 
   // Housing: downsizing proceeds deposited at the chosen age
   if (s.housing?.enabled) {
@@ -1236,7 +1236,7 @@ export function findSafeSpending(
   const getSuccessRate = (monthlySpending: number, numSims: number): number => {
     const testScenario: ScenarioInput = {
       ...baseScenario,
-      baseAnnualSpending: monthlySpending, // stored as monthly, toAnnualScenario multiplies by 12
+      baseMonthlySpending: monthlySpending,
     };
     const simsPerSeed = Math.ceil(numSims / NUM_SEEDS);
     let totalSuccesses = 0;
@@ -1258,7 +1258,7 @@ export function findSafeSpending(
 
   // Set search bounds (monthly amounts in today's dollars)
   let low = 0;
-  let high = scenario.baseAnnualSpending * 5; // 5x current spending as upper bound
+  let high = scenario.baseMonthlySpending * 5; // 5x current spending as upper bound
   // If current spending is 0 or very small, use a reasonable upper bound
   if (high < 1000) high = 20000;
 

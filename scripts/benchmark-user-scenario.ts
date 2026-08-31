@@ -25,23 +25,25 @@
 import { readFileSync } from 'node:fs';
 import { runSimulation } from '../src/engine/simulation';
 import { DEFAULT_SCENARIO } from '../src/constants/defaults';
+import { importScenario } from '../src/utils/storage';
 import type { ScenarioInput } from '../src/types';
 import { loadHistoricalReturns } from './external-benchmarks/historical-data';
 import { PRNG } from '../src/engine/math';
 
 // ── Load the scenario ──────────────────────────────────────────────────
 const SCENARIO_PATH = '/Users/mm39036/Downloads/11kAt55 (2).json';
-const raw = JSON.parse(readFileSync(SCENARIO_PATH, 'utf-8'));
+// importScenario applies field migrations (e.g. baseAnnualSpending → baseMonthlySpending)
+const raw = importScenario(readFileSync(SCENARIO_PATH, 'utf-8'));
 const scenario: ScenarioInput = { ...DEFAULT_SCENARIO, ...raw };
 
 const N_SIMS = 5000;
 const SEED = 42;
 
-// ── Basic scenario facts (annualised) ──────────────────────────────────
+// ── Basic scenario facts (annualised) ────────────────────────────────
 const retirementAge = scenario.retirementAge;
 const endAge = scenario.endAge;
 const years = endAge - retirementAge;
-const annualSpending = scenario.baseAnnualSpending * 12;
+const annualSpending = scenario.baseMonthlySpending * 12;
 const annualPension = scenario.pensionAmount * 12; // no COLA
 const pensionStartAge = scenario.pensionStartAge;
 const inflation = scenario.spendingInflationRate; // for pension real-decay

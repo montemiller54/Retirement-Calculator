@@ -55,11 +55,11 @@ describe('Field magnitude bands', () => {
     expect(ratio).toBeLessThan(10.0);
   });
 
-  it('baseAnnualSpending: +25% bump cuts median ending to 30%–85% of baseline', () => {
+  it('baseMonthlySpending: +25% bump cuts median ending to 30%–85% of baseline', () => {
     // Default scenario operates near the depletion threshold, so spending
     // is extremely high-leverage. Use a modest bump to avoid total depletion.
-    const baseline = run({ baseAnnualSpending: 5000 });   // $60K/yr
-    const higher = run({ baseAnnualSpending: 6250 });     // $75K/yr (+25%)
+    const baseline = run({ baseMonthlySpending: 5000 });   // $60K/yr
+    const higher = run({ baseMonthlySpending: 6250 });     // $75K/yr (+25%)
     const ratio = higher.medianEnding / baseline.medianEnding;
     expect(ratio).toBeGreaterThan(0.30);
     expect(ratio).toBeLessThan(0.85);

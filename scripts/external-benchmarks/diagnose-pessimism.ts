@@ -262,7 +262,7 @@ function runOurEngineWithCrashFreq(s: ExternalScenario, crashFrequency: number) 
     filingStatus: 'single',
     jobs: [],
     totalSavingsRate: 0,
-    baseAnnualSpending: s.annualSpending / 12,
+    baseMonthlySpending: s.annualSpending / 12,
     spendingInflationRate: 0.025,
     socialSecurityBenefit: 0,
     socialSecurityClaimAge: 99,

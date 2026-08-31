@@ -31,7 +31,7 @@ const scenario: ScenarioInput = {
   },
   visibleAccounts: ['traditional401k', 'roth401k', 'hsa', 'otherAssets'],
   taxableCostBasisPct: 0.5,
-  baseAnnualSpending: 9000,
+  baseMonthlySpending: 9000,
   spendingInflationRate: 0.025,
   taxBracketInflationRate: 0.02,
   oneTimeExpenses: [],

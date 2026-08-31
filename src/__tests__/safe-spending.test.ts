@@ -53,7 +53,7 @@ describe('findSafeSpending', () => {
     // cash-account withdrawals → sustainable = 264000 / 11 / 12 = $2,000/mo.
     const scenario = makeDeterministicScenario({
       currentAge: 65, retirementAge: 65, endAge: 75,
-      baseAnnualSpending: 2000,
+      baseMonthlySpending: 2000,
       balances: { ...makeDeterministicScenario().balances, cashAccount: 264_000 },
     });
 
@@ -96,7 +96,7 @@ describe('findSafeSpending', () => {
     // Cross-check: simulating at the found spending level reproduces
     // roughly the achieved rate (independent seed).
     const check = runSimulation(
-      { ...scenario, baseAnnualSpending: result.monthlySpending },
+      { ...scenario, baseMonthlySpending: result.monthlySpending },
       { numSimulations: 2000, seed: 4242 },
     );
     expect(check.successRate).toBeGreaterThanOrEqual(0.85);

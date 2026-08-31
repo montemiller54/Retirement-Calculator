@@ -75,7 +75,7 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
   taxableCostBasisPct: 0.80,
 
   // Spending (monthly amounts)
-  baseAnnualSpending: 5000,
+  baseMonthlySpending: 5000,
   spendingInflationRate: 0.025,
   taxBracketInflationRate: 0.02,
   oneTimeExpenses: [],

@@ -102,7 +102,7 @@ export interface Job {
 export interface IncomeSource {
   id: string;
   name: string;
-  annualAmount: number;
+  monthlyAmount: number;  // monthly, today's dollars
   startAge: number;
   endAge: number;
   inflationRate: number;
@@ -210,7 +210,7 @@ export interface ScenarioInput {
   taxableCostBasisPct: number;   // e.g., 0.70 means 70% is basis
 
   // Spending
-  baseAnnualSpending: number;    // today's dollars
+  baseMonthlySpending: number;   // monthly, today's dollars
   spendingInflationRate: number; // e.g., 0.025
   taxBracketInflationRate: number; // e.g., 0.02 — annual indexing of tax brackets
   oneTimeExpenses: OneTimeExpense[];

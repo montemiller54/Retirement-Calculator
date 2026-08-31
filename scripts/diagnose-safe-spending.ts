@@ -4,14 +4,14 @@
  * and compares results.
  */
 import { runSimulation, findSafeSpending } from '../src/engine/simulation';
-import type { ScenarioInput } from '../src/types';
+import { importScenario } from '../src/utils/storage';
 
-// Load scenario from JSON
+// Load scenario from JSON (importScenario applies field migrations)
 import scenarioJson from '/Users/mm39036/Downloads/11kAt55.json';
-const scenario = scenarioJson as unknown as ScenarioInput;
+const scenario = importScenario(JSON.stringify(scenarioJson));
 
 console.log('═══ Safe Spending Diagnostic ═══\n');
-console.log(`Spending: $${scenario.baseAnnualSpending}/month`);
+console.log(`Spending: $${scenario.baseMonthlySpending}/month`);
 console.log(`Ages: ${scenario.currentAge} → retire ${scenario.retirementAge} → end ${scenario.endAge}`);
 console.log(`Crash frequency: ${scenario.investments.crashFrequency}\n`);
 
@@ -26,7 +26,7 @@ for (const seed of seeds) {
 // 2. Run at various spending levels with seed=undefined (random)
 console.log('\n─── Success Rate vs Spending (5000 sims, random seed) ───');
 for (const monthly of [9000, 10000, 10500, 11000, 11500, 12000, 13000, 14000]) {
-  const testScenario = { ...scenario, baseAnnualSpending: monthly };
+  const testScenario = { ...scenario, baseMonthlySpending: monthly };
   const result = runSimulation(testScenario, { numSimulations: 5000 });
   console.log(`  $${String(monthly).padEnd(6)}/mo → ${(result.successRate * 100).toFixed(1)}%`);
 }
@@ -34,7 +34,7 @@ for (const monthly of [9000, 10000, 10500, 11000, 11500, 12000, 13000, 14000]) {
 // 3. Run at various spending levels with seed=42
 console.log('\n─── Success Rate vs Spending (5000 sims, seed=42) ───');
 for (const monthly of [9000, 10000, 10500, 11000, 11500, 12000, 13000, 14000]) {
-  const testScenario = { ...scenario, baseAnnualSpending: monthly };
+  const testScenario = { ...scenario, baseMonthlySpending: monthly };
   const result = runSimulation(testScenario, { numSimulations: 5000, seed: 42 });
   console.log(`  $${String(monthly).padEnd(6)}/mo → ${(result.successRate * 100).toFixed(1)}%`);
 }
@@ -47,7 +47,7 @@ console.log(`  Achieved: ${(safe80.achievedSuccessRate * 100).toFixed(1)}%`);
 
 // 5. Verify: run main simulation at the safe spending level
 console.log('\n─── Verify safe spending with main simulation ───');
-const verifyScenario = { ...scenario, baseAnnualSpending: safe80.monthlySpending, guardrails: { ...scenario.guardrails, enabled: false } };
+const verifyScenario = { ...scenario, baseMonthlySpending: safe80.monthlySpending, guardrails: { ...scenario.guardrails, enabled: false } };
 for (const seed of [undefined, 42, 12345]) {
   const result = runSimulation(verifyScenario, { numSimulations: 5000, seed });
   console.log(`  $${safe80.monthlySpending}/mo, seed=${String(seed).padEnd(10)} → ${(result.successRate * 100).toFixed(1)}%`);
