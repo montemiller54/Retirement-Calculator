@@ -109,6 +109,682 @@ function toAnnualScenario(s: ScenarioInput): ScenarioInput {
   };
 }
 
+// ── Per-year phase helpers for runSinglePath ──
+// Each helper owns one phase of the year loop. All scenario values (`s`) are
+// the ANNUALIZED scenario from toAnnualScenario.
+
+interface RegimeState {
+  inBear: boolean;
+  bearDuration: number;          // consecutive bear years
+  recoveryYearsRemaining: number; // post-bear recovery countdown
+  lastBearDuration: number;       // length of the most recent bear (for boost sizing)
+}
+
+// Markov regime transition: bear markets cluster realistically, capped at
+// MAX_BEAR_DURATION consecutive years. Returns this year's post-bear recovery
+// boost mean (elevated stocks/crypto mean; bigger bear → bigger bounce).
+function transitionRegime(state: RegimeState, rng: PRNG, yearsFromNow: number, enterBear: number): number | undefined {
+  if (yearsFromNow > 0) {
+    const wasBear = state.inBear;
+    state.inBear = state.inBear
+      ? (state.bearDuration < MAX_BEAR_DURATION && rng.next() < BEAR_PERSISTENCE)
+      : rng.next() < enterBear;
+    if (wasBear && !state.inBear) {
+      // Bear → Bull transition: start recovery window (1-2 years)
+      state.lastBearDuration = state.bearDuration;
+      state.recoveryYearsRemaining = state.bearDuration >= 2 ? 2 : 1;
+      state.bearDuration = 0;
+    } else if (state.inBear) {
+      state.bearDuration++;
+      state.recoveryYearsRemaining = 0; // cancel recovery if we re-enter bear
+    } else if (state.recoveryYearsRemaining > 0) {
+      state.recoveryYearsRemaining--;
+    }
+  }
+  if (!state.inBear && state.recoveryYearsRemaining > 0) {
+    const isFirstRecoveryYear = (state.lastBearDuration >= 2 && state.recoveryYearsRemaining === 2) ||
+                                (state.lastBearDuration === 1 && state.recoveryYearsRemaining === 1);
+    const baseMean = isFirstRecoveryYear ? POST_BEAR_RECOVERY_YEAR1_MEAN : POST_BEAR_RECOVERY_YEAR2_MEAN;
+    // Scale: 1-year bear gets ~70% of full boost; 3+ year bear gets 100%
+    const scale = Math.min(1, 0.5 + 0.25 * state.lastBearDuration);
+    return baseMean * scale;
+  }
+  return undefined;
+}
+
+// Each job is active when its owner's age falls within its own window.
+// A regular job ends at the owner's retirementAge (retiring at N means the
+// person is retired starting the year they turn N — no salary that year).
+// Explicit post-retirement gigs (startAge >= retirementAge) are honored.
+function computeJobIncome(s: ScenarioInput, age: number, spouseAge: number | null, yearsFromNow: number): {
+  primarySalary: number; spouseSalary: number; activeJobs: ScenarioInput['jobs'];
+} {
+  const sp = s.spouse;
+  let primarySalary = 0;
+  let spouseSalary = 0;
+  const activeJobs: ScenarioInput['jobs'] = [];
+  for (const job of (s.jobs ?? [])) {
+    let ownerAge: number;
+    let ownerRetirementAge: number;
+    if (job.owner === 'spouse') {
+      if (!sp?.enabled || spouseAge === null) continue;
+      ownerAge = spouseAge;
+      ownerRetirementAge = sp.retirementAge;
+    } else {
+      ownerAge = age;
+      ownerRetirementAge = s.retirementAge;
+    }
+    if (ownerAge < job.startAge || ownerAge > job.endAge) continue;
+    // Cap regular jobs at retirement; allow explicit post-retirement gigs.
+    const isPostRetirementGig = job.startAge >= ownerRetirementAge;
+    if (!isPostRetirementGig && ownerAge >= ownerRetirementAge) continue;
+    const jobSalary = job.monthlyPay * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
+    if (job.owner === 'spouse') spouseSalary += jobSalary;
+    else primarySalary += jobSalary;
+    activeJobs.push(job);
+  }
+  return { primarySalary, spouseSalary, activeJobs };
+}
+
+// SS benefits for both spouses, indexed from today (benefits are entered in
+// today's dollars), with the pre-FRA earnings test applied per person.
+function computeSocialSecurityIncome(
+  s: ScenarioInput, age: number, spouseAge: number | null, yearsFromNow: number,
+  primarySalary: number, spouseSalary: number,
+): { socialSecurity: number; spouseSS: number } {
+  const sp = s.spouse;
+
+  const ssClaiming = age >= s.socialSecurityClaimAge;
+  let socialSecurity = ssClaiming
+    ? s.socialSecurityBenefit * Math.pow(1 + s.socialSecurityCOLA, yearsFromNow)
+    : 0;
+
+  // Earnings test: before FRA, SS is reduced $1 per $2 earned above threshold
+  const birthYear = new Date().getFullYear() - s.currentAge;
+  const fraMonths = getFullRetirementAgeMonths(birthYear);
+  const fraAge = Math.ceil(fraMonths / 12);
+  if (socialSecurity > 0 && age < fraAge && primarySalary > 0) {
+    // 2026 exempt amount (~$23,400, indexed)
+    const ssEarningsExempt = 23400 * Math.pow(1 + (s.taxBracketInflationRate ?? 0.02), yearsFromNow);
+    const excessEarnings = Math.max(0, primarySalary - ssEarningsExempt);
+    socialSecurity -= Math.min(socialSecurity, excessEarnings * 0.5);
+  }
+
+  let spouseSS = 0;
+  if (sp?.enabled && spouseAge !== null) {
+    const spouseSsClaiming = spouseAge >= sp.socialSecurityClaimAge;
+    spouseSS = spouseSsClaiming
+      ? sp.socialSecurityBenefit * Math.pow(1 + s.socialSecurityCOLA, yearsFromNow)
+      : 0;
+
+    if (spouseSS > 0 && spouseSalary > 0) {
+      const spouseBirthYear = new Date().getFullYear() - sp.currentAge;
+      const spouseFraAge = Math.ceil(getFullRetirementAgeMonths(spouseBirthYear) / 12);
+      if (spouseAge < spouseFraAge) {
+        const ssEarningsExempt = 23400 * Math.pow(1 + (s.taxBracketInflationRate ?? 0.02), yearsFromNow);
+        const excessEarnings = Math.max(0, spouseSalary - ssEarningsExempt);
+        spouseSS -= Math.min(spouseSS, excessEarnings * 0.5);
+      }
+    }
+  }
+
+  return { socialSecurity, spouseSS };
+}
+
+// Pension income (annuity) or one-time lump-sum deposit into the chosen account.
+function applyPension(s: ScenarioInput, age: number, isRetired: boolean, balances: AccountBalances): {
+  pension: number; lumpSumTaxable: number; taxableBasisAdd: number;
+} {
+  let pension = 0;
+  let lumpSumTaxable = 0;
+  let taxableBasisAdd = 0;
+  if (s.pensionType === 'lumpSum') {
+    if (age === s.pensionStartAge && s.pensionAmount > 0) {
+      const acct = s.pensionLumpSumAccount ?? 'traditionalIRA';
+      balances[acct] += s.pensionAmount;
+      if (acct === 'taxable') {
+        taxableBasisAdd = s.pensionAmount;
+        // Cash-out is taxed as ordinary income; IRA rollover is not
+        lumpSumTaxable = s.pensionAmount;
+      }
+    }
+  } else {
+    const pensionActive = isRetired && age >= s.pensionStartAge && s.pensionAmount > 0;
+    const pensionYears = pensionActive ? age - s.pensionStartAge : 0;
+    pension = pensionActive
+      ? s.pensionAmount * Math.pow(1 + s.pensionCOLA, pensionYears)
+      : 0;
+  }
+  return { pension, lumpSumTaxable, taxableBasisAdd };
+}
+
+function computeOtherIncome(s: ScenarioInput, age: number, yearsFromNow: number): number {
+  let otherIncome = 0;
+  for (const src of s.otherIncomeSources) {
+    if (age >= src.startAge && age <= src.endAge) {
+      otherIncome += src.annualAmount * Math.pow(1 + src.inflationRate, yearsFromNow);
+    }
+  }
+  return otherIncome;
+}
+
+// Contributions per owner: each owner gets their own 401k/IRA/HSA limits and
+// earns employer match only from their own jobs. Mutates balances.
+function applyContributions(
+  s: ScenarioInput, age: number, spouseAge: number | null, yearsFromNow: number,
+  activeJobs: ScenarioInput['jobs'], primarySalary: number, spouseSalary: number,
+  balances: AccountBalances,
+): { contributions: AccountBalances; employeePreTax401k: number; employeeHSA: number; taxableBasisAdd: number } {
+  const sp = s.spouse;
+  const salary = primarySalary + spouseSalary;
+  const contributions = emptyBalances();
+  let employeePreTax401k = 0; // for wage tax calculation
+  let employeeHSA = 0;
+  let taxableBasisAdd = 0;
+  if (activeJobs.length > 0 && salary > 0) {
+    const limIdx = Math.pow(1 + (s.taxBracketInflationRate ?? 0), yearsFromNow);
+
+    const applyOwner = (ownerSalary: number, ownerJobs: typeof s.jobs, ownerAge: number) => {
+      if (ownerSalary <= 0 || ownerJobs.length === 0) return;
+      const totalSavings = ownerSalary * s.totalSavingsRate;
+
+      let totalEmployerMatch = 0;
+      let totalRothMatch = 0;
+      for (const job of ownerJobs) {
+        if (job.has401k && job.employerMatchRate > 0 && job.employerMatchCapPct > 0) {
+          const jobSalary = job.monthlyPay * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
+          const desired401k = totalSavings *
+            ((s.contributionAllocation.traditional401k + s.contributionAllocation.roth401k) / 100);
+          const matchableAmount = Math.min(desired401k, jobSalary * job.employerMatchCapPct);
+          const jobMatch = matchableAmount * job.employerMatchRate;
+          totalRothMatch += jobMatch * ((job.employerRothPct ?? 0) / 100);
+          totalEmployerMatch += jobMatch;
+        }
+      }
+      const weightedRothPct = totalEmployerMatch > 0 ? (totalRothMatch / totalEmployerMatch) * 100 : 0;
+
+      const has401k = ownerJobs.some(j => j.has401k);
+      const effectiveAllocation = { ...s.contributionAllocation };
+      if (!has401k) {
+        effectiveAllocation.taxable += effectiveAllocation.traditional401k + effectiveAllocation.roth401k;
+        effectiveAllocation.traditional401k = 0;
+        effectiveAllocation.roth401k = 0;
+      }
+
+      const result = allocateContributions({
+        totalSavings,
+        allocation: effectiveAllocation,
+        age: ownerAge,
+        limit401k: s.limit401k * limIdx,
+        limitIRA: s.limitIRA * limIdx,
+        enable401kCatchUp: s.enable401kCatchUp,
+        enableIRACatchUp: s.enableIRACatchUp,
+        employerMatch: totalEmployerMatch,
+        employerRothPct: weightedRothPct,
+        catchUp401k: DEFAULT_401K_CATCHUP * limIdx,
+        superCatchUp401k: DEFAULT_401K_SUPER_CATCHUP * limIdx,
+        catchUpIRA: DEFAULT_IRA_CATCHUP * limIdx,
+        hsaLimit: DEFAULT_HSA_SELF_ONLY * limIdx,
+      });
+
+      employeePreTax401k += result.contributions.traditional401k;
+      employeeHSA += result.contributions.hsa;
+
+      for (const acct of ACCOUNT_TYPES) {
+        contributions[acct] += result.contributions[acct];
+        balances[acct] += result.contributions[acct];
+        if (acct === 'taxable') {
+          taxableBasisAdd += result.contributions[acct];
+        }
+      }
+      for (const acct of ACCOUNT_TYPES) {
+        if (result.employerContributions[acct] > 0) {
+          contributions[acct] += result.employerContributions[acct];
+          balances[acct] += result.employerContributions[acct];
+        }
+      }
+    };
+
+    applyOwner(
+      primarySalary,
+      activeJobs.filter(j => j.owner === 'primary'),
+      age,
+    );
+    if (sp?.enabled && spouseAge !== null) {
+      applyOwner(
+        spouseSalary,
+        activeJobs.filter(j => j.owner === 'spouse'),
+        spouseAge,
+      );
+    }
+  }
+  return { contributions, employeePreTax401k, employeeHSA, taxableBasisAdd };
+}
+
+// Taxable-account investment income: the blended return already includes
+// these; recharacterize the slice as currently-taxed income — qualified
+// dividends (LTCG rates) on the stock portion, interest (ordinary) on
+// bond/cash. Reinvested, so the caller adds both to cost basis.
+function computeTaxableInvestmentIncome(
+  scenario: ScenarioInput, balances: AccountBalances, isRetired: boolean, means: number[],
+): { taxableDividends: number; taxableInterestIncome: number } {
+  if (balances.taxable <= 0) return { taxableDividends: 0, taxableInterestIncome: 0 };
+  const taxAlloc = getAllocation(scenario, 'taxable', isRetired);
+  const stockPct = (taxAlloc[ASSET_CLASSES.indexOf('stocks')] ?? 0) / 100;
+  const bondPct = (taxAlloc[ASSET_CLASSES.indexOf('bonds')] ?? 0) / 100;
+  const cashPct = (taxAlloc[ASSET_CLASSES.indexOf('cash')] ?? 0) / 100;
+  const bondMean = means[ASSET_CLASSES.indexOf('bonds')] ?? 0;
+  const cashMean = means[ASSET_CLASSES.indexOf('cash')] ?? 0;
+  return {
+    taxableDividends: balances.taxable * stockPct * QUALIFIED_DIVIDEND_YIELD,
+    taxableInterestIncome: balances.taxable * Math.max(0, bondPct * bondMean + cashPct * cashMean),
+  };
+}
+
+// Roth conversion for the year: fixed amount or fill-to-bracket-ceiling.
+// Moves money traditional → Roth IRA (mutates balances); returns the amount.
+function executeRothConversionPhase(
+  s: ScenarioInput, age: number, yearsFromNow: number, isRetired: boolean,
+  balances: AccountBalances,
+  income: { salary: number; pension: number; otherIncome: number; socialSecurity: number; spouseSS: number; taxableInterestIncome: number },
+): number {
+  if (!s.rothConversion?.enabled || age < s.rothConversion.startAge || age > s.rothConversion.endAge) return 0;
+  const traditionalBalance = balances.traditional401k + balances.traditionalIRA;
+  if (traditionalBalance <= 0) return 0;
+
+  let conversionTarget = 0;
+  if (s.rothConversion.strategy === 'fixedAmount') {
+    conversionTarget = s.rothConversion.fixedAnnualAmount;
+  } else {
+    // fillBracket: compute "bracket room" = bracket ceiling - existing taxable ordinary income
+    const idx = Math.pow(1 + (s.taxBracketInflationRate ?? 0), yearsFromNow);
+    const brackets = getFederalBrackets(s.filingStatus ?? 'hoh');
+    const stdDed = getStandardDeduction(s.filingStatus ?? 'hoh') * idx;
+    const ssThresh = getSSThresholds(s.filingStatus ?? 'hoh');
+
+    // Existing ordinary income (before conversion)
+    const ordinaryExSS = income.salary + income.pension + income.otherIncome + income.taxableInterestIncome;
+    // Estimate SS taxable portion for bracket room calc
+    // (SS thresholds are statutorily frozen — not indexed)
+    const totalSS = income.socialSecurity + income.spouseSS;
+    const provisionalIncome = ordinaryExSS + totalSS * 0.5;
+    let estSSTaxable = 0;
+    if (totalSS > 0 && provisionalIncome > ssThresh.low) {
+      estSSTaxable = Math.min(0.85 * totalSS,
+        provisionalIncome > ssThresh.high
+          ? 0.5 * (ssThresh.high - ssThresh.low) + 0.85 * (provisionalIncome - ssThresh.high)
+          : 0.5 * (provisionalIncome - ssThresh.low));
+      estSSTaxable = Math.max(0, Math.min(estSSTaxable, 0.85 * totalSS));
+    }
+    const existingOrdinary = ordinaryExSS + estSSTaxable;
+
+    // Estimate traditional withdrawal for spending so the conversion doesn't
+    // consume bracket room that spending withdrawals will also need.
+    let estTradWithdrawal = 0;
+    if (isRetired) {
+      const estSpending = s.baseAnnualSpending * Math.pow(1 + s.spendingInflationRate, yearsFromNow);
+      const estIncome = income.socialSecurity + income.spouseSS + income.pension + income.otherIncome;
+      const estCashNeed = Math.max(0, estSpending - estIncome);
+      // Non-traditional accounts are tapped first in most strategies
+      const nonTradAvail = balances.cashAccount + balances.otherAssets + balances.taxable;
+      estTradWithdrawal = Math.max(0, estCashNeed - nonTradAvail);
+    }
+
+    // Find bracket ceiling for the target rate
+    const targetRate = s.rothConversion.targetBracketRate;
+    let bracketCeiling = 0;
+    for (const b of brackets) {
+      if (b.rate <= targetRate) {
+        bracketCeiling = (b.max === Infinity ? b.min : b.max) * idx;
+      }
+    }
+    // Bracket room = gross income to fill bracket = ceiling + deduction - existing income - est withdrawals
+    const grossCeiling = bracketCeiling + stdDed;
+    conversionTarget = Math.max(0, grossCeiling - existingOrdinary - estTradWithdrawal);
+  }
+
+  // Actually convert: min(target, available traditional balance)
+  const rothConversionAmount = Math.min(conversionTarget, traditionalBalance);
+  if (rothConversionAmount > 0) {
+    // Pull proportionally from traditional401k and traditionalIRA
+    const pct401k = balances.traditional401k / traditionalBalance;
+    const from401k = rothConversionAmount * pct401k;
+    const fromIRA = rothConversionAmount - from401k;
+    balances.traditional401k -= from401k;
+    balances.traditionalIRA -= fromIRA;
+    balances.rothIRA += rothConversionAmount;
+  }
+  return rothConversionAmount;
+}
+
+// ── Early-withdrawal penalty tracking (path-scoped state) ──
+// 10% penalty on Traditional 401k/IRA withdrawals before 59.5; Rule of 55
+// exempts the 401k at 55+. Roth IRA follows IRS ordering: contribution basis
+// (penalty-free) → conversions oldest-first (penalized only if < 5 years old)
+// → earnings (penalized). A conversion itself is never penalized.
+interface RothPenaltyTracker {
+  /** Penalizable portion of a Roth IRA withdrawal; consume=true permanently
+   *  uses up basis/conversion layers (call once per year). */
+  walk(age: number, amount: number, consume: boolean): number;
+  /** Total penalizable amount for the year's withdrawals. */
+  calcPenalty(age: number, w: AccountBalances): number;
+}
+
+function makeRothPenaltyTracker(s: ScenarioInput, conversionLedger: Map<number, number>): RothPenaltyTracker {
+  let basisRemaining = Math.max(0, s.rothContributionBasis);
+
+  const walk = (age: number, amount: number, consume: boolean): number => {
+    let remaining = amount;
+    let penalized = 0;
+    const fromBasis = Math.min(remaining, basisRemaining);
+    remaining -= fromBasis;
+    if (consume) basisRemaining -= fromBasis;
+    const convAges = [...conversionLedger.keys()].sort((a, b) => a - b);
+    for (const convAge of convAges) {
+      if (remaining <= 0) break;
+      const layerAmt = conversionLedger.get(convAge)!;
+      const take = Math.min(remaining, layerAmt);
+      if (age - convAge < 5) penalized += take;
+      remaining -= take;
+      if (consume) {
+        if (take >= layerAmt) conversionLedger.delete(convAge);
+        else conversionLedger.set(convAge, layerAmt - take);
+      }
+    }
+    penalized += remaining; // beyond basis and all conversion layers = earnings
+    return penalized;
+  };
+
+  const calcPenalty = (age: number, w: AccountBalances): number => {
+    if (age >= 60) return 0; // 59.5 — using 60 as annual approximation
+    let penalizable = 0;
+    const rule55 = s.ruleof55Eligible && age >= 55;
+    if (w.traditional401k > 0 && !rule55) {
+      penalizable += w.traditional401k;
+    }
+    penalizable += w.traditionalIRA;
+    // Roth 401k basis/earnings split isn't tracked; treated as penalty-free.
+    if (w.rothIRA > 0) {
+      penalizable += walk(age, w.rothIRA, false);
+    }
+    return penalizable;
+  };
+
+  return { walk, calcPenalty };
+}
+
+interface GuardrailState {
+  highWaterMark: number;
+  currentSpendingAdjustment: number;
+}
+
+interface YearIncome {
+  salary: number;
+  socialSecurity: number;
+  spouseSS: number;
+  pension: number;
+  pensionLumpSumTaxable: number;
+  otherIncome: number;
+  rothConversionAmount: number;
+  taxableDividends: number;
+  taxableInterestIncome: number;
+  activeJobCount: number;
+  employeePreTax401k: number;
+  employeeHSA: number;
+}
+
+// Retirement-year spending: base (inflated, guardrail-adjusted) + one-time
+// expenses + fixed-nominal mortgage + healthcare with IRMAA. Mutates balances
+// (downsizing deposit, HSA-first healthcare payment) and withdrawals.hsa.
+function computeRetirementSpending(
+  s: ScenarioInput, age: number, spouseAge: number | null, yearsFromNow: number,
+  yearInflationFactor: number, balances: AccountBalances, withdrawals: AccountBalances,
+  guard: GuardrailState, magiHistory: number[], income: YearIncome,
+): { spending: number; taxableBasisAdd: number } {
+  const sp = s.spouse;
+  let taxableBasisAdd = 0;
+  let baseSpending = s.baseAnnualSpending * yearInflationFactor;
+
+  // Housing: downsizing proceeds deposited at the chosen age
+  if (s.housing?.enabled) {
+    if (age === s.housing.downsizingAge && s.housing.downsizingProceeds > 0) {
+      // Downsizing proceeds appreciate at inflation + 1% (historical real home appreciation)
+      const homeAppreciation = s.spendingInflationRate + 0.01;
+      const proceeds = s.housing.downsizingProceeds * Math.pow(1 + homeAppreciation, yearsFromNow);
+      balances.taxable += proceeds;
+      taxableBasisAdd += proceeds;
+    }
+  }
+
+  // One-time expenses
+  for (const exp of s.oneTimeExpenses) {
+    if (exp.age === age) {
+      const inflatedAmount = exp.inflationAdjusted
+        ? exp.amount * Math.pow(1 + s.spendingInflationRate, yearsFromNow)
+        : exp.amount;
+      baseSpending += inflatedAmount;
+    }
+  }
+
+  // Guardrails
+  if (s.guardrails?.enabled) {
+    const currentTotal = sumBalances(balances);
+    guard.highWaterMark = Math.max(guard.highWaterMark, currentTotal);
+    const drawdownPct = guard.highWaterMark > 0
+      ? ((guard.highWaterMark - currentTotal) / guard.highWaterMark) * 100
+      : 0;
+
+    // Recompute adjustment fresh each year — allows recovery when portfolio rebounds
+    let yearAdjustment = 1.0;
+    const sortedTiers = [...s.guardrails.tiers].sort((a, b) => b.drawdownPct - a.drawdownPct);
+    for (const tier of sortedTiers) {
+      if (drawdownPct >= tier.drawdownPct) {
+        yearAdjustment = Math.max(1 - tier.spendingCutPct / 100, 0.5);
+        break;
+      }
+    }
+    guard.currentSpendingAdjustment = yearAdjustment;
+
+    baseSpending *= guard.currentSpendingAdjustment;
+  }
+
+  let spending = baseSpending;
+
+  // Mortgage P&I: constant nominal (never inflated) and contractual — no guardrail cuts
+  if (s.housing?.enabled && age < s.housing.payoffAge) {
+    spending += s.housing.mortgagePayment;
+  }
+
+  // ── Healthcare costs (non-discretionary, not subject to guardrails) ──
+  if (s.healthcare?.enabled) {
+    const hc = s.healthcare;
+    let annualHealthcare: number;
+    if (age < hc.medicareStartAge) {
+      annualHealthcare = hc.preMedicareMonthly; // already annualized
+    } else if (age < hc.lateLifeStartAge) {
+      annualHealthcare = hc.medicareMonthly;
+    } else {
+      annualHealthcare = hc.lateLifeMonthly;
+    }
+    // Inflate from current age (today's dollars) by medical inflation
+    annualHealthcare *= Math.pow(1 + hc.inflationRate, yearsFromNow);
+
+    // IRMAA: Medicare premium surcharges based on MAGI from TWO years prior.
+    // For the first two sim years (no history yet), estimate from current income.
+    const personsOnMedicare =
+      (age >= hc.medicareStartAge ? 1 : 0) +
+      (sp?.enabled && spouseAge !== null && spouseAge >= hc.medicareStartAge ? 1 : 0);
+    if (personsOnMedicare > 0) {
+      let magiLookback: number;
+      if (magiHistory.length >= 2) {
+        magiLookback = magiHistory[magiHistory.length - 2];
+      } else if (magiHistory.length === 1) {
+        magiLookback = magiHistory[0];
+      } else {
+        magiLookback = income.salary + income.pension + income.otherIncome + income.rothConversionAmount +
+          income.taxableInterestIncome + income.taxableDividends + 0.85 * (income.socialSecurity + income.spouseSS);
+      }
+      const thresholdIdx = Math.pow(1 + (s.taxBracketInflationRate ?? 0), yearsFromNow);
+      const surchargeMonthly = getIrmaaMonthlySurcharge(magiLookback, s.filingStatus ?? 'hoh', thresholdIdx);
+      // Premiums grow faster than CPI — use medical inflation
+      annualHealthcare += surchargeMonthly * 12 * personsOnMedicare * Math.pow(1 + hc.inflationRate, yearsFromNow);
+    }
+
+    // Pay healthcare from HSA first (tax-free qualified medical use), then portfolio
+    if (balances.hsa > 0 && annualHealthcare > 0) {
+      const hsaUsed = Math.min(balances.hsa, annualHealthcare);
+      balances.hsa -= hsaUsed;
+      withdrawals.hsa += hsaUsed;
+      annualHealthcare -= hsaUsed;
+    }
+    spending += annualHealthcare;
+  }
+
+  return { spending, taxableBasisAdd };
+}
+
+// Gross traditional withdrawal that keeps ordinary income at or below the
+// top of the 12% bracket (taxEfficient strategy only).
+function computeBracketFillLimit(s: ScenarioInput, yearsFromNow: number, income: YearIncome): number | undefined {
+  if (s.withdrawalStrategy !== 'taxEfficient') return undefined;
+  const idx = Math.pow(1 + (s.taxBracketInflationRate ?? 0), yearsFromNow);
+  const brackets = getFederalBrackets(s.filingStatus ?? 'hoh');
+  const stdDed = getStandardDeduction(s.filingStatus ?? 'hoh') * idx;
+  const ssThresh = getSSThresholds(s.filingStatus ?? 'hoh');
+  // Existing ordinary income excluding SS (wages, pension, other, Roth conv)
+  const wagesTaxable = (income.activeJobCount > 0 && income.salary > 0)
+    ? income.salary - income.employeePreTax401k - income.employeeHSA : income.salary;
+  const ordinaryExSS = wagesTaxable + income.pension + income.pensionLumpSumTaxable +
+    income.otherIncome + income.rothConversionAmount + income.taxableInterestIncome;
+  // Estimate SS taxable portion (SS thresholds are statutorily frozen — not indexed)
+  const totalSS = income.socialSecurity + income.spouseSS;
+  const provisionalIncome = ordinaryExSS + totalSS * 0.5;
+  let estSSTaxable = 0;
+  if (totalSS > 0 && provisionalIncome > ssThresh.low) {
+    estSSTaxable = provisionalIncome > ssThresh.high
+      ? 0.5 * (ssThresh.high - ssThresh.low) + 0.85 * (provisionalIncome - ssThresh.high)
+      : 0.5 * (provisionalIncome - ssThresh.low);
+    estSSTaxable = Math.max(0, Math.min(estSSTaxable, 0.85 * totalSS));
+  }
+  const existingOrdinary = ordinaryExSS + estSSTaxable;
+
+  // Top of 12% bracket for this filing status, indexed
+  let twelvePctCeiling = 0;
+  for (const b of brackets) {
+    if (b.rate === 0.12) { twelvePctCeiling = b.max * idx; break; }
+  }
+  // Traditional room = gross income needed to hit the ceiling
+  // = (12% bracket top on taxable income) + std deduction - existing ordinary
+  return Math.max(0, twelvePctCeiling + stdDed - existingOrdinary);
+}
+
+// Income-tax wages are net of pre-tax 401k + HSA; FICA wages are gross minus
+// HSA only (401k deferrals remain FICA-taxable). Employer match affects neither.
+function buildYearTaxInput(
+  s: ScenarioInput, age: number, yearsFromNow: number,
+  income: YearIncome, traditionalWithdrawals: number, capitalGains: number,
+  penaltyAmount: number,
+): TaxInput {
+  return {
+    wages: (income.activeJobCount > 0 && income.salary > 0)
+      ? income.salary - income.employeePreTax401k - income.employeeHSA : income.salary,
+    ficaWages: income.salary > 0 ? income.salary - income.employeeHSA : 0,
+    traditionalWithdrawals,
+    socialSecurity: income.socialSecurity + income.spouseSS,
+    pension: income.pension + income.pensionLumpSumTaxable,
+    capitalGains: capitalGains + income.taxableDividends,
+    taxableInterest: income.taxableInterestIncome,
+    otherTaxableIncome: income.otherIncome,
+    age,
+    filingStatus: s.filingStatus,
+    stateCode: s.stateCode,
+    yearsFromNow,
+    taxBracketInflationRate: s.taxBracketInflationRate ?? 0,
+    earlyWithdrawalPenaltyAmount: penaltyAmount,
+  };
+}
+
+// Iterative tax-aware withdrawal: withdraw enough to cover spending + taxes
+// on those withdrawals; the tax on traditional draws creates additional cash
+// need, so iterate to converge (within $100). Mutates balances/withdrawals.
+function convergeWithdrawalsAndTaxes(p: {
+  s: ScenarioInput; age: number; yearsFromNow: number;
+  spending: number; incomeFromSources: number; initialCashNeed: number;
+  balances: AccountBalances; withdrawals: AccountBalances; taxableCostBasis: number;
+  priorYearEnd401k: number; priorYearEndIRA: number; rmdStartAge: number;
+  traditionalBracketFillLimit: number | undefined;
+  income: YearIncome; penalty: RothPenaltyTracker;
+}): { capitalGains: number; rmdAmount: number; taxableCostBasis: number } {
+  const { s, age, balances, withdrawals } = p;
+  let taxableCostBasis = p.taxableCostBasis;
+  let totalCashNeed = p.initialCashNeed;
+  let capitalGains = 0;
+  let rmdAmount = 0;
+
+  // Save balance snapshot for iteration
+  const balanceSnapshot = cloneBalances(balances);
+  const costBasisSnapshot = taxableCostBasis;
+
+  for (let iter = 0; iter < 5; iter++) {
+    // Reset balances to snapshot for each iteration
+    for (const acct of ACCOUNT_TYPES) balances[acct] = balanceSnapshot[acct];
+    taxableCostBasis = costBasisSnapshot;
+
+    const costBasisPct = balances.taxable > 0 ? taxableCostBasis / balances.taxable : 0;
+
+    const wResult = executeWithdrawals({
+      cashNeed: totalCashNeed,
+      balances,
+      strategy: s.withdrawalStrategy,
+      age,
+      priorYearTraditionalBalance: p.priorYearEnd401k + p.priorYearEndIRA,
+      priorYear401kBalance: p.priorYearEnd401k,
+      priorYearIRABalance: p.priorYearEndIRA,
+      taxableCostBasisPct: Math.min(1, Math.max(0, costBasisPct)),
+      rmdStartAge: p.rmdStartAge,
+      traditionalBracketFillLimit: p.traditionalBracketFillLimit,
+    });
+
+    for (const acct of ACCOUNT_TYPES) {
+      withdrawals[acct] = wResult.withdrawals[acct];
+      balances[acct] = Math.max(0, balanceSnapshot[acct] - wResult.withdrawals[acct]);
+    }
+
+    // Update taxable cost basis
+    if (withdrawals.taxable > 0 && balanceSnapshot.taxable > 0) {
+      const withdrawnBasis = costBasisSnapshot * (withdrawals.taxable / balanceSnapshot.taxable);
+      taxableCostBasis = Math.max(0, costBasisSnapshot - withdrawnBasis);
+    }
+
+    capitalGains = wResult.capitalGains;
+    rmdAmount = wResult.rmdAmount;
+
+    // Excess RMD goes to taxable
+    if (wResult.excessRMD > 0) {
+      balances.taxable += wResult.excessRMD;
+      taxableCostBasis += wResult.excessRMD;
+    }
+
+    // Estimate taxes on these withdrawals
+    const tradW = withdrawals.traditional401k + withdrawals.traditionalIRA;
+    const iterPenaltyAmount = p.penalty.calcPenalty(age, withdrawals);
+    const iterTax = calculateTaxes(buildYearTaxInput(
+      s, age, p.yearsFromNow, p.income,
+      tradW + p.income.rothConversionAmount, capitalGains, iterPenaltyAmount,
+    ));
+
+    const newCashNeed = Math.max(0, p.spending + iterTax.total - p.incomeFromSources);
+    // If converged (within $100), break
+    if (Math.abs(newCashNeed - totalCashNeed) < 100) {
+      totalCashNeed = newCashNeed;
+      break;
+    }
+    totalCashNeed = newCashNeed;
+  }
+
+  return { capitalGains, rmdAmount, taxableCostBasis };
+}
+
 // ── Run a single simulation path ──
 function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number[][], bearCholeskyL: number[][]): SimulationPath {
   const s = toAnnualScenario(scenario);
@@ -130,21 +806,25 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
   // Markov regime state: bear probability from crash frequency slider
   const bearSteadyState = crashFrequencyToSteadyState(s.investments.crashFrequency);
   const enterBear = bearSteadyState * (1 - BEAR_PERSISTENCE) / (1 - bearSteadyState);
-  let inBearRegime = rng.next() < bearSteadyState; // start from steady-state
-  let bearDuration = inBearRegime ? 1 : 0; // consecutive bear years
-  let recoveryYearsRemaining = 0; // post-bear recovery countdown
-  let lastBearDuration = 0; // length of the most recent bear (for boost sizing)
+  const startInBear = rng.next() < bearSteadyState; // start from steady-state
+  const regime: RegimeState = {
+    inBear: startInBear,
+    bearDuration: startInBear ? 1 : 0,
+    recoveryYearsRemaining: 0,
+    lastBearDuration: 0,
+  };
 
   let depleted = false;
   let depletionAge: number | null = null;
-  let highWaterMark = sumBalances(balances);
-  let currentSpendingAdjustment = 1.0; // for guardrails
+  const guard: GuardrailState = {
+    highWaterMark: sumBalances(balances),
+    currentSpendingAdjustment: 1.0,
+  };
 
   // Roth 5-year rule: track conversion amounts by year (age)
   // Converted amounts can't be withdrawn penalty-free until 5 years later
   const rothConversionsByAge: Map<number, number> = new Map();
-  // Roth IRA contribution basis — withdrawn first, penalty-free, consumed as used
-  let rothBasisRemaining = Math.max(0, s.rothContributionBasis);
+  const rothPenalty = makeRothPenaltyTracker(s, rothConversionsByAge);
 
   // Track prior-year-end traditional balances for RMD (IRS uses Dec 31 balance of prior year)
   let priorYearEnd401k = balances.traditional401k;
@@ -160,48 +840,17 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
   const magiHistory: number[] = [];
 
   for (let age = s.currentAge; age <= s.endAge; age++) {
-    const sp = s.spouse;
-    const spouseAge = sp?.enabled ? sp.currentAge + (age - s.currentAge) : null;
-    const primaryRetired = age >= s.retirementAge;
+    const spouseAge = s.spouse?.enabled ? s.spouse.currentAge + (age - s.currentAge) : null;
     // Drawdown and allocation phases both track the primary's retirement,
     // which is when withdrawals begin.
-    const isRetired = primaryRetired;
+    const isRetired = age >= s.retirementAge;
     const yearsFromNow = age - s.currentAge;
 
     // ── Generate returns for this year ──
-    // Markov regime transition: bear markets cluster realistically, capped
-    // at MAX_BEAR_DURATION consecutive years to match historical limits.
-    if (yearsFromNow > 0) {
-      const wasBear = inBearRegime;
-      inBearRegime = inBearRegime
-        ? (bearDuration < MAX_BEAR_DURATION && rng.next() < BEAR_PERSISTENCE)
-        : rng.next() < enterBear;
-      if (wasBear && !inBearRegime) {
-        // Bear → Bull transition: start recovery window (1-2 years)
-        lastBearDuration = bearDuration;
-        recoveryYearsRemaining = bearDuration >= 2 ? 2 : 1;
-        bearDuration = 0;
-      } else if (inBearRegime) {
-        bearDuration++;
-        recoveryYearsRemaining = 0; // cancel recovery if we re-enter bear
-      } else if (recoveryYearsRemaining > 0) {
-        recoveryYearsRemaining--;
-      }
-    }
-    const choleskyL = inBearRegime ? bearCholeskyL : bullCholeskyL;
-    const yearMeans = inBearRegime ? bearMeans : means;
-    let recoveryBoost: number | undefined;
-    if (!inBearRegime && recoveryYearsRemaining > 0) {
-      // Post-bear recovery: elevated mean for stocks/crypto.
-      // Bigger bear → bigger bounce (scaled by lastBearDuration).
-      const isFirstRecoveryYear = (lastBearDuration >= 2 && recoveryYearsRemaining === 2) ||
-                                  (lastBearDuration === 1 && recoveryYearsRemaining === 1);
-      const baseMean = isFirstRecoveryYear ? POST_BEAR_RECOVERY_YEAR1_MEAN : POST_BEAR_RECOVERY_YEAR2_MEAN;
-      // Scale: 1-year bear gets ~70% of full boost; 3+ year bear gets 100%
-      const scale = Math.min(1, 0.5 + 0.25 * lastBearDuration);
-      recoveryBoost = baseMean * scale;
-    }
-    const assetReturns = generateCorrelatedReturns(rng, choleskyL, yearMeans, stdDevs, inBearRegime, regimeMask, recoveryBoost);
+    const recoveryBoost = transitionRegime(regime, rng, yearsFromNow, enterBear);
+    const choleskyL = regime.inBear ? bearCholeskyL : bullCholeskyL;
+    const yearMeans = regime.inBear ? bearMeans : means;
+    const assetReturns = generateCorrelatedReturns(rng, choleskyL, yearMeans, stdDevs, regime.inBear, regimeMask, recoveryBoost);
 
     // ── Variable inflation for this year ──
     // Compound inflation year by year; if volatility > 0, randomize each year's rate
@@ -217,602 +866,97 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     }
     yearInflationFactor = cumulativeInflationFactor;
 
-    // ── Income from jobs (per owner) ──
-    // Each job is active when its owner's age falls within its own window.
-    // A regular job ends at the owner's retirementAge (retiring at N means the
-    // person is retired starting the year they turn N — no salary that year).
-    // Explicit post-retirement gigs (startAge >= retirementAge) are honored.
-    let primarySalary = 0;
-    let spouseSalary = 0;
-    const activeJobs: typeof s.jobs = [];
-    for (const job of (s.jobs ?? [])) {
-      let ownerAge: number;
-      let ownerRetirementAge: number;
-      if (job.owner === 'spouse') {
-        if (!sp?.enabled || spouseAge === null) continue;
-        ownerAge = spouseAge;
-        ownerRetirementAge = sp.retirementAge;
-      } else {
-        ownerAge = age;
-        ownerRetirementAge = s.retirementAge;
-      }
-      if (ownerAge < job.startAge || ownerAge > job.endAge) continue;
-      // Cap regular jobs at retirement; allow explicit post-retirement gigs.
-      const isPostRetirementGig = job.startAge >= ownerRetirementAge;
-      if (!isPostRetirementGig && ownerAge >= ownerRetirementAge) continue;
-      const jobSalary = job.monthlyPay * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
-      if (job.owner === 'spouse') spouseSalary += jobSalary;
-      else primarySalary += jobSalary;
-      activeJobs.push(job);
-    }
+    // ── Income phases ──
+    const { primarySalary, spouseSalary, activeJobs } = computeJobIncome(s, age, spouseAge, yearsFromNow);
     const salary = primarySalary + spouseSalary;
 
-    const ssClaiming = age >= s.socialSecurityClaimAge;
-    // Benefit is entered in today's dollars; index from TODAY (not from claim age)
-    // so purchasing power isn't silently eroded during the pre-claim years.
-    let socialSecurity = ssClaiming
-      ? s.socialSecurityBenefit * Math.pow(1 + s.socialSecurityCOLA, yearsFromNow)
-      : 0;
+    const { socialSecurity, spouseSS } = computeSocialSecurityIncome(s, age, spouseAge, yearsFromNow, primarySalary, spouseSalary);
 
-    // ── Social Security earnings test (per person) ──
-    // Before Full Retirement Age, SS benefits are reduced if earned income exceeds threshold
-    const birthYear = new Date().getFullYear() - s.currentAge;
-    const fraMonths = getFullRetirementAgeMonths(birthYear);
-    const fraAge = Math.ceil(fraMonths / 12);
-    let ssEarningsTestReduction = 0;
-    if (socialSecurity > 0 && age < fraAge && primarySalary > 0) {
-      // 2026 exempt amount (~$23,400, indexed) — $1 reduction per $2 earned above threshold
-      const ssEarningsExempt = 23400 * Math.pow(1 + (s.taxBracketInflationRate ?? 0.02), yearsFromNow);
-      const excessEarnings = Math.max(0, primarySalary - ssEarningsExempt);
-      ssEarningsTestReduction = Math.min(socialSecurity, excessEarnings * 0.5);
-      socialSecurity -= ssEarningsTestReduction;
-    }
+    const pensionResult = applyPension(s, age, isRetired, balances);
+    const pension = pensionResult.pension;
+    const pensionLumpSumTaxable = pensionResult.lumpSumTaxable;
+    taxableCostBasis += pensionResult.taxableBasisAdd;
 
-    // ── Pension ──
-    let pension = 0;
-    let pensionLumpSumTaxable = 0;
-    if (s.pensionType === 'lumpSum') {
-      // Lump sum: deposit into chosen account at pension start age
-      if (age === s.pensionStartAge && s.pensionAmount > 0) {
-        const acct = s.pensionLumpSumAccount ?? 'traditionalIRA';
-        balances[acct] += s.pensionAmount;
-        if (acct === 'taxable') {
-          taxableCostBasis += s.pensionAmount;
-          // Cash-out is taxed as ordinary income
-          pensionLumpSumTaxable = s.pensionAmount;
-        }
-        // IRA rollover: no immediate tax event
-      }
-    } else {
-      // Annuity: annual pension income
-      const pensionActive = isRetired && age >= s.pensionStartAge && s.pensionAmount > 0;
-      const pensionYears = pensionActive ? age - s.pensionStartAge : 0;
-      pension = pensionActive
-        ? s.pensionAmount * Math.pow(1 + s.pensionCOLA, pensionYears)
-        : 0;
-    }
-
-    // ── Spouse Social Security ──
-    let spouseSS = 0;
-    if (sp?.enabled && spouseAge !== null) {
-      const spouseSsClaiming = spouseAge >= sp.socialSecurityClaimAge;
-      spouseSS = spouseSsClaiming
-        ? sp.socialSecurityBenefit * Math.pow(1 + s.socialSecurityCOLA, yearsFromNow)
-        : 0;
-
-      // Spouse SS earnings test — reduced if spouse still working pre-FRA
-      if (spouseSS > 0 && spouseSalary > 0) {
-        const spouseBirthYear = new Date().getFullYear() - sp.currentAge;
-        const spouseFraAge = Math.ceil(getFullRetirementAgeMonths(spouseBirthYear) / 12);
-        if (spouseAge < spouseFraAge) {
-          const ssEarningsExempt = 23400 * Math.pow(1 + (s.taxBracketInflationRate ?? 0.02), yearsFromNow);
-          const excessEarnings = Math.max(0, spouseSalary - ssEarningsExempt);
-          spouseSS -= Math.min(spouseSS, excessEarnings * 0.5);
-        }
-      }
-    }
-
-    let otherIncome = 0;
-    for (const src of s.otherIncomeSources) {
-      if (age >= src.startAge && age <= src.endAge) {
-        otherIncome += src.annualAmount * Math.pow(1 + src.inflationRate, yearsFromNow);
-      }
-    }
+    const otherIncome = computeOtherIncome(s, age, yearsFromNow);
 
     const totalIncome = salary + socialSecurity + spouseSS + pension + otherIncome;
 
     // ── Contributions (per owner) ──
-    // Each owner gets their own 401k/IRA/HSA limits applied independently;
-    // each pays employer match only from their own jobs.
-    const contributions = emptyBalances();
-    let employeePreTax401k = 0; // for wage tax calculation
-    let employeeHSA = 0;
-    if (activeJobs.length > 0 && salary > 0) {
-      const limIdx = Math.pow(1 + (s.taxBracketInflationRate ?? 0), yearsFromNow);
-
-      const applyOwner = (ownerSalary: number, ownerJobs: typeof s.jobs, ownerAge: number) => {
-        if (ownerSalary <= 0 || ownerJobs.length === 0) return;
-        const totalSavings = ownerSalary * s.totalSavingsRate;
-
-        let totalEmployerMatch = 0;
-        let totalRothMatch = 0;
-        for (const job of ownerJobs) {
-          if (job.has401k && job.employerMatchRate > 0 && job.employerMatchCapPct > 0) {
-            const jobSalary = job.monthlyPay * Math.pow(1 + s.salaryGrowthRate, yearsFromNow);
-            const desired401k = totalSavings *
-              ((s.contributionAllocation.traditional401k + s.contributionAllocation.roth401k) / 100);
-            const matchableAmount = Math.min(desired401k, jobSalary * job.employerMatchCapPct);
-            const jobMatch = matchableAmount * job.employerMatchRate;
-            totalRothMatch += jobMatch * ((job.employerRothPct ?? 0) / 100);
-            totalEmployerMatch += jobMatch;
-          }
-        }
-        const weightedRothPct = totalEmployerMatch > 0 ? (totalRothMatch / totalEmployerMatch) * 100 : 0;
-
-        const has401k = ownerJobs.some(j => j.has401k);
-        const effectiveAllocation = { ...s.contributionAllocation };
-        if (!has401k) {
-          effectiveAllocation.taxable += effectiveAllocation.traditional401k + effectiveAllocation.roth401k;
-          effectiveAllocation.traditional401k = 0;
-          effectiveAllocation.roth401k = 0;
-        }
-
-        const result = allocateContributions({
-          totalSavings,
-          allocation: effectiveAllocation,
-          age: ownerAge,
-          limit401k: s.limit401k * limIdx,
-          limitIRA: s.limitIRA * limIdx,
-          enable401kCatchUp: s.enable401kCatchUp,
-          enableIRACatchUp: s.enableIRACatchUp,
-          employerMatch: totalEmployerMatch,
-          employerRothPct: weightedRothPct,
-          catchUp401k: DEFAULT_401K_CATCHUP * limIdx,
-          superCatchUp401k: DEFAULT_401K_SUPER_CATCHUP * limIdx,
-          catchUpIRA: DEFAULT_IRA_CATCHUP * limIdx,
-          hsaLimit: DEFAULT_HSA_SELF_ONLY * limIdx,
-        });
-
-        employeePreTax401k += result.contributions.traditional401k;
-        employeeHSA += result.contributions.hsa;
-
-        for (const acct of ACCOUNT_TYPES) {
-          contributions[acct] += result.contributions[acct];
-          balances[acct] += result.contributions[acct];
-          if (acct === 'taxable') {
-            taxableCostBasis += result.contributions[acct];
-          }
-        }
-        for (const acct of ACCOUNT_TYPES) {
-          if (result.employerContributions[acct] > 0) {
-            contributions[acct] += result.employerContributions[acct];
-            balances[acct] += result.employerContributions[acct];
-          }
-        }
-      };
-
-      applyOwner(
-        primarySalary,
-        activeJobs.filter(j => j.owner === 'primary'),
-        age,
-      );
-      if (sp?.enabled && spouseAge !== null) {
-        applyOwner(
-          spouseSalary,
-          activeJobs.filter(j => j.owner === 'spouse'),
-          spouseAge,
-        );
-      }
-    }
+    const contribResult = applyContributions(s, age, spouseAge, yearsFromNow, activeJobs, primarySalary, spouseSalary, balances);
+    const { contributions, employeePreTax401k, employeeHSA } = contribResult;
+    taxableCostBasis += contribResult.taxableBasisAdd;
 
     // ── Taxable-account investment income (dividends & interest) ──
-    // The blended return already includes these; recharacterize the slice as
-    // currently-taxed income: qualified dividends (LTCG rates) on the stock
-    // portion, interest (ordinary) on bond/cash. Reinvested → adds to basis.
-    let taxableDividends = 0;
-    let taxableInterestIncome = 0;
-    if (balances.taxable > 0) {
-      const taxAlloc = getAllocation(scenario, 'taxable', isRetired);
-      const stockPct = (taxAlloc[ASSET_CLASSES.indexOf('stocks')] ?? 0) / 100;
-      const bondPct = (taxAlloc[ASSET_CLASSES.indexOf('bonds')] ?? 0) / 100;
-      const cashPct = (taxAlloc[ASSET_CLASSES.indexOf('cash')] ?? 0) / 100;
-      const bondMean = means[ASSET_CLASSES.indexOf('bonds')] ?? 0;
-      const cashMean = means[ASSET_CLASSES.indexOf('cash')] ?? 0;
-      taxableDividends = balances.taxable * stockPct * QUALIFIED_DIVIDEND_YIELD;
-      taxableInterestIncome = balances.taxable * Math.max(0, bondPct * bondMean + cashPct * cashMean);
-      taxableCostBasis += taxableDividends + taxableInterestIncome;
-    }
+    const { taxableDividends, taxableInterestIncome } = computeTaxableInvestmentIncome(scenario, balances, isRetired, means);
+    taxableCostBasis += taxableDividends + taxableInterestIncome;
 
     // ── Roth Conversion ──
-    let rothConversionAmount = 0;
-    if (s.rothConversion?.enabled && age >= s.rothConversion.startAge && age <= s.rothConversion.endAge) {
-      const traditionalBalance = balances.traditional401k + balances.traditionalIRA;
-      if (traditionalBalance > 0) {
-        let conversionTarget = 0;
-        if (s.rothConversion.strategy === 'fixedAmount') {
-          conversionTarget = s.rothConversion.fixedAnnualAmount;
-        } else {
-          // fillBracket: compute "bracket room" = bracket ceiling - existing taxable ordinary income
-          const idx = Math.pow(1 + (s.taxBracketInflationRate ?? 0), yearsFromNow);
-          const brackets = getFederalBrackets(s.filingStatus ?? 'hoh');
-          const stdDed = getStandardDeduction(s.filingStatus ?? 'hoh') * idx;
-          const ssThresh = getSSThresholds(s.filingStatus ?? 'hoh');
-
-          // Existing ordinary income (before conversion)
-          const ordinaryExSS = salary + pension + otherIncome + taxableInterestIncome;
-          // Estimate SS taxable portion for bracket room calc
-          // (SS thresholds are statutorily frozen — not indexed)
-          const totalSS = socialSecurity + spouseSS;
-          const provisionalIncome = ordinaryExSS + totalSS * 0.5;
-          let estSSTaxable = 0;
-          if (totalSS > 0 && provisionalIncome > ssThresh.low) {
-            estSSTaxable = Math.min(0.85 * totalSS,
-              provisionalIncome > ssThresh.high
-                ? 0.5 * (ssThresh.high - ssThresh.low) + 0.85 * (provisionalIncome - ssThresh.high)
-                : 0.5 * (provisionalIncome - ssThresh.low));
-            estSSTaxable = Math.max(0, Math.min(estSSTaxable, 0.85 * totalSS));
-          }
-          const existingOrdinary = ordinaryExSS + estSSTaxable;
-
-          // Estimate traditional withdrawal for spending so the conversion doesn't
-          // consume bracket room that spending withdrawals will also need.
-          let estTradWithdrawal = 0;
-          if (isRetired) {
-            const estSpending = s.baseAnnualSpending * Math.pow(1 + s.spendingInflationRate, yearsFromNow);
-            const estIncome = socialSecurity + spouseSS + pension + otherIncome;
-            const estCashNeed = Math.max(0, estSpending - estIncome);
-            // Non-traditional accounts are tapped first in most strategies
-            const nonTradAvail = balances.cashAccount + balances.otherAssets + balances.taxable;
-            estTradWithdrawal = Math.max(0, estCashNeed - nonTradAvail);
-          }
-
-          // Find bracket ceiling for the target rate
-          const targetRate = s.rothConversion.targetBracketRate;
-          let bracketCeiling = 0;
-          for (const b of brackets) {
-            if (b.rate <= targetRate) {
-              bracketCeiling = (b.max === Infinity ? b.min : b.max) * idx;
-            }
-          }
-          // Bracket room = gross income to fill bracket = ceiling + deduction - existing income - est withdrawals
-          const grossCeiling = bracketCeiling + stdDed;
-          conversionTarget = Math.max(0, grossCeiling - existingOrdinary - estTradWithdrawal);
-        }
-
-        // Actually convert: min(target, available traditional balance)
-        rothConversionAmount = Math.min(conversionTarget, traditionalBalance);
-
-        if (rothConversionAmount > 0) {
-          // Pull proportionally from traditional401k and traditionalIRA
-          const pct401k = balances.traditional401k / traditionalBalance;
-          const from401k = rothConversionAmount * pct401k;
-          const fromIRA = rothConversionAmount - from401k;
-          balances.traditional401k -= from401k;
-          balances.traditionalIRA -= fromIRA;
-          balances.rothIRA += rothConversionAmount;
-          // Track for Roth 5-year rule
-          rothConversionsByAge.set(age, (rothConversionsByAge.get(age) || 0) + rothConversionAmount);
-        }
-      }
+    const rothConversionAmount = executeRothConversionPhase(s, age, yearsFromNow, isRetired, balances,
+      { salary, pension, otherIncome, socialSecurity, spouseSS, taxableInterestIncome });
+    if (rothConversionAmount > 0) {
+      // Track for Roth 5-year rule
+      rothConversionsByAge.set(age, (rothConversionsByAge.get(age) || 0) + rothConversionAmount);
     }
 
-    // ── Spending (retirement) ──
+    // ── Spending & withdrawals (retirement) ──
     let spending = 0;
     const withdrawals = emptyBalances();
     let capitalGains = 0;
     let rmdAmount = 0;
 
-    // ── Early withdrawal penalty helper ──
-    // 10% penalty on Traditional 401k/IRA withdrawals before 59.5
-    // Rule of 55: 401k penalty-free if separated from service at 55+
-    // Roth IRA follows IRS ordering: contribution basis (penalty-free) →
-    // conversions oldest-first (penalized only if < 5 years old) → earnings (penalized).
-    // A conversion itself is never penalized — the full amount is converted.
-
-    // Walk Roth IRA layers for a withdrawal; returns the penalizable portion.
-    // consume=true permanently uses up basis/conversion layers (call once per year).
-    const walkRothLayers = (amount: number, consume: boolean): number => {
-      let remaining = amount;
-      let penalized = 0;
-      const fromBasis = Math.min(remaining, rothBasisRemaining);
-      remaining -= fromBasis;
-      if (consume) rothBasisRemaining -= fromBasis;
-      const convAges = [...rothConversionsByAge.keys()].sort((a, b) => a - b);
-      for (const convAge of convAges) {
-        if (remaining <= 0) break;
-        const layerAmt = rothConversionsByAge.get(convAge)!;
-        const take = Math.min(remaining, layerAmt);
-        if (age - convAge < 5) penalized += take;
-        remaining -= take;
-        if (consume) {
-          if (take >= layerAmt) rothConversionsByAge.delete(convAge);
-          else rothConversionsByAge.set(convAge, layerAmt - take);
-        }
-      }
-      penalized += remaining; // beyond basis and all conversion layers = earnings
-      return penalized;
-    };
-
-    const calcPenaltyAmount = (w: AccountBalances): number => {
-      if (age >= 60) return 0; // 59.5 — using 60 as annual approximation
-      let penalizable = 0;
-
-      // Traditional 401k — penalty-free if Rule of 55 eligible and age >= 55
-      const rule55 = s.ruleof55Eligible && age >= 55;
-      if (w.traditional401k > 0 && !rule55) {
-        penalizable += w.traditional401k;
-      }
-      // Traditional IRA — always subject to penalty before 59.5
-      penalizable += w.traditionalIRA;
-
-      // Roth IRA — layered ordering (basis → conversions → earnings)
-      // Roth 401k basis/earnings split isn't tracked; treated as penalty-free.
-      if (w.rothIRA > 0) {
-        penalizable += walkRothLayers(w.rothIRA, false);
-      }
-
-      return penalizable;
+    const income: YearIncome = {
+      salary, socialSecurity, spouseSS, pension, pensionLumpSumTaxable,
+      otherIncome, rothConversionAmount, taxableDividends, taxableInterestIncome,
+      activeJobCount: activeJobs.length, employeePreTax401k, employeeHSA,
     };
 
     if (isRetired) {
-      let baseSpending = s.baseAnnualSpending * yearInflationFactor;
+      const spendResult = computeRetirementSpending(
+        s, age, spouseAge, yearsFromNow, yearInflationFactor,
+        balances, withdrawals, guard, magiHistory, income,
+      );
+      spending = spendResult.spending;
+      taxableCostBasis += spendResult.taxableBasisAdd;
 
-      // Housing: downsizing proceeds deposited at the chosen age
-      if (s.housing?.enabled) {
-        if (age === s.housing.downsizingAge && s.housing.downsizingProceeds > 0) {
-          // Downsizing proceeds appreciate at inflation + 1% (historical real home appreciation)
-          const homeAppreciation = s.spendingInflationRate + 0.01;
-          const proceeds = s.housing.downsizingProceeds * Math.pow(1 + homeAppreciation, yearsFromNow);
-          balances.taxable += proceeds;
-          taxableCostBasis += proceeds;
-        }
-      }
-
-      // One-time expenses
-      for (const exp of s.oneTimeExpenses) {
-        if (exp.age === age) {
-          const inflatedAmount = exp.inflationAdjusted
-            ? exp.amount * Math.pow(1 + s.spendingInflationRate, yearsFromNow)
-            : exp.amount;
-          baseSpending += inflatedAmount;
-        }
-      }
-
-      // Guardrails
-      if (s.guardrails?.enabled) {
-        const currentTotal = sumBalances(balances);
-        highWaterMark = Math.max(highWaterMark, currentTotal);
-        const drawdownPct = highWaterMark > 0
-          ? ((highWaterMark - currentTotal) / highWaterMark) * 100
-          : 0;
-
-        // Recompute adjustment fresh each year — allows recovery when portfolio rebounds
-        let yearAdjustment = 1.0;
-        const sortedTiers = [...s.guardrails.tiers].sort((a, b) => b.drawdownPct - a.drawdownPct);
-        for (const tier of sortedTiers) {
-          if (drawdownPct >= tier.drawdownPct) {
-            yearAdjustment = Math.max(1 - tier.spendingCutPct / 100, 0.5);
-            break;
-          }
-        }
-        currentSpendingAdjustment = yearAdjustment;
-
-        baseSpending *= currentSpendingAdjustment;
-      }
-
-      spending = baseSpending;
-
-      // ── Mortgage P&I (non-discretionary) ──
-      // Fixed-rate P&I is constant in nominal dollars — never inflated —
-      // and contractual, so guardrail cuts don't apply.
-      if (s.housing?.enabled && age < s.housing.payoffAge) {
-        spending += s.housing.mortgagePayment;
-      }
-
-      // ── Healthcare costs (non-discretionary, not subject to guardrails) ──
-      if (s.healthcare?.enabled) {
-        const hc = s.healthcare;
-        let annualHealthcare: number;
-        if (age < hc.medicareStartAge) {
-          annualHealthcare = hc.preMedicareMonthly; // already annualized
-        } else if (age < hc.lateLifeStartAge) {
-          annualHealthcare = hc.medicareMonthly;
-        } else {
-          annualHealthcare = hc.lateLifeMonthly;
-        }
-        // Inflate from current age (today's dollars) by medical inflation
-        annualHealthcare *= Math.pow(1 + hc.inflationRate, yearsFromNow);
-
-        // ── IRMAA: Medicare premium surcharges (cliff tiers, per person) ──
-        // Based on MAGI from TWO years prior in this path. For the first two
-        // sim years (no history yet), estimate from current-year income.
-        const personsOnMedicare =
-          (age >= hc.medicareStartAge ? 1 : 0) +
-          (sp?.enabled && spouseAge !== null && spouseAge >= hc.medicareStartAge ? 1 : 0);
-        if (personsOnMedicare > 0) {
-          let magiLookback: number;
-          if (magiHistory.length >= 2) {
-            magiLookback = magiHistory[magiHistory.length - 2];
-          } else if (magiHistory.length === 1) {
-            magiLookback = magiHistory[0];
-          } else {
-            magiLookback = salary + pension + otherIncome + rothConversionAmount +
-              taxableInterestIncome + taxableDividends + 0.85 * (socialSecurity + spouseSS);
-          }
-          const thresholdIdx = Math.pow(1 + (s.taxBracketInflationRate ?? 0), yearsFromNow);
-          const surchargeMonthly = getIrmaaMonthlySurcharge(magiLookback, s.filingStatus ?? 'hoh', thresholdIdx);
-          // Premiums grow faster than CPI — use medical inflation
-          annualHealthcare += surchargeMonthly * 12 * personsOnMedicare * Math.pow(1 + hc.inflationRate, yearsFromNow);
-        }
-
-        // Pay healthcare from HSA first (tax-free qualified medical use), then portfolio
-        if (balances.hsa > 0 && annualHealthcare > 0) {
-          const hsaUsed = Math.min(balances.hsa, annualHealthcare);
-          balances.hsa -= hsaUsed;
-          withdrawals.hsa += hsaUsed;
-          annualHealthcare -= hsaUsed;
-        }
-        spending += annualHealthcare;
-      }
-
-      // ── Iterative tax-aware withdrawal loop ──
-      // Withdraw enough to cover spending + taxes on those withdrawals.
-      // Tax on traditional withdrawals creates additional cash need; iterate to converge.
       // Salary is counted net of the savings-rate portion, which has already been
       // diverted into contributions above and isn't available to fund spending.
       const netSalaryCash = salary > 0 ? salary * (1 - s.totalSavingsRate) : 0;
       const incomeFromSources = socialSecurity + spouseSS + pension + otherIncome + netSalaryCash;
-      let totalCashNeed = Math.max(0, spending - incomeFromSources);
+      const initialCashNeed = Math.max(0, spending - incomeFromSources);
 
-      // ── Bracket-fill limit for tax-efficient withdrawals ──
-      // Compute the total traditional withdrawal that would keep ordinary income at
-      // or below the top of the 12% bracket. Passed to executeWithdrawals so the
-      // tax-efficient strategy can cap early traditional draws at the low bracket,
-      // fall through to taxable, then accept higher brackets only if needed.
-      // (Only computed for taxEfficient; other strategies ignore the value.)
-      let traditionalBracketFillLimit: number | undefined;
-      if (s.withdrawalStrategy === 'taxEfficient') {
-        const idx = Math.pow(1 + (s.taxBracketInflationRate ?? 0), yearsFromNow);
-        const brackets = getFederalBrackets(s.filingStatus ?? 'hoh');
-        const stdDed = getStandardDeduction(s.filingStatus ?? 'hoh') * idx;
-        const ssThresh = getSSThresholds(s.filingStatus ?? 'hoh');
-        // Existing ordinary income excluding SS (wages, pension, other, Roth conv)
-        const wagesTaxable = (activeJobs.length > 0 && salary > 0) ? salary - employeePreTax401k - employeeHSA : salary;
-        const ordinaryExSS = wagesTaxable + pension + pensionLumpSumTaxable + otherIncome + rothConversionAmount + taxableInterestIncome;
-        // Estimate SS taxable portion (mirrors Roth conversion logic;
-        // SS thresholds are statutorily frozen — not indexed)
-        const totalSS = socialSecurity + spouseSS;
-        const provisionalIncome = ordinaryExSS + totalSS * 0.5;
-        let estSSTaxable = 0;
-        if (totalSS > 0 && provisionalIncome > ssThresh.low) {
-          estSSTaxable = provisionalIncome > ssThresh.high
-            ? 0.5 * (ssThresh.high - ssThresh.low) + 0.85 * (provisionalIncome - ssThresh.high)
-            : 0.5 * (provisionalIncome - ssThresh.low);
-          estSSTaxable = Math.max(0, Math.min(estSSTaxable, 0.85 * totalSS));
-        }
-        const existingOrdinary = ordinaryExSS + estSSTaxable;
-
-        // Top of 12% bracket for this filing status, indexed
-        let twelvePctCeiling = 0;
-        for (const b of brackets) {
-          if (b.rate === 0.12) { twelvePctCeiling = b.max * idx; break; }
-        }
-        // Traditional room = gross income needed to hit the ceiling
-        // = (12% bracket top on taxable income) + std deduction - existing ordinary
-        traditionalBracketFillLimit = Math.max(0, twelvePctCeiling + stdDed - existingOrdinary);
-      }
+      const traditionalBracketFillLimit = computeBracketFillLimit(s, yearsFromNow, income);
 
       // RMDs must be taken even when income fully covers spending
       const rmdIsDue = age >= rmdStartAge && (priorYearEnd401k + priorYearEndIRA) > 0;
 
-      if ((totalCashNeed > 0 || rothConversionAmount > 0 || rmdIsDue) && !depleted) {
-        // Save balance snapshot for iteration
-        const balanceSnapshot = cloneBalances(balances);
-        const costBasisSnapshot = taxableCostBasis;
-
-        // Iterate up to 5 times to converge on tax-aware withdrawal amount
-        for (let iter = 0; iter < 5; iter++) {
-          // Reset balances to snapshot for each iteration
-          for (const acct of ACCOUNT_TYPES) balances[acct] = balanceSnapshot[acct];
-          taxableCostBasis = costBasisSnapshot;
-
-          const costBasisPct = balances.taxable > 0 ? taxableCostBasis / balances.taxable : 0;
-
-          const wResult = executeWithdrawals({
-            cashNeed: totalCashNeed,
-            balances,
-            strategy: s.withdrawalStrategy,
-            age,
-            priorYearTraditionalBalance: priorYearEnd401k + priorYearEndIRA,
-            priorYear401kBalance: priorYearEnd401k,
-            priorYearIRABalance: priorYearEndIRA,
-            taxableCostBasisPct: Math.min(1, Math.max(0, costBasisPct)),
-            rmdStartAge,
-            traditionalBracketFillLimit,
-          });
-
-          for (const acct of ACCOUNT_TYPES) {
-            withdrawals[acct] = wResult.withdrawals[acct];
-            balances[acct] = Math.max(0, balanceSnapshot[acct] - wResult.withdrawals[acct]);
-          }
-
-          // Update taxable cost basis
-          if (withdrawals.taxable > 0 && balanceSnapshot.taxable > 0) {
-            const withdrawnBasis = costBasisSnapshot * (withdrawals.taxable / balanceSnapshot.taxable);
-            taxableCostBasis = Math.max(0, costBasisSnapshot - withdrawnBasis);
-          }
-
-          capitalGains = wResult.capitalGains;
-          rmdAmount = wResult.rmdAmount;
-
-          // Excess RMD goes to taxable
-          if (wResult.excessRMD > 0) {
-            balances.taxable += wResult.excessRMD;
-            taxableCostBasis += wResult.excessRMD;
-          }
-
-          // Estimate taxes on these withdrawals
-          const tradW = withdrawals.traditional401k + withdrawals.traditionalIRA;
-          const iterPenaltyAmount = calcPenaltyAmount(withdrawals);
-          const iterTaxInput: TaxInput = {
-            wages: (activeJobs.length > 0 && salary > 0) ? salary - employeePreTax401k - employeeHSA : salary,
-            ficaWages: salary > 0 ? salary - employeeHSA : 0,
-            traditionalWithdrawals: tradW + rothConversionAmount,
-            socialSecurity: socialSecurity + spouseSS,
-            pension: pension + pensionLumpSumTaxable,
-            capitalGains: capitalGains + taxableDividends,
-            taxableInterest: taxableInterestIncome,
-            otherTaxableIncome: otherIncome,
-            age,
-            filingStatus: s.filingStatus,
-            stateCode: s.stateCode,
-            yearsFromNow,
-            taxBracketInflationRate: s.taxBracketInflationRate ?? 0,
-            earlyWithdrawalPenaltyAmount: iterPenaltyAmount,
-          };
-          const iterTax = calculateTaxes(iterTaxInput);
-
-          const newCashNeed = Math.max(0, spending + iterTax.total - incomeFromSources);
-          // If converged (within $100), break
-          if (Math.abs(newCashNeed - totalCashNeed) < 100) {
-            totalCashNeed = newCashNeed;
-            break;
-          }
-          totalCashNeed = newCashNeed;
-        }
+      if ((initialCashNeed > 0 || rothConversionAmount > 0 || rmdIsDue) && !depleted) {
+        const wr = convergeWithdrawalsAndTaxes({
+          s, age, yearsFromNow,
+          spending, incomeFromSources, initialCashNeed,
+          balances, withdrawals, taxableCostBasis,
+          priorYearEnd401k, priorYearEndIRA, rmdStartAge,
+          traditionalBracketFillLimit,
+          income, penalty: rothPenalty,
+        });
+        capitalGains = wr.capitalGains;
+        rmdAmount = wr.rmdAmount;
+        taxableCostBasis = wr.taxableCostBasis;
       }
     }
 
     // ── Taxes ──
     const traditionalWithdrawals = withdrawals.traditional401k + withdrawals.traditionalIRA + rothConversionAmount;
-    const penaltyAmount = isRetired ? calcPenaltyAmount(withdrawals) : 0;
-    const taxInput: TaxInput = {
-      // Income-tax wages: net of pre-tax 401k + HSA. FICA wages: gross minus HSA only
-      // (401k deferrals remain FICA-taxable). Employer match affects neither.
-      wages: (activeJobs.length > 0 && salary > 0) ? salary - employeePreTax401k - employeeHSA : salary,
-      ficaWages: salary > 0 ? salary - employeeHSA : 0,
-      traditionalWithdrawals,
-      socialSecurity: socialSecurity + spouseSS,
-      pension: pension + pensionLumpSumTaxable,
-      capitalGains: capitalGains + taxableDividends,
-      taxableInterest: taxableInterestIncome,
-      otherTaxableIncome: otherIncome,
-      age,
-      filingStatus: s.filingStatus,
-      stateCode: s.stateCode,
-      yearsFromNow,
-      taxBracketInflationRate: s.taxBracketInflationRate ?? 0,
-      earlyWithdrawalPenaltyAmount: penaltyAmount,
-    };
-
-    const taxResult = calculateTaxes(taxInput);
+    const penaltyAmount = isRetired ? rothPenalty.calcPenalty(age, withdrawals) : 0;
+    const taxResult = calculateTaxes(buildYearTaxInput(
+      s, age, yearsFromNow, income, traditionalWithdrawals, capitalGains, penaltyAmount,
+    ));
 
     // Record MAGI for future IRMAA lookbacks
     magiHistory.push(taxResult.agi);
 
     // Consume Roth IRA basis/conversion layers actually withdrawn this year
     if (withdrawals.rothIRA > 0) {
-      walkRothLayers(withdrawals.rothIRA, true);
+      rothPenalty.walk(age, withdrawals.rothIRA, true);
     }
 
     // ── Surplus income reinvestment ──
@@ -847,7 +991,7 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
 
     // Update high water mark
     const totalBal = sumBalances(balances);
-    if (!isRetired) highWaterMark = totalBal;
+    if (!isRetired) guard.highWaterMark = totalBal;
 
     // Check depletion against spendable balance (excludes HSA, which can only be
     // used for qualified medical expenses). A path with $0 spendable is failed even
