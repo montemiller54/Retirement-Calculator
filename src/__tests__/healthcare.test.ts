@@ -131,7 +131,8 @@ describe('Healthcare cost modeling', () => {
         lateLifeStartAge: 80,
         inflationRate: 0,
       },
-      balances: { ...DEFAULT_SCENARIO.balances, traditional401k: 5000000 },
+      // Cash-funded: no RMD-driven MAGI, so no IRMAA muddying the phase costs
+      balances: { ...DEFAULT_SCENARIO.balances, traditional401k: 0, taxable: 0, rothIRA: 0, cashAccount: 5000000 },
     });
 
     const result = runSimulation(scenario, { numSimulations: 1, seed: 42 });

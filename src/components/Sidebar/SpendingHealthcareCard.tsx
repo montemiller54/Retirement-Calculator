@@ -123,7 +123,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
       </Section>
 
       {/* ── Healthcare ── */}
-      <Section title="Healthcare" description="Healthcare costs by life stage. All amounts in today's dollars.">
+      <Section title="Healthcare" description="Healthcare costs by life stage. All amounts in today's dollars. Income-based Medicare surcharges (IRMAA) are added automatically — don't include them below.">
         <div className="space-y-4">
           <div className="flex items-center gap-1">
             <Toggle
@@ -147,7 +147,7 @@ export function SpendingHealthcareCard({ validationErrors }: CardProps) {
                   <FieldError errors={ve} field="healthcare.medicareStartAge" />
                 </Field>
                 <Field
-                  label="Medicare $/mo"
+                  label={<>Medicare $/mo <InfoTip text="Standard premiums, supplemental plans (Medigap/Advantage), dental, and out-of-pocket costs. Do NOT include IRMAA income surcharges — those are computed automatically each year from your simulated income (MAGI from two years prior, per person on Medicare)." /></>}
                   help={`age ${hc.medicareStartAge}–${hc.lateLifeStartAge - 1}`}
                 >
                   <div className="relative">

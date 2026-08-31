@@ -100,6 +100,7 @@ export interface TaxResult {
   total: number;
   effectiveRate: number;
   marginalRate: number;
+  agi: number;   // ≈ MAGI here (no tax-exempt interest modeled); used for IRMAA lookback
 }
 
 export function calculateTaxes(input: TaxInput): TaxResult {
@@ -226,5 +227,6 @@ export function calculateTaxes(input: TaxInput): TaxResult {
     total,
     effectiveRate: grossIncome > 0 ? total / grossIncome : 0,
     marginalRate,
+    agi,
   };
 }

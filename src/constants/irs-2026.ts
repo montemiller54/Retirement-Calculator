@@ -236,3 +236,37 @@ export function getMedicareSurtaxThreshold(fs: FilingStatus): number {
   if (fs === 'single') return FICA_MEDICARE_SURTAX_THRESHOLD_SINGLE;
   return FICA_MEDICARE_SURTAX_THRESHOLD_HOH;
 }
+
+// ── IRMAA (Medicare income-related monthly adjustment amounts) ─────────
+// 2026 tiers (based on 2024 MAGI). surchargeMonthly is the combined
+// Part B + Part D surcharge PER PERSON. Cliff structure: $1 over a
+// threshold pays the full tier. HOH/single share the single thresholds.
+
+export interface IrmaaTier {
+  magiSingle: number;
+  magiMfj: number;
+  surchargeMonthly: number;
+}
+
+export const IRMAA_TIERS: IrmaaTier[] = [
+  { magiSingle: 109000, magiMfj: 218000, surchargeMonthly: 95.70 },
+  { magiSingle: 137000, magiMfj: 274000, surchargeMonthly: 240.40 },
+  { magiSingle: 171000, magiMfj: 342000, surchargeMonthly: 385.00 },
+  { magiSingle: 205000, magiMfj: 410000, surchargeMonthly: 529.70 },
+  { magiSingle: 500000, magiMfj: 750000, surchargeMonthly: 578.00 },
+];
+
+/** Monthly IRMAA surcharge per person for a given MAGI (from 2 years prior).
+ *  thresholdMultiplier indexes the brackets for future-year inflation. */
+export function getIrmaaMonthlySurcharge(
+  magi: number,
+  fs: FilingStatus,
+  thresholdMultiplier = 1,
+): number {
+  let surcharge = 0;
+  for (const t of IRMAA_TIERS) {
+    const threshold = (fs === 'mfj' ? t.magiMfj : t.magiSingle) * thresholdMultiplier;
+    if (magi > threshold) surcharge = t.surchargeMonthly;
+  }
+  return surcharge;
+}

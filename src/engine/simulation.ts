@@ -13,6 +13,7 @@ import { estimateSSBenefit, getFullRetirementAgeMonths } from '../utils/social-s
 import { calculateTaxes, type TaxInput } from './tax';
 import { getFederalBrackets, getStandardDeduction, getSSThresholds } from '../constants/tax';
 import { getRmdStartAge } from '../constants/rmd-table';
+import { getIrmaaMonthlySurcharge } from '../constants/irs-2026';
 import { DEFAULT_401K_CATCHUP, DEFAULT_401K_SUPER_CATCHUP, DEFAULT_IRA_CATCHUP, DEFAULT_HSA_SELF_ONLY } from '../constants/contribution-limits';
 
 function emptyBalances(): AccountBalances {
@@ -154,6 +155,9 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
 
   // Cumulative inflation factor — compounds year over year with random variation
   let cumulativeInflationFactor = 1.0;
+
+  // Per-year MAGI history for the IRMAA two-year lookback
+  const magiHistory: number[] = [];
 
   for (let age = s.currentAge; age <= s.endAge; age++) {
     const sp = s.spouse;
@@ -619,6 +623,28 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
         // Inflate from current age (today's dollars) by medical inflation
         annualHealthcare *= Math.pow(1 + hc.inflationRate, yearsFromNow);
 
+        // ── IRMAA: Medicare premium surcharges (cliff tiers, per person) ──
+        // Based on MAGI from TWO years prior in this path. For the first two
+        // sim years (no history yet), estimate from current-year income.
+        const personsOnMedicare =
+          (age >= hc.medicareStartAge ? 1 : 0) +
+          (sp?.enabled && spouseAge !== null && spouseAge >= hc.medicareStartAge ? 1 : 0);
+        if (personsOnMedicare > 0) {
+          let magiLookback: number;
+          if (magiHistory.length >= 2) {
+            magiLookback = magiHistory[magiHistory.length - 2];
+          } else if (magiHistory.length === 1) {
+            magiLookback = magiHistory[0];
+          } else {
+            magiLookback = salary + pension + otherIncome + rothConversionAmount +
+              taxableInterestIncome + taxableDividends + 0.85 * (socialSecurity + spouseSS);
+          }
+          const thresholdIdx = Math.pow(1 + (s.taxBracketInflationRate ?? 0), yearsFromNow);
+          const surchargeMonthly = getIrmaaMonthlySurcharge(magiLookback, s.filingStatus ?? 'hoh', thresholdIdx);
+          // Premiums grow faster than CPI — use medical inflation
+          annualHealthcare += surchargeMonthly * 12 * personsOnMedicare * Math.pow(1 + hc.inflationRate, yearsFromNow);
+        }
+
         // Pay healthcare from HSA first (tax-free qualified medical use), then portfolio
         if (balances.hsa > 0 && annualHealthcare > 0) {
           const hsaUsed = Math.min(balances.hsa, annualHealthcare);
@@ -780,6 +806,9 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     };
 
     const taxResult = calculateTaxes(taxInput);
+
+    // Record MAGI for future IRMAA lookbacks
+    magiHistory.push(taxResult.agi);
 
     // Consume Roth IRA basis/conversion layers actually withdrawn this year
     if (withdrawals.rothIRA > 0) {

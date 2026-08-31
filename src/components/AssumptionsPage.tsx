@@ -211,7 +211,7 @@ export function AssumptionsPage() {
       <section className="space-y-2">
         <h3 className="font-semibold text-sm">Other Features</h3>
         <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4">
-          <li><strong>Healthcare</strong>: three-tier cost model (pre-Medicare / Medicare / late-life) with its own medical inflation rate (default 5%). Costs are added on top of base spending.</li>
+          <li><strong>Healthcare</strong>: three-tier cost model (pre-Medicare / Medicare / late-life) with its own medical inflation rate (default 5%). Costs are added on top of base spending. IRMAA Medicare premium surcharges are computed automatically per person on Medicare, from each path's MAGI two years prior (cliff tiers, indexed thresholds).</li>
           <li><strong>Housing</strong>: mortgage P&I added to spending as a fixed nominal amount until payoff age (fixed-rate payments don't inflate). Optional downsizing proceeds deposited at a specified age, appreciating at inflation + 1%.</li>
           <li><strong>Spending safety rules (guardrails)</strong>: configurable spending-cut tiers triggered by portfolio drawdown from peak. Multiple tiers allow graduated responses.</li>
           <li><strong>Spouse</strong>: separate age, retirement age, and Social Security claim age. Each spouse's jobs are owned by them and contribute their own salary, employer match, and per-person 401(k)/IRA/HSA contribution limits. Spouse's pre-retirement allocation continues until both spouses are retired.</li>
