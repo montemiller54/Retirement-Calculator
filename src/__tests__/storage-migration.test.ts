@@ -91,6 +91,13 @@ describe('Scenario migration (importScenario path)', () => {
     expect((s.otherIncomeSources[0] as unknown as Record<string, unknown>).annualAmount).toBeUndefined();
   });
 
+  it('strips removed catch-up toggle fields (enable401kCatchUp, enableIRACatchUp)', () => {
+    const s = importFixture(legacyFixture()) as unknown as Record<string, unknown>;
+    // Fields were removed; catch-up is now always applied when age-eligible
+    expect(s.enable401kCatchUp).toBeUndefined();
+    expect(s.enableIRACatchUp).toBeUndefined();
+  });
+
   it('migrates legacy currentSalary/match fields into a jobs array', () => {
     const s = importFixture(legacyFixture());
     expect(s.jobs).toHaveLength(1);

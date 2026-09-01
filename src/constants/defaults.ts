@@ -55,8 +55,6 @@ export const DEFAULT_SCENARIO: ScenarioInput = {
   },
 
   // Contribution limits
-  enable401kCatchUp: false,
-  enableIRACatchUp: false,
   limit401k: DEFAULT_401K_LIMIT,
   limitIRA: DEFAULT_IRA_LIMIT,
 

@@ -317,8 +317,6 @@ function applyContributions(
         age: ownerAge,
         limit401k: s.limit401k * limIdx,
         limitIRA: s.limitIRA * limIdx,
-        enable401kCatchUp: s.enable401kCatchUp,
-        enableIRACatchUp: s.enableIRACatchUp,
         employerMatch: totalEmployerMatch,
         employerRothPct: weightedRothPct,
         catchUp401k: DEFAULT_401K_CATCHUP * limIdx,

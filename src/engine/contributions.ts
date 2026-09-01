@@ -7,8 +7,6 @@ export interface ContributionInput {
   age: number;
   limit401k: number;
   limitIRA: number;
-  enable401kCatchUp: boolean;
-  enableIRACatchUp: boolean;
 
   // Employer match
   employerMatch: number;          // total employer match $ for this year (pre-computed by caller)
@@ -32,7 +30,6 @@ export function allocateContributions(input: ContributionInput): ContributionRes
   const {
     totalSavings, allocation, age,
     limit401k, limitIRA,
-    enable401kCatchUp, enableIRACatchUp,
     employerMatch = 0, employerRothPct = 0,
     catchUp401k = DEFAULT_401K_CATCHUP,
     superCatchUp401k = DEFAULT_401K_SUPER_CATCHUP,
@@ -40,12 +37,14 @@ export function allocateContributions(input: ContributionInput): ContributionRes
     hsaLimit = DEFAULT_HSA_SELF_ONLY,
   } = input;
 
-  // Effective limits — SECURE 2.0 super catch-up for ages 60-63
+  // Effective limits — catch-up (50+) and SECURE 2.0 super catch-up (60–63)
+  // are applied automatically to anyone age-eligible; the IRS allows them and
+  // virtually every modern plan supports them.
   const catchUpEligible = age >= CATCHUP_AGE;
   const superCatchUpEligible = age >= SUPER_CATCHUP_START_AGE && age <= SUPER_CATCHUP_END_AGE;
   const effective401kCatchUp = superCatchUpEligible ? superCatchUp401k : catchUp401k;
-  const eff401k = limit401k + (catchUpEligible && enable401kCatchUp ? effective401kCatchUp : 0);
-  const effIRA = limitIRA + (catchUpEligible && enableIRACatchUp ? catchUpIRA : 0);
+  const eff401k = limit401k + (catchUpEligible ? effective401kCatchUp : 0);
+  const effIRA = limitIRA + (catchUpEligible ? catchUpIRA : 0);
   const effHSA = hsaLimit;
 
   // ── Employee contributions ──

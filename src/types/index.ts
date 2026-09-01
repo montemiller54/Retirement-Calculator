@@ -199,8 +199,6 @@ export interface ScenarioInput {
   contributionAllocation: ContributionAllocation;
 
   // Contribution limits
-  enable401kCatchUp: boolean;
-  enableIRACatchUp: boolean;
   limit401k: number;
   limitIRA: number;
 

@@ -17,8 +17,6 @@ describe('allocateContributions', () => {
     age: 35,
     limit401k: 24500,
     limitIRA: 7500,
-    enable401kCatchUp: false,
-    enableIRACatchUp: false,
     employerMatch: 0,
     employerRothPct: 0,
   };
@@ -91,7 +89,6 @@ describe('allocateContributions', () => {
         cashAccount: 0, otherAssets: 0,
       },
       age: 55,
-      enable401kCatchUp: true,
     };
     const result = allocateContributions(input);
     const limit = DEFAULT_401K_LIMIT + DEFAULT_401K_CATCHUP;

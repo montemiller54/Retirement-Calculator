@@ -19,6 +19,9 @@ function migrateScenario(s: ScenarioInput): ScenarioInput {
     rawTop.baseMonthlySpending = rawTop.baseAnnualSpending;
   }
   delete rawTop.baseAnnualSpending;
+  // Catch-up toggles are gone — catch-up is now always applied when age-eligible
+  delete rawTop.enable401kCatchUp;
+  delete rawTop.enableIRACatchUp;
   for (const src of (s.otherIncomeSources ?? [])) {
     const r = src as unknown as Record<string, unknown>;
     if (r.annualAmount != null && r.monthlyAmount == null) {

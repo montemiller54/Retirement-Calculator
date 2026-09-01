@@ -173,28 +173,6 @@ describe('Tax Bracket Inflation Rate', () => {
   });
 });
 
-describe('Catch-Up Contributions', () => {
-  it('enabling 401k catch-up for 50+ worker → changes ending balance', () => {
-    // Catch-up into Roth 401k avoids tax-drag on traditional withdrawals
-    const base: Partial<ScenarioInput> = {
-      currentAge: 52, retirementAge: 65, endAge: 85,
-      jobs: [{ id: 'test', name: 'Test Job', owner: 'primary', monthlyPay: 12000, startAge: 52, endAge: 65, has401k: true, employerMatchRate: 0, employerMatchCapPct: 0, employerRothPct: 0 }],
-      totalSavingsRate: 0.25,
-      contributionAllocation: { traditional401k: 0, roth401k: 70, traditionalIRA: 0, rothIRA: 0, taxable: 30, hsa: 0, cashAccount: 0, otherAssets: 0 },
-      balances: {
-        traditional401k: 200000, roth401k: 0,
-        traditionalIRA: 0, rothIRA: 100000,
-        taxable: 50000, hsa: 0,
-        cashAccount: 0, otherAssets: 0,
-      },
-    };
-    const noCatchUp = run({ ...base, enable401kCatchUp: false });
-    const withCatchUp = run({ ...base, enable401kCatchUp: true });
-    // More Roth catch-up = more tax-free growth (allow small variance from regime randomness)
-    expect(withCatchUp.medianEnding).toBeGreaterThanOrEqual(noCatchUp.medianEnding * 0.99);
-  });
-});
-
 describe('Employer Roth Percentage', () => {
   it('employer match to Roth vs Traditional produces different outcomes', () => {
     const base: Partial<ScenarioInput> = {

@@ -21,8 +21,7 @@ const scenario: ScenarioInput = {
     traditional401k: 33, roth401k: 66, traditionalIRA: 0, rothIRA: 0,
     taxable: 0, hsa: 1, cashAccount: 0, otherAssets: 0,
   },
-  enable401kCatchUp: false,
-  enableIRACatchUp: false,
+
   limit401k: 24500,
   limitIRA: 7500,
   balances: {

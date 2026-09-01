@@ -21,8 +21,6 @@ function makeInput(overrides: Partial<ContributionInput>): ContributionInput {
     age: 35,
     limit401k: 24500,
     limitIRA: 7500,
-    enable401kCatchUp: false,
-    enableIRACatchUp: false,
     employerMatch: 0,
     employerRothPct: 0,
     ...overrides,
@@ -110,52 +108,38 @@ describe('Contribution allocation — comprehensive', () => {
     expect(r.spilloverToTaxable).toBeCloseTo(5600);
   });
 
-  // ── Catch-up contributions ──
-  it('age 49, catch-up enabled → no extra', () => {
+  // ── Catch-up contributions (auto-applied when age-eligible) ──
+  it('age 49 → no catch-up (under 50)', () => {
     const input = makeInput({
       totalSavings: 30000,
       allocation: { ...BASE_ALLOC, traditional401k: 100 },
       age: 49,
-      enable401kCatchUp: true,
     });
     const r = allocateContributions(input);
     expect(r.contributions.traditional401k).toBeCloseTo(24500);
     expect(r.spilloverToTaxable).toBeCloseTo(5500);
   });
 
-  it('age 50, catch-up enabled → 401(k) limit includes catch-up', () => {
+  it('age 50 → 401(k) limit auto-includes catch-up', () => {
     const totalSavings = 35000;
     const expectedLimit = DEFAULT_401K_LIMIT + DEFAULT_401K_CATCHUP;
     const input = makeInput({
       totalSavings,
       allocation: { ...BASE_ALLOC, traditional401k: 100 },
       age: 50,
-      enable401kCatchUp: true,
     });
     const r = allocateContributions(input);
     expect(r.contributions.traditional401k).toBeCloseTo(expectedLimit);
     expect(r.spilloverToTaxable).toBeCloseTo(totalSavings - expectedLimit);
   });
 
-  it('age 50, catch-up DISABLED → limit stays at base 401(k) limit', () => {
-    const input = makeInput({
-      totalSavings: 30000,
-      allocation: { ...BASE_ALLOC, traditional401k: 100 },
-      age: 50,
-      enable401kCatchUp: false,
-    });
-    const r = allocateContributions(input);
-    expect(r.contributions.traditional401k).toBeCloseTo(DEFAULT_401K_LIMIT);
-  });
-
-  it('IRA catch-up: age 50 enabled → IRA limit includes catch-up', () => {
+  it('age 50 → IRA limit auto-includes catch-up', () => {
     const totalSavings = 10000;
     const expectedLimit = DEFAULT_IRA_LIMIT + DEFAULT_IRA_CATCHUP;
     const input = makeInput({
       totalSavings,
       allocation: { ...BASE_ALLOC, traditionalIRA: 100 },
       age: 50,
-      enableIRACatchUp: true,
     });
     const r = allocateContributions(input);
     expect(r.contributions.traditionalIRA).toBeCloseTo(expectedLimit);

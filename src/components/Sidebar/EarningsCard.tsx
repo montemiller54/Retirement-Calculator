@@ -305,7 +305,7 @@ export function EarningsCard({ validationErrors }: CardProps) {
               onChange={v => setField('totalSavingsRate', v / 100)}
               min={0} max={60} step={1}
             />
-            <p className="mt-1 text-[0.6875rem] text-gray-500 dark:text-gray-400">Portion of pay saved each month. Split across accounts below.</p>
+            <p className="mt-1 text-[0.6875rem] text-gray-500 dark:text-gray-400">Portion of pay saved each month. Split across accounts below. IRS catch-up limits (50+) apply automatically.</p>
           </div>
         </div>
       </Section>
