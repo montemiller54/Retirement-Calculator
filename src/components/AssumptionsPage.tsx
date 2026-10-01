@@ -178,7 +178,7 @@ export function AssumptionsPage() {
           <li><strong>Full Retirement Age</strong>: 66 for birth year ≤ 1954, graduating to 67 for 1960+.</li>
           <li><strong>Early claiming</strong>: reduced by 5/9% per month for the first 36 months before FRA, then 5/12% per additional month.</li>
           <li><strong>Delayed retirement credits</strong>: +8% per year (2/3% per month) from FRA to age 70.</li>
-          <li>Spousal benefit: 50% of primary PIA when spouse has no earnings. Configurable COLA (default 2%).</li>
+          <li>Spousal benefit: 50% of primary PIA when spouse has no earnings, reduced for claiming before the spouse's FRA (delayed credits don't increase spousal benefits), starting no earlier than the primary's filing. Configurable COLA (default 2%).</li>
           <li><strong>Earnings test</strong>: before FRA, benefits are reduced by $0.50 for every $1 earned above the threshold (~$23,400).</li>
           <li>Assumes current salary approximates career-average earnings. No survivor benefits, no WEP/GPO.</li>
         </ul>

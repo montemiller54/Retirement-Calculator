@@ -9,7 +9,7 @@ import { PRNG, cholesky, generateCorrelatedReturns, blendedReturn, crashFrequenc
 import { DEFAULT_CORRELATION_MATRIX, BEAR_CORRELATION_MATRIX, DEFAULT_ASSET_RETURNS, BEAR_PERSISTENCE, BEAR_BOND_MEAN, POST_BEAR_RECOVERY_YEAR1_MEAN, POST_BEAR_RECOVERY_YEAR2_MEAN, MAX_BEAR_DURATION, QUALIFIED_DIVIDEND_YIELD } from '../constants/asset-classes';
 import { allocateContributions } from './contributions';
 import { executeWithdrawals } from './withdrawals';
-import { estimateSSBenefit, getFullRetirementAgeMonths } from '../utils/social-security';
+import { estimateSSBenefit, estimateSpousalBenefit, getFullRetirementAgeMonths } from '../utils/social-security';
 import { calculateTaxes, type TaxInput } from './tax';
 import { getFederalBrackets, getStandardDeduction, getSSThresholds } from '../constants/tax';
 import { getRmdStartAge } from '../constants/rmd-table';
@@ -61,15 +61,30 @@ function resolveSSBenefits(s: ScenarioInput): ScenarioInput {
 
   const ssBenefit = estimateSSBenefit(highestSalary, s.socialSecurityClaimAge, s.currentAge);
 
-  // Spouse SS: use 50% of primary PIA as spousal benefit estimate
-  const spouseBenefit = s.spouse?.enabled
-    ? estimateSSBenefit(0, s.spouse.socialSecurityClaimAge, s.spouse.currentAge) || Math.round(ssBenefit * 0.5)
-    : 0;
+  // Spouse SS: higher of her own-record benefit (from spouse-owned jobs) or a
+  // spousal benefit — 50% of the primary's PIA reduced by her claim age
+  // (delayed credits don't pass through), startable only once the primary files.
+  let spouse = s.spouse;
+  if (spouse?.enabled) {
+    const spouseOwnSalary = (s.jobs ?? [])
+      .filter(j => j.owner === 'spouse')
+      .reduce((m, j) => Math.max(m, j.monthlyPay), 0);
+    const primarySalary = (s.jobs ?? [])
+      .filter(j => j.owner !== 'spouse')
+      .reduce((m, j) => Math.max(m, j.monthlyPay), 0);
+    const ownBenefit = estimateSSBenefit(spouseOwnSalary, spouse.socialSecurityClaimAge, spouse.currentAge);
+    const spouseAgeWhenPrimaryFiles = spouse.currentAge + (s.socialSecurityClaimAge - s.currentAge);
+    const spousalStartAge = Math.max(spouse.socialSecurityClaimAge, spouseAgeWhenPrimaryFiles);
+    const spousalBenefit = estimateSpousalBenefit(primarySalary, spousalStartAge, spouse.currentAge);
+    spouse = ownBenefit >= spousalBenefit
+      ? { ...spouse, socialSecurityBenefit: ownBenefit }
+      : { ...spouse, socialSecurityBenefit: spousalBenefit, socialSecurityClaimAge: spousalStartAge };
+  }
 
   return {
     ...s,
     socialSecurityBenefit: ssBenefit,
-    spouse: s.spouse ? { ...s.spouse, socialSecurityBenefit: spouseBenefit } : s.spouse,
+    spouse,
   };
 }
 

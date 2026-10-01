@@ -3,6 +3,8 @@ import {
   estimateSSBenefit,
   getFullRetirementAgeMonths,
   claimingAdjustmentFactor,
+  spousalAdjustmentFactor,
+  estimateSpousalBenefit,
 } from '../utils/social-security';
 
 describe('getFullRetirementAgeMonths', () => {
@@ -125,5 +127,46 @@ describe('estimateSSBenefit', () => {
     const max = estimateSSBenefit(20000, 70, 35, 2026);
     expect(max).toBeGreaterThan(4000);
     expect(max).toBeLessThan(6000);
+  });
+});
+
+describe('spousalAdjustmentFactor', () => {
+  // For spouse FRA=67 (born 1960+):
+  it('returns 50% of PIA at spouse FRA', () => {
+    expect(spousalAdjustmentFactor(67, 1960)).toBeCloseTo(0.5, 6);
+  });
+
+  it('reduces 25/36 of 1% per month for first 36 early months (65 → 41.67%)', () => {
+    expect(spousalAdjustmentFactor(65, 1960)).toBeCloseTo(0.5 * (1 - 24 * (25 / 36 / 100)), 6);
+    expect(spousalAdjustmentFactor(65, 1960)).toBeCloseTo(0.41667, 4);
+  });
+
+  it('reduces 5/12 of 1% per month beyond 36 months (62 → 32.5%)', () => {
+    // 60 months early: 36×25/36% = 25%, 24×5/12% = 10% → 35% reduction
+    expect(spousalAdjustmentFactor(62, 1960)).toBeCloseTo(0.325, 6);
+  });
+
+  it('never exceeds 50% — no delayed retirement credits for spousal', () => {
+    expect(spousalAdjustmentFactor(70, 1960)).toBeCloseTo(0.5, 6);
+  });
+});
+
+describe('estimateSpousalBenefit', () => {
+  it('is based on worker PIA, independent of worker claim age', () => {
+    // Same worker salary → same spousal benefit regardless of how the
+    // worker's own benefit was adjusted (PIA passthrough only)
+    const spousal = estimateSpousalBenefit(8333, 67, 35, 2026);
+    const workerAtFRA = estimateSSBenefit(8333, 67, 35, 2026);
+    expect(spousal).toBeCloseTo(workerAtFRA * 0.5, -1); // within rounding ($5)
+  });
+
+  it('applies the spouse claim-age reduction', () => {
+    const atFRA = estimateSpousalBenefit(8333, 67, 35, 2026);
+    const at62 = estimateSpousalBenefit(8333, 62, 35, 2026);
+    expect(at62 / atFRA).toBeCloseTo(0.65, 2); // 0.325 / 0.5
+  });
+
+  it('returns 0 for zero worker salary', () => {
+    expect(estimateSpousalBenefit(0, 67, 35, 2026)).toBe(0);
   });
 });

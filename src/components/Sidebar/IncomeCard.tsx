@@ -3,7 +3,7 @@ import type { IncomeSource } from '../../types';
 import { CurrencyInput } from './CurrencyInput';
 import { FieldError, fieldErrorClass, type CardProps } from './FieldError';
 import { Toggle, PctSlider, Section, Field } from './shared';
-import { estimateSSBenefit } from '../../utils/social-security';
+import { estimateSSBenefit, estimateSpousalBenefit } from '../../utils/social-security';
 import { InfoTip } from './InfoTip';
 
 export function IncomeCard({ validationErrors }: CardProps) {
@@ -14,6 +14,21 @@ export function IncomeCard({ validationErrors }: CardProps) {
   const jobs = scenario.jobs ?? [];
   const highestSalary = jobs.length > 0 ? Math.max(...jobs.map(j => j.monthlyPay)) : 0;
   const estimatedSS = estimateSSBenefit(highestSalary, scenario.socialSecurityClaimAge, scenario.currentAge);
+
+  // Mirror the engine's spousal estimate: own record vs PIA-based spousal,
+  // gated on the primary having filed
+  const sp = scenario.spouse;
+  const spouseOwnSalary = jobs.filter(j => j.owner === 'spouse').reduce((m, j) => Math.max(m, j.monthlyPay), 0);
+  const primaryOwnSalary = jobs.filter(j => j.owner !== 'spouse').reduce((m, j) => Math.max(m, j.monthlyPay), 0);
+  const spousalStartAge = sp?.enabled
+    ? Math.max(sp.socialSecurityClaimAge, sp.currentAge + (scenario.socialSecurityClaimAge - scenario.currentAge))
+    : 67;
+  const estimatedSpousal = sp?.enabled
+    ? Math.max(
+        estimateSSBenefit(spouseOwnSalary, sp.socialSecurityClaimAge, sp.currentAge),
+        estimateSpousalBenefit(primaryOwnSalary, spousalStartAge, sp.currentAge),
+      )
+    : 0;
 
   const addOtherIncome = () => {
     const src: IncomeSource = {
@@ -101,7 +116,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
                     <div className="input-field pl-6 text-right bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 cursor-default">
-                      {Math.round(estimatedSS * 0.5).toLocaleString()}
+                      {estimatedSpousal.toLocaleString()}
                     </div>
                   </div>
                 ) : (
@@ -117,7 +132,7 @@ export function IncomeCard({ validationErrors }: CardProps) {
             </div>
             {isAuto && (
               <p className="text-xs text-gray-500 dark:text-gray-400 italic">
-                Spousal benefit: 50% of your ${estimatedSS.toLocaleString()}/mo benefit
+                Spousal benefit: 50% of your PIA, reduced for claiming before spouse's FRA; starts no earlier than your own filing{spousalStartAge > (sp?.socialSecurityClaimAge ?? 0) ? ` (effective start age ${spousalStartAge})` : ''}
               </p>
             )}
           </div>

@@ -81,3 +81,30 @@ export function estimateSSBenefit(
 
   return Math.round(pia * factor);
 }
+
+// ── Spousal claiming adjustment ──
+// Spousal benefit = 50% of the worker's PIA, reduced 25/36 of 1% per month for
+// the first 36 months claimed before the spouse's own FRA and 5/12 of 1% per
+// month beyond. Delayed retirement credits never increase spousal benefits.
+export function spousalAdjustmentFactor(claimAge: number, birthYear: number): number {
+  const fraMonths = getFullRetirementAgeMonths(birthYear);
+  const monthsEarly = Math.max(0, fraMonths - claimAge * 12);
+  const firstPortion = Math.min(monthsEarly, 36) * (25 / 36 / 100);
+  const secondPortion = Math.max(0, monthsEarly - 36) * (5 / 12 / 100);
+  return 0.5 * (1 - firstPortion - secondPortion);
+}
+
+// ── Estimate monthly spousal benefit from the worker's salary ──
+// PIA-based: the worker's own claiming adjustment does not pass through.
+export function estimateSpousalBenefit(
+  workerMonthlySalary: number,
+  spouseClaimAge: number,
+  spouseCurrentAge: number,
+  currentYear: number = 2026,
+): number {
+  if (workerMonthlySalary <= 0) return 0;
+  const cappedAnnual = Math.min(workerMonthlySalary * 12, SS_WAGE_CAP);
+  const pia = computePIA(cappedAnnual / 12);
+  const birthYear = currentYear - spouseCurrentAge;
+  return Math.round(pia * spousalAdjustmentFactor(spouseClaimAge, birthYear));
+}
