@@ -121,7 +121,7 @@ const SCENARIOS: Record<string, ScenarioInput> = {
 // Captured baselines — regenerate with CAPTURE=1 after intentional engine changes
 const EXPECTED: Record<string, Fingerprint> = {
   accumulation: { successRate: 0.955, medianEnding: 13627379.41, finalMedianBalance: 13488807.03, y10Spending: 0, y10TaxTotal: 27881.56, y10TotalBalance: 702995.02 },
-  earlyRetiree: { successRate: 0.205, medianEnding: 0, finalMedianBalance: 0, y10Spending: 188738.71, y10TaxTotal: 26252.55, y10TotalBalance: 1470712.11 },
+  earlyRetiree: { successRate: 0.205, medianEnding: 0, finalMedianBalance: 0, y10Spending: 201861.95, y10TaxTotal: 29952.07, y10TotalBalance: 1900653.29 },
   converter: { successRate: 0.945, medianEnding: 2141812.47, finalMedianBalance: 2127212.86, y10Spending: 92018.46, y10TaxTotal: 20115.35, y10TotalBalance: 1921940.24 },
   couple: { successRate: 0.96, medianEnding: 7566420.84, finalMedianBalance: 7522177.9, y10Spending: 160695.02, y10TaxTotal: 8188.62, y10TotalBalance: 2578152.51 },
 };

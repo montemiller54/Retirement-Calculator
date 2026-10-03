@@ -799,7 +799,9 @@ function convergeWithdrawalsAndTaxes(p: {
 }
 
 // ── Run a single simulation path ──
-function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number[][], bearCholeskyL: number[][]): SimulationPath {
+// `deterministic` bypasses regime-switching and volatility so every year earns
+// exactly the user's configured per-asset mean (used for the "Average" path).
+function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number[][], bearCholeskyL: number[][], deterministic = false): SimulationPath {
   const s = toAnnualScenario(scenario);
   const years: YearResult[] = [];
   const balances = cloneBalances(s.balances);
@@ -860,10 +862,15 @@ function runSinglePath(scenario: ScenarioInput, rng: PRNG, bullCholeskyL: number
     const yearsFromNow = age - s.currentAge;
 
     // ── Generate returns for this year ──
-    const recoveryBoost = transitionRegime(regime, rng, yearsFromNow, enterBear);
-    const choleskyL = regime.inBear ? bearCholeskyL : bullCholeskyL;
-    const yearMeans = regime.inBear ? bearMeans : means;
-    const assetReturns = generateCorrelatedReturns(rng, choleskyL, yearMeans, stdDevs, regime.inBear, regimeMask, recoveryBoost);
+    let assetReturns: number[];
+    if (deterministic) {
+      assetReturns = means;
+    } else {
+      const recoveryBoost = transitionRegime(regime, rng, yearsFromNow, enterBear);
+      const choleskyL = regime.inBear ? bearCholeskyL : bullCholeskyL;
+      const yearMeans = regime.inBear ? bearMeans : means;
+      assetReturns = generateCorrelatedReturns(rng, choleskyL, yearMeans, stdDevs, regime.inBear, regimeMask, recoveryBoost);
+    }
 
     // ── Variable inflation for this year ──
     // Compound inflation year by year; if volatility > 0, randomize each year's rate
@@ -1153,7 +1160,14 @@ function aggregateResults(paths: SimulationPath[], _scenario: ScenarioInput): Si
   // Ending balances
   const endingBalances = paths.map(p => p.endingBalance).sort((a, b) => a - b);
 
-  const sortedByEnding = [...paths].sort((a, b) => a.endingBalance - b.endingBalance);
+  // Rank by outcome: depleted paths (all ending at $0) are ordered by depletion
+  // age so the median band isn't an arbitrary slice of ties when success < 55%.
+  const sortedByEnding = [...paths].sort((a, b) => {
+    if (a.depletionAge !== null && b.depletionAge !== null) return a.depletionAge - b.depletionAge;
+    if (a.depletionAge !== null) return -1;
+    if (b.depletionAge !== null) return 1;
+    return a.endingBalance - b.endingBalance;
+  });
 
   // Median path (smoothed: average of paths between p45 and p55)
   const medianBandPaths = sortedByEnding.slice(Math.floor(n * 0.45), Math.floor(n * 0.55) + 1);
@@ -1202,17 +1216,9 @@ export function runSimulation(
     ...scenario,
     inflationVolatility: 0,
     guardrails: { ...scenario.guardrails, enabled: false },
-    investments: {
-      ...scenario.investments,
-      assetClassReturns: Object.fromEntries(
-        Object.entries(scenario.investments.assetClassReturns).map(
-          ([k, v]) => [k, { mean: v.mean, stdDev: 0 }]
-        )
-      ) as ScenarioInput['investments']['assetClassReturns'],
-    },
   };
   const deterministicRng = new PRNG(0);
-  const expectedPath = runSinglePath(deterministicScenario, deterministicRng, bullCholeskyL, bearCholeskyL).years;
+  const expectedPath = runSinglePath(deterministicScenario, deterministicRng, bullCholeskyL, bearCholeskyL, true).years;
 
   const result = aggregateResults(paths, scenario);
   return { ...result, expectedPath };
